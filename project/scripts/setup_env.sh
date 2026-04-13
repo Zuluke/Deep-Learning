@@ -48,6 +48,10 @@ esac
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
+cargo_ready() {
+  command -v cargo >/dev/null 2>&1 && cargo --version >/dev/null 2>&1
+}
+
 if ! command -v uv >/dev/null 2>&1; then
   if ! command -v curl >/dev/null 2>&1; then
     echo "uv not found and curl is unavailable for installation." >&2
@@ -75,7 +79,7 @@ if [[ -f "$HOME/.cargo/env" ]]; then
   source "$HOME/.cargo/env"
 fi
 
-if ! command -v cargo >/dev/null 2>&1; then
+if ! cargo_ready; then
   if ! command -v curl >/dev/null 2>&1; then
     echo "cargo not found and curl is unavailable for rustup installation." >&2
     exit 1
@@ -85,7 +89,13 @@ if ! command -v cargo >/dev/null 2>&1; then
   source "$HOME/.cargo/env"
 fi
 
-if ! command -v cargo >/dev/null 2>&1; then
+if ! cargo_ready; then
+  rustup default stable >/dev/null 2>&1
+  # shellcheck disable=SC1090
+  source "$HOME/.cargo/env"
+fi
+
+if ! cargo_ready; then
   echo "cargo is still unavailable after rustup installation." >&2
   exit 1
 fi
