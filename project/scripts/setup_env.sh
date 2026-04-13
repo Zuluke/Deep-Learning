@@ -105,8 +105,28 @@ mkdir -p "$CARGO_HOME"
 
 cargo build --release --manifest-path "$PROJECT_ROOT/external/circuit-to-tensor/Cargo.toml"
 
+IMPORT_LOG="$(mktemp)"
+set +e
 PYTHONPATH="$PROJECT_ROOT/external${PYTHONPATH:+:$PYTHONPATH}" \
-  uv run --project "$PROJECT_ROOT" python -c "import alphatensor_quantum.src.demo.run_demo as run_demo; print(run_demo.__name__)"
+  uv run --project "$PROJECT_ROOT" python -c "import alphatensor_quantum.src.demo.run_demo as run_demo; print(run_demo.__name__)" \
+  >"$IMPORT_LOG" 2>&1
+IMPORT_STATUS=$?
+set -e
+
+if [[ "$IMPORT_STATUS" -ne 0 ]]; then
+  if [[ "$profile" == "cuda" ]] && grep -q "built using AVX instructions" "$IMPORT_LOG"; then
+    echo "Skipping login-node JAX import check for CUDA profile because this CPU lacks AVX support."
+    echo "GPU-node preflight in the Slurm job will validate the JAX runtime."
+  else
+    cat "$IMPORT_LOG" >&2
+    rm -f "$IMPORT_LOG"
+    exit "$IMPORT_STATUS"
+  fi
+else
+  cat "$IMPORT_LOG"
+fi
+
+rm -f "$IMPORT_LOG"
 
 PROJECT_ROOT="$PROJECT_ROOT" BOOTSTRAP_PROFILE="$profile" PYTHONPATH="$PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
   uv run --project "$PROJECT_ROOT" python - <<'PY'
