@@ -34,9 +34,17 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROFILE_GROUP="demo-$profile"
 RUSTUP_SH_URL="https://sh.rustup.rs"
 UV_INSTALLER_URL="https://astral.sh/uv/install.sh"
+
+case "$profile" in
+  cpu)
+    PROFILE_GROUP="demo-cpu"
+    ;;
+  cuda)
+    PROFILE_GROUP="demo-cuda12"
+    ;;
+esac
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
