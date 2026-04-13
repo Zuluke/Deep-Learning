@@ -13,14 +13,20 @@ set -euo pipefail
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 PROJECT_ROOT="$HOME/Deep-Learning/project"
+PYTHON_BIN="$PROJECT_ROOT/.venv/bin/python"
 
 cd "$PROJECT_ROOT"
 mkdir -p results/logs/slurm results/logs/demo
 
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "Expected virtualenv interpreter at $PYTHON_BIN" >&2
+  exit 1
+fi
+
 nvidia-smi
 
 echo "[preflight] starting jax gpu check"
-uv run --project . --no-sync --frozen --offline python - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import json
 import jax
 
@@ -34,7 +40,7 @@ if payload["backend"] != "gpu":
 PY
 
 echo "[train] starting quick MOD_5_4 run"
-uv run --project . --no-sync --frozen --offline python scripts/run_demo_train.py \
+"$PYTHON_BIN" scripts/run_demo_train.py \
   --mode quick \
   --profile cuda \
   --use-gadgets on \
