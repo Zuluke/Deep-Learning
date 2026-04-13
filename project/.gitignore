@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.pytest_cache/
+results/
+scripts/__pycache__/
+external/circuit-to-tensor/target/

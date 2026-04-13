@@ -1,0 +1,824 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{array,booktabs,longtable,tabularx}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{verbatim}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue,
+  pdftitle={Avaliação prática de AlphaTensor-Quantum em escala reduzida com nova métrica estrutural Clifford--não-Clifford e comparação contra baselines de ZX-calculus},
+  pdfauthor={Plano técnico para projeto acadêmico}
+}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlist[itemize]{noitemsep,topsep=3pt}
+\setlist[enumerate]{noitemsep,topsep=3pt}
+
+\title{Avaliação prática de AlphaTensor-Quantum em escala reduzida com nova métrica estrutural Clifford--não-Clifford e comparação contra baselines de ZX-calculus}
+\author{Plano técnico para projeto acadêmico}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\bigskip
+
+\section{Problem Statement}
+
+Este projeto será executado como um \textbf{estudo experimental de otimização de circuitos quânticos com AlphaTensor-Quantum em escala reduzida, com introdução e validação de uma métrica de separação/estrutura Clifford--não-Clifford}. O objetivo não é reproduzir integralmente o treinamento do artigo-base, mas sim construir um pipeline público, verificável e executável que una compilação de circuitos, ressíntese, simplificação por ZX-calculus, uso criterioso do demo público do AlphaTensor-Quantum e análise quantitativa baseada em métricas estruturais.
+
+A decisão central do projeto é metodológica: o repositório público do AlphaTensor-Quantum será tratado como uma \textbf{implementação pública parcial}. O componente executável de treino é o \texttt{src/demo}; o diretório \texttt{/src} não deve ser assumido como pipeline completo reproduzível de ponta a ponta; e o diretório \texttt{/decompositions} deve ser tratado como fonte de resultados públicos reaproveitáveis, não como prova de reprodução interna do treinamento do artigo. Por isso, o projeto é formalmente redefinido como \textbf{reprodução parcial + extensão metodológica + avaliação rigorosa}.
+
+A pergunta central de pesquisa é a seguinte: \textit{uma família de métricas de estrutura Clifford--não-Clifford consegue explicar, ao menos parcialmente, o ganho de otimização em T-count obtido por diferentes métodos públicos, em especial PyZX, QuiZX+\texttt{circuit-to-tensor} e o demo do AlphaTensor-Quantum em pequena escala?}
+
+O projeto será considerado bem-sucedido se, ao final, cumprir simultaneamente os cinco critérios a seguir:
+\begin{enumerate}
+  \item o demo público do AlphaTensor-Quantum rodar sem modificação estrutural em seus alvos originais;
+  \item o pipeline \texttt{compile/resynth/verify} do \texttt{circuit-to-tensor} funcionar ponta a ponta em pelo menos um circuito de controle;
+  \item a família de métricas proposta for calculada para todos os circuitos da amostra final;
+  \item pelo menos um experimento de RL adaptado na Faixa S for concluído com exportação de decomposição;
+  \item a tabela final incluir entre $8$ e $15$ circuitos viáveis, ou, caso a disponibilidade pública imponha um conjunto menor, todos os circuitos viáveis acompanhados de justificativa técnica.
+\end{enumerate}
+
+\section{Scope and Non-Scope}
+
+\subsection*{Escopo obrigatório}
+
+O escopo obrigatório do projeto é fechado e executável:
+\begin{itemize}
+  \item reproduzir apenas o que é publicamente e realisticamente reexecutável;
+  \item rodar o demo público do \texttt{alphatensor\_quantum};
+  \item montar e validar o pipeline \texttt{compile/resynth/verify} via \texttt{circuit-to-tensor};
+  \item rodar baselines com PyZX;
+  \item aproveitar decomposições públicas do diretório \texttt{/decompositions} sempre que houver correspondência com circuitos do benchmark;
+  \item implementar e medir uma \textbf{família} de métricas de estrutura Clifford--não-Clifford;
+  \item produzir comparação quantitativa entre: circuito original, PyZX, QuiZX+\texttt{compile}, demo RL e decomposições públicas quando disponíveis.
+\end{itemize}
+
+\subsection*{Não-escopo obrigatório}
+
+Os itens abaixo ficam explicitamente fora do escopo:
+\begin{itemize}
+  \item reproduzir integralmente todos os números do artigo-base;
+  \item treinar agentes gerais no regime computacional do paper;
+  \item cobrir de maneira homogênea todos os circuitos grandes do benchmark \textit{op-T-mize};
+  \item reconstruir infraestrutura interna da DeepMind;
+  \item escrever o relatório como se o repositório público fosse equivalente ao stack interno usado no paper;
+  \item depender de qualquer resultado privado, não reprodutível ou inacessível publicamente.
+\end{itemize}
+
+\subsection*{Partição operacional do benchmark}
+
+O benchmark será particionado depois da etapa de compilação tensorial, usando o tamanho do tensor compilado como critério operacional:
+
+\begin{itemize}
+  \item \textbf{Faixa S} (core com treino RL permitido): alvos do demo público e circuitos adicionais cujo tensor compilado tenha tamanho $\leq 8$. Nesta faixa é permitido adaptar ou treinar o demo.
+  \item \textbf{Faixa M} (core sem RL novo obrigatório): circuitos com tensores compilados de tamanho entre $9$ e $20$. Nesta faixa o foco será \texttt{compile}, \texttt{resynth}, PyZX, QuiZX, decomposições públicas e métricas estruturais.
+  \item \textbf{Faixa L} (fora do core deliverable): circuitos com tensores compilados de tamanho $>20$. Esta faixa será tratada apenas como exploração opcional, apêndice ou análise estrutural; ela não é dependência para o sucesso do projeto.
+\end{itemize}
+
+\subsection*{Amostra final e regra de seleção}
+
+A amostra final seguirá as regras abaixo:
+\begin{enumerate}
+  \item compilar todos os circuitos públicos disponíveis do benchmark selecionado;
+  \item atribuir cada circuito à Faixa S, M ou L;
+  \item incluir \textbf{todos} os circuitos da Faixa S;
+  \item incluir até \textbf{10} circuitos da Faixa M, escolhidos por amostragem estratificada em três níveis de T-count inicial (baixo, médio e alto) e, quando possível, cobrindo famílias distintas de aplicações;
+  \item não incluir circuitos da Faixa L na avaliação principal, salvo como estudo opcional claramente marcado.
+\end{enumerate}
+
+Essa decisão fecha o escopo e impede que o projeto se torne inviável por tentar escalar treino RL para casos que pertencem ao regime computacional do artigo, e não ao regime computacional disponível neste projeto.
+
+\section{Scientific Motivation}
+
+A motivação científica do projeto é dupla.
+
+Primeiro, \textbf{T-gates são caros} em computação quântica tolerante a falhas, de modo que reduzir T-count e T-depth continua sendo um objetivo central em compilação quântica. O AlphaTensor-Quantum é interessante porque conecta esse problema à decomposição tensorial e a deep reinforcement learning, ao invés de tratá-lo apenas como simplificação simbólica local. Isso o torna um excelente ponto de partida para um projeto de Deep Learning que também tenha relevância em otimização quântica.
+
+Segundo, a utilidade de um método de otimização não deve ser medida apenas pelo menor T-count final. Em prática experimental, há três questões adicionais:
+\begin{itemize}
+  \item \textbf{quando} um método melhora mais que outro;
+  \item \textbf{em quais tipos de circuitos} ele tende a funcionar melhor;
+  \item \textbf{quais propriedades estruturais} do circuito estão associadas ao ganho obtido.
+\end{itemize}
+
+É exatamente nesse ponto que a nova contribuição do projeto se encaixa. Em vez de propor um novo grande modelo, o projeto propõe uma \textbf{camada de análise estrutural}: uma família de métricas que capture a composição Clifford/T do circuito, sua segmentação em blocos e sua organização relativa. O valor científico esperado não está condicionado a uma correlação forte; mesmo uma correlação fraca, nula ou instável é informativa, pois ajuda a delimitar o que o demo público consegue ou não capturar.
+
+Do ponto de vista metodológico, o projeto é forte porque combina três virtudes:
+\begin{enumerate}
+  \item \textbf{reprodução}: o trabalho parte de código público e tenta reexecutá-lo no limite do que é realisticamente possível;
+  \item \textbf{extensão}: a proposta adiciona uma família de métricas novas e um protocolo experimental comparativo;
+  \item \textbf{controle}: o escopo é fechado por faixas de tensor, orçamento computacional e critérios explícitos de sucesso.
+\end{enumerate}
+
+\section{Public Repositories and Their Roles}
+
+\subsection*{\texttt{google-deepmind/alphatensor\_quantum}}
+
+Este repositório será usado para quatro finalidades concretas:
+\begin{itemize}
+  \item entender a formulação \textit{TensorGame}/RL do método;
+  \item rodar o \texttt{src/demo} como núcleo treinável em pequena escala;
+  \item reaproveitar o diretório \texttt{/decompositions} como fonte pública de decomposições já obtidas;
+  \item extrair uma configuração pública de referência para batch, número de simulações MCTS, frequência de avaliação e comprimento de treino do demo.
+\end{itemize}
+
+A regra operacional do projeto é simples: \textbf{o demo será tratado como o único componente público de treino diretamente executável}, enquanto \texttt{/decompositions} será tratado como replay público de resultados, e não como treino reproduzido pelo projeto.
+
+\subsection*{\texttt{tlaakkonen/circuit-to-tensor}}
+
+Este repositório será o eixo da integração entre circuitos e tensores. Seu papel é:
+\begin{itemize}
+  \item compilar circuitos Clifford+T em tensores binários simétricos;
+  \item ressintetizar circuitos a partir de decomposições;
+  \item verificar equivalência funcional quando a verificação for viável;
+  \item permitir pré-otimização com QuiZX;
+  \item servir como ponto de integração entre QASM, tensores, decomposições públicas e circuitos finais.
+\end{itemize}
+
+No projeto, \texttt{compile} e \texttt{resynth} são obrigatórios; \texttt{verify} é obrigatório apenas sob orçamento temporal e com possibilidade de status inconclusivo documentado.
+
+\subsection*{\texttt{zxcalc/pyzx}}
+
+PyZX será o \textbf{baseline público principal} de simplificação simbólica. O repositório será usado para:
+\begin{itemize}
+  \item ler circuitos em QASM;
+  \item construir ZX-diagrams;
+  \item executar simplificação e extração de circuitos;
+  \item gerar um baseline competitivo sem RL;
+  \item exportar circuitos otimizados e, quando conveniente, figuras ou artefatos visuais para o relatório.
+\end{itemize}
+
+PyZX não será usado apenas como ferramenta de simplificação; ele também servirá de apoio para extração de estatísticas estruturais e inspeção manual de casos qualitativos.
+
+\subsection*{\textit{op-T-mize} da PennyLane}
+
+O benchmark principal do projeto será o \textit{op-T-mize}. Seu papel é:
+\begin{itemize}
+  \item fornecer um conjunto público de circuitos de referência para T-count optimization;
+  \item garantir diversidade suficiente de tamanho e família de circuitos;
+  \item permitir comparação com uma base já reconhecida em trabalhos públicos da área;
+  \item permitir filtragem por faixas operacionais compatíveis com o orçamento do projeto.
+\end{itemize}
+
+A amostra final será derivada do \textit{op-T-mize}, mas o projeto não depende de cobrir os 31 circuitos de forma homogênea com treino RL.
+
+\section{Theory}
+
+\subsection*{Clifford+T}
+
+No formalismo Clifford+T, as portas de Clifford podem ser geradas por combinações de portas como Hadamard ($H$), phase gate ($S$) e CNOT, enquanto a porta $T$ adiciona a não-Cliffordidade necessária para universalidade aproximada. Em computação tolerante a falhas, Clifford gates são relativamente baratas do ponto de vista lógico, enquanto gates do tipo $T$ costumam ser associadas a custos bem maiores de injeção e destilação de estados mágicos. Por isso, otimizar circuitos Clifford+T costuma significar, em primeiro lugar, reduzir o uso efetivo de $T$-gates.
+
+\subsection*{T-count / T-depth}
+
+Duas medidas são centrais:
+\begin{itemize}
+  \item \textbf{T-count}: número total de gates $T$ e $T^\dagger$ no circuito;
+  \item \textbf{T-depth}: número de camadas sequenciais de gates $T/T^\dagger$ que não podem ser paralelizadas sob o critério de conflito em qubits.
+\end{itemize}
+
+T-count mede consumo total de gates caros. T-depth mede o grau de serialização do custo não-Clifford. Um circuito pode ter o mesmo T-count de outro e ainda assim possuir T-depth muito maior, o que torna a análise estrutural importante.
+
+\subsection*{Signature tensors}
+
+O AlphaTensor-Quantum reformula a otimização de T-count em termos de um \textbf{tensor de assinatura} binário e simétrico. Em circuitos já reduzidos a uma parte diagonal do tipo CNOT+T, o circuito pode ser representado por um tensor que codifica a estrutura algébrica associada à parte não-Clifford relevante para a otimização.
+
+Para circuitos gerais, a ideia prática é separar o circuito em uma parte diagonal compatível com a representação tensorial e uma parte não diagonal Clifford que permanece como contexto de mudança de base. Essa separação é uma das razões pelas quais faz sentido estudar uma métrica estrutural Clifford--não-Clifford em paralelo ao ganho de T-count.
+
+\subsection*{Waring decomposition}
+
+Uma decomposição do tensor de assinatura em soma de fatores simétricos sobre o corpo binário pode ser escrita, em forma esquemática, como
+\[
+\mathcal{T} = \sum_{r=1}^{R} u^{(r)} \otimes u^{(r)} \otimes u^{(r)} \pmod 2.
+\]
+O número de fatores $R$ está diretamente ligado ao custo não-Clifford da realização correspondente. Assim, \textbf{encontrar uma decomposição curta} equivale a encontrar uma realização com T-count reduzido, ao menos até equivalência por gates de Clifford e eventuais esquemas de gadgetização.
+
+\subsection*{TensorGame / RL / MCTS}
+
+O AlphaTensor-Quantum transforma a busca por decomposições curtas em um jogo de decisão sequencial. O estado contém um tensor residual e histórico suficiente das jogadas anteriores; cada ação seleciona um novo fator candidato; a transição atualiza o tensor residual; e a recompensa penaliza o uso de muitos fatores, favorecendo decomposições curtas.
+
+No demo público, essa lógica é acoplada a uma versão simplificada em máquina única usando MCTS e uma rede de política/valor. Para este projeto, essa distinção é crucial: \textbf{o paper original e o demo público não devem ser confundidos}. O demo é uma prova de conceito pública e treinável em pequena escala; o projeto usará essa propriedade deliberadamente, sem extrapolar claims.
+
+\subsection*{Gadgets}
+
+Gadgetização é o uso de padrões estruturados que trocam uma implementação direta em Clifford+T por outra com menor custo equivalente de T-gates, frequentemente ao preço de ancillas, medições ou circuitos auxiliares. No ecossistema deste projeto, gadgets aparecem em dois lugares:
+\begin{itemize}
+  \item no artigo e no demo, como parte do sinal de recompensa e do problema de otimização;
+  \item no \texttt{circuit-to-tensor}, como opção de ressíntese que ativa gadgetização na reconstrução do circuito.
+\end{itemize}
+
+Isso exige que o projeto reporte sempre, quando necessário, tanto o circuito produzido quanto o critério de comparação adotado: T-count direto do circuito expandido ou T-count equivalente informado pelo pipeline.
+
+\subsection*{ZX-calculus}
+
+ZX-calculus é uma linguagem gráfica para raciocínio e reescrita de circuitos quânticos via diagramas ZX. Na prática, ela oferece um baseline forte por três motivos:
+\begin{enumerate}
+  \item representa circuitos em uma forma algébrica flexível;
+  \item permite reescritas globais que não são evidentes em uma representação gate-by-gate;
+  \item possibilita extrair novamente um circuito simplificado.
+\end{enumerate}
+
+PyZX materializa essa abordagem em software público e maduro, tornando-se o baseline natural do projeto.
+
+\subsection*{Motivação para a métrica Clifford--não-Clifford}
+
+T-count sozinho não captura a organização do circuito. Dois circuitos com o mesmo T-count podem diferir muito em:
+\begin{itemize}
+  \item quantos blocos não-Clifford aparecem;
+  \item quão concentrados ou espalhados estão os gates $T$;
+  \item quanto contexto Clifford existe entre esses blocos;
+  \item quão serializado está o custo não-Clifford.
+\end{itemize}
+
+A hipótese de trabalho deste projeto é que uma \textbf{família operacional de métricas estruturais} pode fornecer sinais preditivos sobre:
+\begin{itemize}
+  \item ganho absoluto de T-count;
+  \item ganho percentual;
+  \item diferenças entre métodos públicos;
+  \item estabilidade estrutural antes e depois da ressíntese.
+\end{itemize}
+
+Essa hipótese será testada, não presumida.
+
+\section{Available Compute and Practical Constraints}
+
+O projeto dispõe de \textbf{duas GPUs NVIDIA A100}. Esse recurso é forte para um projeto acadêmico, mas é muito inferior ao regime computacional reportado no artigo-base. Portanto, a política de uso computacional será a seguinte:
+
+\subsection*{Alocação de recursos}
+
+\begin{itemize}
+  \item \textbf{GPU A}: prioritariamente dedicada a treino do demo público e pequenas ablações associadas.
+  \item \textbf{GPU B}: dedicada a reruns, segunda semente quando realmente necessária, inferência auxiliar, pós-processamento JAX e experimentos controlados de adaptação do demo.
+  \item \textbf{CPU}: usada para \texttt{compile}, \texttt{resynth}, parsing, normalização de QASM, PyZX, agregação de resultados, geração de tabelas e scripts auxiliares em Rust e Python.
+\end{itemize}
+
+\subsection*{Caps obrigatórios de execução}
+
+Para impedir que o escopo se expanda de forma irrealista, o projeto adotará os seguintes limites:
+\begin{itemize}
+  \item no máximo \textbf{8 jobs de treino RL} em toda a execução do projeto;
+  \item no máximo \textbf{2 sementes} para qualquer configuração RL incluída na tabela principal;
+  \item no máximo \textbf{12 horas} de wall-clock por run RL adaptado;
+  \item no máximo \textbf{6 horas} de wall-clock por run de validação do demo padrão;
+  \item no máximo \textbf{20 minutos} por circuito para PyZX na etapa principal;
+  \item no máximo \textbf{30 minutos} por circuito de Faixa S e \textbf{60 minutos} por circuito de Faixa M para \texttt{verify}; acima disso, o status será marcado como \texttt{timeout} ou \texttt{inconclusive};
+  \item a Faixa L não terá verificação obrigatória.
+\end{itemize}
+
+\subsection*{Configuração inicial do demo}
+
+A configuração inicial do demo seguirá a configuração pública do repositório como ponto de partida: batch size $128$, $80$ simulações MCTS por passo, $50\,000$ passos de treino e avaliação a cada $50$ passos. Essa configuração será tratada como \textbf{baseline operacional pública}, não como hiperparâmetro ótimo universal. Se a execução for instável ou lenta demais, o primeiro recuo permitido será reduzir MCTS de $80$ para $40$, mantendo o restante fixo. Não será feita busca ampla de hiperparâmetros.
+
+\subsection*{Early stopping e fallback}
+
+As regras de early stopping serão:
+\begin{itemize}
+  \item após os primeiros $10\,000$ passos, encerrar um run RL se o melhor T-count não melhorar por $5\,000$ passos consecutivos;
+  \item encerrar imediatamente qualquer run que exceda o cap de wall-clock;
+  \item em caso de falha repetida na adaptação RL para um circuito da Faixa S, usar apenas PyZX, QuiZX+\texttt{compile} e, se houver, decomposições públicas.
+\end{itemize}
+
+\subsection*{Princípio de honestidade computacional}
+
+O documento final e todos os resultados deverão diferenciar explicitamente:
+\begin{itemize}
+  \item \textbf{o que o paper fez} em regime de TPU e larga escala;
+  \item \textbf{o que este projeto executará} com duas A100 e código público parcial.
+\end{itemize}
+
+\section{Execution Plan}
+
+\subsection*{Estrutura sugerida do repositório local}
+
+O projeto deverá ser organizado em um repositório local com a seguinte estrutura:
+
+\begin{verbatim}
+project/
+  external/
+    alphatensor_quantum/
+    circuit-to-tensor/
+    pyzx/
+  configs/
+    demo/
+    metrics/
+    experiments/
+  data/
+    raw/
+      op_t_mize/
+      demo_targets/
+    normalized_qasm/
+    compiled/
+    decompositions_public/
+    decompositions_demo/
+    pyzx_outputs/
+    resynth_outputs/
+    verification/
+  logs/
+    compile/
+    pyzx/
+    demo/
+    verify/
+  results/
+    csv/
+    figures/
+    tables/
+  reports/
+  scripts/
+\end{verbatim}
+
+\subsection*{Ambientes e dependências}
+
+O plano adota duas pilhas principais:
+\begin{itemize}
+  \item \textbf{Python 3.11}: demo JAX/MCTX, PyZX, scripts de análise, agregação e geração de tabelas;
+  \item \textbf{Rust estável}: \texttt{circuit-to-tensor}.
+\end{itemize}
+
+Dependências mínimas recomendadas:
+\begin{itemize}
+  \item JAX com backend GPU compatível com o ambiente CUDA do cluster;
+  \item dependências do \texttt{alphatensor\_quantum/src/demo/requirements.txt};
+  \item PyZX em versão estável recente;
+  \item PennyLane apenas para ingestão pública do benchmark, se isso facilitar o download;
+  \item Rust via \texttt{rustup};
+  \item \texttt{feynver} no \texttt{PATH} para verificação quando aplicável.
+\end{itemize}
+
+\subsection*{Scripts planejados}
+
+A execução será organizada pelos scripts da Tabela~\ref{tab:scripts}. Os nomes são parte do plano e devem ser mantidos para garantir rastreabilidade.
+
+\begin{table}[ht]
+\centering
+\caption{Scripts planejados e responsabilidade de cada um.}
+\label{tab:scripts}
+\begin{tabularx}{\textwidth}{>{\ttfamily}p{0.33\textwidth} Y}
+\toprule
+Script & Responsabilidade \\
+\midrule
+scripts/setup\_env.sh & Criar ambiente Python, instalar dependências do demo, instalar PyZX, instalar Rust e compilar \texttt{circuit-to-tensor}. \\
+scripts/download\_or\_prepare\_benchmarks.py & Obter os circuitos públicos do benchmark, normalizar nomes, montar catálogo inicial e metadados brutos. \\
+scripts/export\_qasm\_v2.py & Converter ou reexportar circuitos para OpenQASM v2 quando necessário. \\
+scripts/run\_pyzx\_baseline.py & Ler QASM, simplificar com PyZX, extrair circuito otimizado, salvar QASM final e estatísticas. \\
+scripts/run\_compile\_pipeline.sh & Executar \texttt{compile} com e sem QuiZX, armazenar tensores, matrizes, logs e saídas intermediárias. \\
+scripts/run\_resynth.sh & Executar \texttt{resynth} a partir de decomposições públicas ou exportadas pelo demo, com e sem gadgetização. \\
+scripts/run\_verify.sh & Executar verificação por \texttt{feynver} sob orçamento temporal. \\
+scripts/run\_demo\_train.py & Rodar o demo padrão e o demo adaptado na Faixa S. \\
+scripts/export\_best\_demo\_decompositions.py & Salvar a melhor sequência de fatores encontrada pelo demo em formato \texttt{.npy}. \\
+scripts/compute\_metrics.py & Calcular T-count, T-depth, métricas estruturais e tempos por método e por circuito. \\
+scripts/aggregate\_results.py & Unificar resultados em CSV único, validar chaves e produzir tabela canônica por circuito/método. \\
+scripts/make\_tables.py & Gerar tabelas finais em CSV e, opcionalmente, em \LaTeX. \\
+scripts/plot\_results.py & Gerar gráficos de dispersão, correlações e comparações por método. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{Etapa 1: ingestão de benchmarks}
+
+A primeira execução prática será:
+\begin{enumerate}
+  \item obter os circuitos públicos do \textit{op-T-mize};
+  \item garantir representação em OpenQASM v2;
+  \item normalizar nomes, número de qubits e estatísticas básicas;
+  \item armazenar um catálogo em CSV com colunas mínimas:
+  \[
+  \texttt{circuit\_id, source, n\_qubits, raw\_gate\_count, qasm\_path.}
+  \]
+\end{enumerate}
+
+Regra de exclusão: qualquer circuito que, após \textbf{duas tentativas determinísticas de normalização}, ainda não puder ser exportado para OpenQASM v2 ficará fora do core deliverable, mas será listado em apêndice como \texttt{not-normalized}.
+
+\subsection*{Etapa 2: baselines de PyZX}
+
+Para cada circuito em QASM v2:
+\begin{enumerate}
+  \item carregar no PyZX;
+  \item converter para representação de grafo;
+  \item aplicar rotina de simplificação;
+  \item extrair circuito otimizado;
+  \item salvar o QASM otimizado;
+  \item calcular T-count, T-depth, tempo de execução e status.
+\end{enumerate}
+
+Regra de falha: se a extração do circuito falhar, o circuito não será usado para comparação PyZX, mas continuará elegível para os demais métodos.
+
+\subsection*{Etapa 3: compilação tensorial}
+
+Cada circuito QASM v2 será processado de duas formas:
+\begin{enumerate}
+  \item \textbf{sem QuiZX}: \texttt{compile} padrão;
+  \item \textbf{com QuiZX}: \texttt{compile -z}.
+\end{enumerate}
+
+Em ambos os casos, a emissão mínima obrigatória será:
+\begin{itemize}
+  \item \texttt{tensor};
+  \item \texttt{matrix};
+  \item \texttt{circuit-qasm};
+  \item \texttt{log}.
+\end{itemize}
+
+A verificação será executada separadamente por \texttt{scripts/run\_verify.sh}, para permitir orçamentos distintos e evitar que a compilação principal fique bloqueada.
+
+\subsection*{Etapa 4: partição por faixas}
+
+Após a compilação, cada circuito será classificado pela dimensão do tensor compilado:
+\begin{itemize}
+  \item Faixa S: tamanho $\leq 8$;
+  \item Faixa M: tamanho entre $9$ e $20$;
+  \item Faixa L: tamanho $>20$.
+\end{itemize}
+
+O script \texttt{scripts/aggregate\_results.py} deve gerar uma tabela \texttt{circuit\_inventory.csv} contendo:
+\[
+\texttt{circuit\_id, n\_qubits, tensor\_size, faixa, compile\_status, pyzx\_status.}
+\]
+
+\subsection*{Etapa 5: uso de decomposições públicas}
+
+O diretório \texttt{/decompositions} do repositório \texttt{alphatensor\_quantum} contém, para cada nome de circuito suportado, até dez decomposições não equivalentes em arranjos booleanos. O projeto usará essas decomposições apenas como \textbf{replay público}.
+
+Procedimento:
+\begin{enumerate}
+  \item mapear nomes de circuito entre benchmark local e arquivo de decomposições;
+  \item quando houver correspondência exata, extrair no máximo as \textbf{3 primeiras} decomposições para ressíntese;
+  \item executar \texttt{resynth} com e sem gadgetização;
+  \item verificar quando o orçamento permitir;
+  \item manter o melhor resultado validado ou, na ausência de validação, o melhor resultado com status claramente marcado.
+\end{enumerate}
+
+\subsection*{Etapa 6: demo padrão}
+
+O demo padrão deverá ser rodado \textbf{sem adaptação estrutural} para validar a infraestrutura pública. Os alvos padrão serão exatamente os do repositório público. O objetivo desta etapa não é produzir o melhor número do projeto, mas comprovar:
+\begin{itemize}
+  \item que o ambiente JAX/MCTX funciona;
+  \item que o log de treinamento é compreensível;
+  \item que o projeto consegue exportar decomposições e conectá-las ao \texttt{resynth}.
+\end{itemize}
+
+\subsection*{Etapa 7: demo adaptado na Faixa S}
+
+O demo adaptado será usado apenas na Faixa S. As decisões são:
+\begin{itemize}
+  \item agrupar circuitos por tamanho tensorial e afinidade temática quando possível;
+  \item no máximo \textbf{3 tensores por run} adaptado;
+  \item usar a configuração pública como baseline inicial;
+  \item realizar no máximo \textbf{2 sementes} por configuração selecionada;
+  \item exportar a melhor sequência de fatores assim que um novo melhor retorno for encontrado em episódio terminal.
+\end{itemize}
+
+Modificação obrigatória do demo: criar um mecanismo de logging que salve, para o melhor episódio terminal observado, a sequência de fatores em formato \texttt{.npy} compatível com o \texttt{resynth}. Essa modificação faz parte do projeto e deve ser documentada em apêndice metodológico.
+
+\subsection*{Etapa 8: ressíntese}
+
+A ressíntese será aplicada apenas quando existir decomposição:
+\begin{itemize}
+  \item decomposição pública proveniente de \texttt{/decompositions};
+  \item decomposição exportada pelo demo;
+  \item eventualmente, decomposição heurística adicional se for implementada dentro do orçamento e sem alterar o escopo central.
+\end{itemize}
+
+Para cada decomposição, executar:
+\begin{enumerate}
+  \item \texttt{resynth} sem gadgetização;
+  \item \texttt{resynth} com gadgetização, quando aplicável;
+  \item cálculo de métricas e verificação sob cap temporal.
+\end{enumerate}
+
+\subsection*{Etapa 9: verificação}
+
+A verificação com \texttt{feynver} será tratada como forte evidência de correção, mas não como requisito universal. Os status permitidos são:
+\begin{itemize}
+  \item \texttt{verified};
+  \item \texttt{timeout};
+  \item \texttt{inconclusive};
+  \item \texttt{not-run}.
+\end{itemize}
+
+A tabela final sempre exibirá o status de verificação, para impedir que circuitos não verificados sejam apresentados como equivalentes sem ressalva.
+
+\subsection*{Etapa 10: cálculo de métricas e agregação}
+
+Todos os circuitos comparados serão convertidos para uma base normalizada de portas, preferencialmente Clifford+T explícita. O arquivo canônico final deverá ter uma linha por par \texttt{(circuito, método)} e as colunas:
+\begin{verbatim}
+circuit_id, method, source, faixa, n_qubits, tensor_size,
+verify_status, runtime_sec,
+tcount_before, tcount_after, delta_t, rel_gain_t,
+tdepth_before, tdepth_after, delta_tdepth,
+rho_t, rho_w, n_clifford_blocks, n_nonclifford_blocks,
+avg_nonclifford_block_len, hadamard_boundary_density,
+tdepth_over_tcount
+\end{verbatim}
+
+\section{Experimental Matrix}
+
+\subsection*{Grupos de circuitos}
+
+\begin{table}[ht]
+\centering
+\caption{Grupos experimentais e papel de cada grupo.}
+\label{tab:groups}
+\begin{tabularx}{\textwidth}{p{0.15\textwidth} p{0.22\textwidth} Y Y}
+\toprule
+Grupo & Regra de inclusão & Métodos obrigatórios & Papel no projeto \\
+\midrule
+Demo-controle & Alvos originais do demo público & Demo padrão, PyZX, métricas, ressíntese quando houver decomposição exportada & Validar infraestrutura pública e comportamento base do demo \\
+Faixa S & Tensor compilado $\leq 8$ & PyZX, QuiZX+\texttt{compile}, demo adaptado, métricas, ressíntese & Núcleo com treino RL permitido \\
+Faixa M & Tensor compilado entre $9$ e $20$ & PyZX, QuiZX+\texttt{compile}, decomposições públicas quando existirem, métricas & Núcleo comparativo sem depender de novo treino RL \\
+Faixa L & Tensor compilado $>20$ & Métricas e análise opcional; demais métodos apenas se o custo for baixo & Apêndice e delimitação de limite prático \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{Métodos comparados}
+
+\begin{table}[ht]
+\centering
+\caption{Métodos da matriz comparativa.}
+\label{tab:methods}
+\begin{tabularx}{\textwidth}{p{0.18\textwidth} p{0.12\textwidth} Y Y}
+\toprule
+Método & Treino novo & Saída principal & Papel analítico \\
+\midrule
+Original & Não & Circuito de referência & Ponto de partida para T-count, T-depth e métricas estruturais \\
+PyZX & Não & Circuito simplificado por ZX-calculus & Baseline público forte sem RL \\
+QuiZX+\texttt{compile} & Não & Circuito pré-otimizado e tensores compilados & Baseline tensorial sem treino novo \\
+Decomposição pública+\texttt{resynth} & Não & Circuito ressintetizado a partir de replay público & Comparação com resultados públicos do ecossistema AlphaTensor-Quantum \\
+Demo padrão & Sim, mas apenas no alvo público & Logs e decomposição exportada & Validação do componente treinável público \\
+Demo adaptado & Sim, restrito à Faixa S & Decomposição exportada e circuito ressintetizado & Estudo RL em pequena escala compatível com o projeto \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+
+\section{Metrics}
+
+\subsection*{Métricas de ganho}
+
+As métricas primárias de desempenho serão:
+\[
+\Delta T = T_{\text{antes}} - T_{\text{depois}},
+\qquad
+g_T = \frac{T_{\text{antes}} - T_{\text{depois}}}{\max(T_{\text{antes}},1)}.
+\]
+De forma análoga, serão calculadas:
+\[
+\Delta D_T = D_{T,\text{antes}} - D_{T,\text{depois}},
+\]
+onde $D_T$ é a T-depth.
+
+\subsection*{Métrica 1: fração não-Clifford}
+
+A primeira camada da família de métricas é a fração não-Clifford:
+\[
+\rho_T = \frac{N_T}{N_{\text{total}}},
+\]
+onde $N_T$ conta portas $T$ e $T^\dagger$, e $N_{\text{total}}$ conta todas as portas na forma normalizada de comparação.
+
+A variante ponderada por custo será
+\[
+\rho_w^{(\lambda)} = \frac{\lambda N_T}{N_C + \lambda N_T},
+\]
+onde $N_C$ é o número de portas Clifford na representação normalizada. A análise principal usará $\lambda = 10$, enquanto a ablação testará $\lambda \in \{5,10,20\}$.
+
+Essa escolha é deliberada: evita assumir um custo físico exato dependente de arquitetura e, ao mesmo tempo, preserva a ideia de que T-gates são significativamente mais caros que gates Clifford.
+
+\subsection*{Métrica 2: estrutura de separação}
+
+A segunda camada da família mede a estrutura de segmentação. Após normalização do circuito para uma sequência linear de portas em base Clifford+T:
+\begin{itemize}
+  \item define-se \textbf{bloco Clifford} como um segmento maximal de portas do conjunto Clifford;
+  \item define-se \textbf{bloco não-Clifford} como um segmento maximal de portas do conjunto $\{T,T^\dagger\}$.
+\end{itemize}
+
+As métricas estruturais obrigatórias serão:
+\begin{itemize}
+  \item $B_C$: número de blocos Clifford;
+  \item $B_{NC}$: número de blocos não-Clifford;
+  \item $\bar{\ell}_{NC}$: comprimento médio dos blocos não-Clifford;
+  \item $H_{\partial}$: densidade de Hadamard nas fronteiras entre blocos Clifford e não-Clifford;
+  \item T-count;
+  \item T-depth;
+  \item razão
+  \[
+  \eta_T = \frac{D_T}{\max(T,1)}.
+  \]
+\end{itemize}
+
+A densidade de Hadamard na fronteira será definida por
+\[
+H_{\partial} = \frac{N_H^{(\partial)}}{\max(B_C + B_{NC} - 1,1)},
+\]
+onde $N_H^{(\partial)}$ conta gates $H$ a uma distância de até uma porta de uma fronteira entre bloco Clifford e bloco não-Clifford. A janela de fronteira $w=1$ será a definição principal; a ablação testará $w=2$.
+
+\subsection*{Normalização de portas}
+
+Para cálculo das métricas, todos os circuitos serão convertidos, sempre que possível, para uma base comparável que explicite:
+\[
+\{H, S, S^\dagger, X, Y, Z, \mathrm{CNOT}, T, T^\dagger\}.
+\]
+Se um método produzir portas compostas, a regra será:
+\begin{enumerate}
+  \item tentar expandir para Clifford+T canônico;
+  \item se a expansão não for suportada pelo pipeline público, registrar o circuito apenas com métricas disponíveis e marcar a ausência de comparabilidade estrutural total.
+\end{enumerate}
+
+\subsection*{Perguntas experimentais obrigatórias}
+
+A avaliação quantitativa deverá responder às cinco perguntas abaixo:
+\begin{enumerate}
+  \item A métrica prevê ganho absoluto de T-count?
+  \item A métrica prevê ganho percentual?
+  \item PyZX e AlphaTensor-Quantum melhoram os mesmos circuitos?
+  \item Há circuitos em que o baseline ZX vence o demo RL?
+  \item A métrica é estável antes e depois da ressíntese?
+\end{enumerate}
+
+\subsection*{Procedimento estatístico}
+
+O procedimento estatístico será fechado e simples:
+\begin{itemize}
+  \item correlação de \textbf{Spearman} como análise primária entre cada métrica estrutural e os ganhos $\Delta T$ e $g_T$;
+  \item correlação de \textbf{Pearson} como análise secundária;
+  \item intervalos de confiança por bootstrap com $1000$ reamostragens;
+  \item gráficos de dispersão por método para inspeção qualitativa;
+  \item sem ``p-hacking'': o foco será tamanho de efeito, estabilidade do sinal e interpretação metodológica.
+\end{itemize}
+
+\section{Ablations}
+
+As ablações serão pequenas, controladas e limitadas pelo orçamento computacional. O projeto incluirá obrigatoriamente as seguintes ablações:
+
+\begin{enumerate}
+  \item \textbf{Com e sem gadgets}: executar demo padrão e, quando possível, demo adaptado e \texttt{resynth} com gadgetização ligada e desligada.
+  \item \textbf{Com e sem pré-otimização QuiZX}: para todos os circuitos da amostra final, comparar \texttt{compile} padrão versus \texttt{compile -z}.
+  \item \textbf{Com diferentes definições da métrica}: variar $\lambda \in \{5,10,20\}$ em $\rho_w^{(\lambda)}$ e usar janela de fronteira $w \in \{1,2\}$ em $H_{\partial}$.
+  \item \textbf{Com e sem decomposições públicas}: em circuitos com correspondência pública, comparar a tabela final incluindo ou removendo o replay de \texttt{/decompositions}.
+  \item \textbf{Demo padrão versus demo levemente adaptado}: comparar o comportamento do demo nos alvos originais e em um conjunto pequeno da Faixa S.
+\end{enumerate}
+
+Escopo das ablações:
+\begin{itemize}
+  \item as ablações de gadgetização e demo adaptado serão restritas a no máximo \textbf{2 circuitos de controle} e \textbf{2 circuitos da Faixa S};
+  \item a ablação de QuiZX será aplicada em toda a amostra final, pois não exige treino novo;
+  \item a ablação de métrica será aplicada a todos os circuitos da amostra final, pois é computacionalmente barata.
+\end{itemize}
+
+\section{Risks and Mitigations}
+
+\begin{longtable}{p{0.21\textwidth} p{0.18\textwidth} p{0.26\textwidth} p{0.25\textwidth}}
+\caption{Riscos principais e mitigação.}
+\label{tab:risks}\\
+\toprule
+Risco & Impacto & Mitigação & Fallback \\
+\midrule
+\endfirsthead
+\toprule
+Risco & Impacto & Mitigação & Fallback \\
+\midrule
+\endhead
+Demo não generaliza bem & O RL pequeno não melhora circuitos novos de Faixa S & Limitar claims; tratar RL como prova de conceito; manter demo padrão como controle obrigatório & Basear conclusão comparativa em PyZX, QuiZX+\texttt{compile} e decomposições públicas \\
+Conversão para tensor falha & Parte do benchmark não entra no pipeline tensorial & Exigir OpenQASM v2; normalização determinística; registrar exclusões com razão técnica & Trabalhar apenas com subconjunto viável e documentar cobertura efetiva \\
+Verificação lenta ou inconclusiva & Dificuldade em afirmar equivalência formal de todos os casos & Caps de tempo; status explícitos \texttt{verified}/\texttt{timeout}/\texttt{inconclusive} & Relatar equivalência apenas quando verificada; manter demais casos como candidatos não verificados \\
+Métrica não correlaciona com ganho & A principal hipótese exploratória pode falhar & Definir família de métricas, não uma única; usar análise estatística transparente & Tratar resultado negativo como achado metodológico legítimo \\
+Custo computacional alto & RL e verificação consumirem o cronograma & Wall-clock caps, early stopping, limite de 8 runs RL, foco em Faixa S/M & Encerrar RL adaptado cedo e reforçar análise com replay público \\
+Poucos circuitos entram na Faixa S & RL adaptado perde massa experimental & Manter demo-controle e usar toda Faixa S viável, ainda que pequena & Redefinir RL como estudo de caso e concentrar comparação ampla na Faixa M \\
+PyZX falha na extração em parte dos casos & Baseline incompleto & Separar falha de leitura, simplificação e extração; manter logs & Comparar apenas nos circuitos onde PyZX produz circuito final \\
+Mapeamento de nomes nas decomposições públicas é ambíguo & Risco de replay incorreto & Exigir nome exato ou checagem adicional por dimensão e estatísticas do tensor & Se não houver correspondência inequívoca, não usar aquela decomposição \\
+\bottomrule
+\end{longtable}
+
+\section{Deliverables}
+
+Ao final do projeto, os entregáveis obrigatórios serão:
+
+\begin{enumerate}
+  \item \textbf{código organizado} em repositório único, com scripts nomeados conforme a Tabela~\ref{tab:scripts};
+  \item \textbf{arquivo de ambiente} (\texttt{requirements.txt}, \texttt{environment.yml} ou equivalente) e instruções de reprodução;
+  \item \textbf{CSVs de métricas} com schema canônico por circuito e por método;
+  \item \textbf{tabelas finais} em formato CSV e, opcionalmente, \LaTeX;
+  \item \textbf{gráficos} de comparação por método e correlação métrica--ganho;
+  \item \textbf{apêndice metodológico} descrevendo adaptações do demo, normalização de QASM e política de verificação;
+  \item \textbf{relatório final} com resultados, limitações e interpretação;
+  \item \textbf{checklist de reprodutibilidade} contendo:
+  \begin{itemize}
+    \item hashes de commit dos repositórios externos;
+    \item versões de Python, JAX, PyZX e Rust;
+    \item flags usadas em \texttt{compile}, \texttt{resynth} e demo;
+    \item orçamento temporal real por bloco;
+    \item status de verificação de cada circuito final.
+  \end{itemize}
+\end{enumerate}
+
+Arquivos mínimos esperados no diretório \texttt{results/}:
+\begin{itemize}
+  \item \texttt{results/csv/circuit\_inventory.csv};
+  \item \texttt{results/csv/final\_metrics.csv};
+  \item \texttt{results/csv/final\_summary.csv};
+  \item \texttt{results/tables/final\_comparison.tex};
+  \item \texttt{results/figures/*.pdf}.
+\end{itemize}
+
+
+Se qualquer semana crítica atrasar, a prioridade de preservação será:
+\[
+\text{PyZX + QuiZX+\texttt{compile} + métricas + demo-controle} \;>\; \text{demo adaptado} \;>\; \text{Faixa L}.
+\]
+
+\section{Expected Outcomes}
+
+Os resultados esperados devem ser formulados em termos de \textbf{viabilidade, comparação e delimitação}, e não como promessas de superar o paper.
+
+Espera-se obter:
+\begin{itemize}
+  \item um pipeline público funcional que conecte OpenQASM v2, \texttt{circuit-to-tensor}, PyZX, demo público do AlphaTensor-Quantum e análise quantitativa;
+  \item uma comparação metodológica clara entre simplificação por ZX-calculus, pré-otimização QuiZX+\texttt{compile} e uso do ecossistema AlphaTensor-Quantum em pequena escala;
+  \item uma avaliação objetiva da utilidade da família de métricas estruturais proposta;
+  \item uma delimitação prática dos limites do demo público sob orçamento compatível com duas A100;
+  \item um conjunto de resultados com valor científico mesmo se a correlação entre métricas e ganho for fraca, instável ou negativa.
+\end{itemize}
+
+Em particular, o projeto deverá ser capaz de produzir uma das seguintes conclusões válidas:
+\begin{enumerate}
+  \item a família de métricas fornece sinal preditivo útil;
+  \item a família de métricas fornece sinal fraco, mas interpretável apenas em certos regimes;
+  \item a família de métricas não explica adequadamente o ganho, o que constitui um resultado negativo relevante e bem documentado.
+\end{enumerate}
+
+\section{References}
+
+\begin{thebibliography}{99}
+
+\bibitem{ruiz2025nature}
+F. J. R. Ruiz, T. Laakkonen, J. Bausch, M. Balog, M. Barekatain, F. J. H. Heras, A. Novikov, N. Fitzpatrick, B. Romera-Paredes, J. van de Wetering, A. Fawzi, K. Meichanetzidis e P. Kohli.
+\newblock \emph{Quantum Circuit Optimization with AlphaTensor}.
+\newblock Nature Machine Intelligence, 2025.
+\newblock Disponível em: \url{https://www.nature.com/articles/s42256-025-01001-1}.
+
+\bibitem{ruiz2024arxiv}
+F. J. R. Ruiz, T. Laakkonen, J. Bausch, M. Balog, M. Barekatain, F. J. H. Heras, A. Novikov, N. Fitzpatrick, B. Romera-Paredes, J. van de Wetering, A. Fawzi, K. Meichanetzidis e P. Kohli.
+\newblock \emph{Quantum Circuit Optimization with AlphaTensor}.
+\newblock arXiv:2402.14396, 2024.
+\newblock Disponível em: \url{https://arxiv.org/abs/2402.14396}.
+
+\bibitem{alphatensorrepo}
+Google DeepMind.
+\newblock \emph{alphatensor\_quantum}.
+\newblock Repositório público no GitHub.
+\newblock Disponível em: \url{https://github.com/google-deepmind/alphatensor_quantum}.
+
+\bibitem{circuittotensorrepo}
+T. Laakkonen.
+\newblock \emph{circuit-to-tensor}.
+\newblock Repositório público no GitHub.
+\newblock Disponível em: \url{https://github.com/tlaakkonen/circuit-to-tensor}.
+
+\bibitem{pyzxrepo}
+A. Kissinger, J. van de Wetering e colaboradores.
+\newblock \emph{PyZX}.
+\newblock Repositório público no GitHub.
+\newblock Disponível em: \url{https://github.com/zxcalc/pyzx}.
+
+\bibitem{kissinger2020tcount}
+A. Kissinger e J. van de Wetering.
+\newblock \emph{Reducing T-count with the ZX-calculus}.
+\newblock Physical Review A 102, 022406, 2020.
+\newblock Pré-print disponível em: \url{https://arxiv.org/abs/1903.10477}.
+
+\bibitem{kissinger2019pyzx}
+A. Kissinger e J. van de Wetering.
+\newblock \emph{PyZX: Large Scale Automated Diagrammatic Reasoning}.
+\newblock arXiv:1904.04735, 2019.
+\newblock Disponível em: \url{https://arxiv.org/abs/1904.04735}.
+
+\bibitem{optmize}
+PennyLane.
+\newblock \emph{op-T-mize dataset}.
+\newblock Página pública do benchmark.
+\newblock Disponível em: \url{https://pennylane.ai/datasets/op-t-mize}.
+
+\bibitem{deepmindpub}
+Google DeepMind.
+\newblock \emph{AlphaTensor for Optimizing Quantum Computations}.
+\newblock Página pública da publicação.
+\newblock Disponível em: \url{https://deepmind.google/research/publications/77240/}.
+
+\end{thebibliography}
+
+\end{document}

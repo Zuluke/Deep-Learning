@@ -1,0 +1,21 @@
+{
+  "generated_on": "2026-04-13",
+  "strategy": "git subtree via temporary worktree branch",
+  "subtree_branch": "codex/project_subtrees_bootstrap",
+  "repositories": [
+    {
+      "name": "alphatensor_quantum",
+      "url": "https://github.com/google-deepmind/alphatensor_quantum.git",
+      "ref": "refs/heads/main",
+      "commit": "3def81a2a42666416a4a8041eea6e1bc98bc8e9f",
+      "vendor_path": "project/external/alphatensor_quantum"
+    },
+    {
+      "name": "circuit-to-tensor",
+      "url": "https://github.com/tlaakkonen/circuit-to-tensor.git",
+      "ref": "refs/heads/main",
+      "commit": "4d6f1f9bc2f3cbad674cb8ebef7544af6853545d",
+      "vendor_path": "project/external/circuit-to-tensor"
+    }
+  ]
+}
