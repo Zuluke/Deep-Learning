@@ -19,7 +19,8 @@ mkdir -p results/logs/slurm results/logs/demo
 
 nvidia-smi
 
-uv run --project . python - <<'PY'
+echo "[preflight] starting jax gpu check"
+uv run --project . --no-sync --frozen --offline python - <<'PY'
 import json
 import jax
 
@@ -32,7 +33,8 @@ if payload["backend"] != "gpu":
     raise SystemExit("JAX backend is not gpu.")
 PY
 
-uv run --project . python scripts/run_demo_train.py \
+echo "[train] starting quick MOD_5_4 run"
+uv run --project . --no-sync --frozen --offline python scripts/run_demo_train.py \
   --mode quick \
   --profile cuda \
   --use-gadgets on \
