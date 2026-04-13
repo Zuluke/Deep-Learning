@@ -54,8 +54,13 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-uv python install 3.11
-uv sync --project "$PROJECT_ROOT" --python 3.11 --no-default-groups --group dev --group "$PROFILE_GROUP"
+MANAGED_PYTHON="$(find "$HOME/.local/share/uv/python" -maxdepth 3 -type f -path '*cpython-3.11*/bin/python3.11' 2>/dev/null | head -n 1 || true)"
+if [[ -z "$MANAGED_PYTHON" ]]; then
+  uv python install 3.11
+  MANAGED_PYTHON="3.11"
+fi
+
+uv sync --project "$PROJECT_ROOT" --python "$MANAGED_PYTHON" --no-default-groups --group dev --group "$PROFILE_GROUP"
 
 if [[ -f "$HOME/.cargo/env" ]]; then
   # shellcheck disable=SC1090
