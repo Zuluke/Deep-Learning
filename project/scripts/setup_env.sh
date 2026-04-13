@@ -100,6 +100,9 @@ if ! cargo_ready; then
   exit 1
 fi
 
+export CARGO_HOME="${CARGO_HOME:-${TMPDIR:-/tmp}/$USER/alphatensor_quantum_cargo_home}"
+mkdir -p "$CARGO_HOME"
+
 cargo build --release --manifest-path "$PROJECT_ROOT/external/circuit-to-tensor/Cargo.toml"
 
 PYTHONPATH="$PROJECT_ROOT/external${PYTHONPATH:+:$PYTHONPATH}" \
