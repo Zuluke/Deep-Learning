@@ -9,7 +9,18 @@ dependencies = []
 [dependency-groups]
 dev = [
   "ipython>=8.32.0",
+  "matplotlib>=3.9.2",
+  "pandas>=2.2.3",
+  "pyzx>=0.8.0",
   "pytest>=8.3.5",
+  "qiskit>=1.3.2",
+  "scipy>=1.14.1",
+]
+benchmarks = [
+  "aiohttp>=3.11.0",
+  "fsspec>=2024.10.0",
+  "h5py>=3.12.1",
+  "pennylane>=0.40.0",
 ]
 demo-cpu = [
   "absl-py>=2.1.0",

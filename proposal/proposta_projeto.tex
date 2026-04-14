@@ -1,0 +1,52 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.7cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{parskip}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{leftmargin=1.2em, itemsep=0.2em, topsep=0.25em}
+
+\begin{document}
+\small
+
+{\Large\bfseries Projeto de Deep Learning 2026.1:\\AlphaTensor-Quantum, Clifford Splitting e Hibridização Estrutural}
+
+\vspace{0.7em}
+
+\textbf{Equipe:} Caio Almeida Carneiro Leão --- \texttt{cacl2@cin.ufpe.br} \quad | \quad João Victor Moreira Cardoso --- \texttt{jvmc@cin.ufpe.br}
+
+\textbf{Artigo base:} Ruiz et al., \emph{Quantum Circuit Optimization with AlphaTensor}. \url{https://www.nature.com/articles/s42256-025-01001-1}
+
+\textbf{Código base:}
+\begin{itemize}
+  \item \url{https://github.com/google-deepmind/alphatensor_quantum}
+  \item \url{https://github.com/tlaakkonen/circuit-to-tensor}
+\end{itemize}
+
+\textbf{Dados para validação:} A validação será feita com circuitos públicos disponíveis no ecossistema do projeto. Em uma primeira etapa, serão usados circuitos disponíveis pelo próprio repositório \texttt{circuit-to-tensor} e os alvos públicos do demo do \texttt{alphatensor\_quantum}. Em uma etapa expandida, o benchmark \emph{op-T-mize} será usado como conjunto adicional de circuitos para comparação entre métodos.
+
+\textbf{Resumo da proposta:} Para esse projeto, propomos um estudo sobre otimização e hibridização de circuitos quânticos com base no ecossistema público do AlphaTensor-Quantum. O ponto de partida é a distinção entre partes Clifford e não-Clifford de um circuito. Circuitos estabilizadores, associados ao grupo de Clifford, admitem simulação clássica eficiente em vários regimes. Em contraste, portas T introduzem o recurso não-Clifford que torna a simulação e a implementação tolerante a falhas mais custosas. Por isso, minimizar o uso de portas T se tornou um objetivo central em compilação quântica e alvo de intensa investigação nos últimos anos.
+
+Nesse contexto, o AlphaTensor-Quantum é relevante por usar Deep Reinforcement Learning para buscar decomposições que reduzam o custo não-Clifford. Com esse contexto em mente, a hipótese que buscamos investigar nesse projeto é utilizar a arquitetura do AlphaTensor-Quantum para reorganizar o circuito de modo a expor uma separação mais favorável entre a parte que pode ser tratada classicamente e a parte que precisa permanecer quântica.
+
+Essa ideia se conecta ao conceito de \emph{Clifford splitting}, introduzido por Medina et al., no qual se busca maximizar a porção Clifford de um circuito e concentrar a parte não-Clifford em um núcleo menor e mais localizado. Assim, o objetivo deste projeto é investigar, dentro do contexto do AlphaTensor-Quantum, se métricas estruturais inspiradas em \emph{Clifford splitting} podem ser incorporadas ao pipeline do método e ajudar a produzir circuitos mais adequados para hibridização quântico-clássica. Em termos práticos, queremos avaliar se essas métricas conseguem orientar melhor o procedimento de otimização e indicar em quais regimes a reorganização estrutural do circuito é tão importante quanto a própria redução de T-count.
+
+
+
+\textbf{Referências}
+\begin{itemize}
+  \item Ruiz et al. \emph{Quantum Circuit Optimization with AlphaTensor}. \url{https://arxiv.org/abs/2402.14396}
+  \item Castañeda Medina et al. \emph{Clifford and Non-Clifford Splitting in Quantum Circuits: Applications and ZX-Calculus Detection Procedure}. \url{https://arxiv.org/abs/2504.16004}
+  \item DeepMind. \emph{alphatensor\_quantum}. \url{https://github.com/google-deepmind/alphatensor_quantum}
+  \item Laakkonen. \emph{circuit-to-tensor}. \url{https://github.com/tlaakkonen/circuit-to-tensor}
+  \item Kissinger and van de Wetering. \emph{PyZX}. \url{https://github.com/zxcalc/pyzx}
+  \item Aaronson and Gottesman. \emph{Improved Simulation of Stabilizer Circuits}. \url{https://doi.org/10.1103/PhysRevA.70.052328}
+\end{itemize}
+
+\end{document}

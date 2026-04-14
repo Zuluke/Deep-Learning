@@ -1,0 +1,553 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+  pdftitle={Task-Relative Hybridizability as a Rewrite-Orbit Property of Quantum Circuits},
+  pdfauthor={OpenAI GPT-5.4 Pro draft manuscript}
+}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{observation}{Observation}
+\newtheorem{conjecture}{Conjecture}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\orbit}{\mathcal{O}}
+\newcommand{\Hyb}{\mathsf{Hyb}}
+\newcommand{\Task}{\mathcal{T}}
+\newcommand{\Core}{\mathsf{Core}}
+\newcommand{\Magic}{\mathsf{Magic}}
+\newcommand{\Interface}{\mathsf{Interface}}
+\newcommand{\Class}{\mathsf{Cl}}
+\newcommand{\Qcore}{\mathsf{Q}}
+\newcommand{\Pauli}{\mathcal{P}}
+\newcommand{\Cliff}{\mathcal{C}}
+\newcommand{\Eff}{\mathrm{Eff}}
+\newcommand{\Tr}{\mathrm{Tr}}
+
+\title{\textbf{Task-Relative Hybridizability as a Rewrite-Orbit Property of Quantum Circuits}\\[0.35em]
+\large A Theoretical Framework for AI-Guided Clifford--Magic Separation}
+\author{Caio A. C. Leão\\João Victor Moreira Cardoso}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The motivating question of this manuscript is simple to state but subtle to formalize: can artificial intelligence transform a quantum circuit into a more hybrid quantum-classical execution by exposing a larger Clifford section and concentrating the non-Clifford ``magic'' into a smaller residual core? The main claim advanced here is that the correct object of study is not a circuit in a single syntactic form, but its \emph{rewrite orbit}: the family of equivalent representations reachable by valid rewrites, recompilations, or diagrammatic transformations. We argue that hybridizability is necessarily \emph{task-relative}. A Clifford factor acting on a live unknown quantum state is not, in general, ``classically executable'' in place; exact classicalization requires an interface such as observable conjugation, Pauli-frame tracking, measurement adaptation, projector replacement, or a global re-expression such as Pauli-based computation. On this basis, we define task-relative classicalizable factors, hybrid decompositions, and an orbit-level hybridizability frontier. We prove an exact and operationally useful special case: for expectation estimation of Pauli-sum observables, any right-Clifford suffix is removable by classical conjugation of the observable, so the quantum workload can be reduced without approximation. We then argue that the strongest research direction is not generic circuit compression, but AI-guided search for orbit representatives that maximize this operationally removable structure while localizing the remaining non-Clifford resource. ZX-calculus is identified as the most natural current search language because it exposes nonlocal equivalences and interfaces directly with graph learning, although the framework itself is not restricted to ZX. The manuscript closes by identifying the strongest empirical route: learned search over equivalent circuit representations for exact task-preserving hybridization, especially in expectation-estimation settings, with broader extensions to sampling, state preparation, and Pauli-based computation.
+\end{abstract}
+
+\section{Introduction}
+
+Quantum circuit optimization has long been guided by syntactic objectives: total gate count, two-qubit count, circuit depth, or, in fault-tolerant settings, the number and depth of non-Clifford gates such as $T$ gates. These metrics are well motivated. In many architectures, non-Clifford operations dominate implementation overhead because they are closely tied to magic-state injection and distillation, while Clifford structure is comparatively cheap or classically tractable \cite{bravyi_gosset_2016, howard_campbell_2017, alphatensor_2025}. At the same time, recent work suggests that there is a different optimization objective worth isolating: \emph{how much of a quantum computation can be displaced from the quantum processor into exact or efficient classical side-processing without changing the task being solved?} \cite{peres_galvao_2023, splitting_2025}.
+
+That question motivates the informal language of ``splitting a circuit into a Clifford part and a magic part.'' Yet the phrase is ambiguous. A circuit identity such as $U = C M$ does not by itself imply an executable hybrid workflow. If $C$ acts on an unknown quantum state that must later continue coherently through additional quantum evolution, then saying that $C$ is ``simulated on a classical computer'' is not operationally meaningful unless one specifies an interface between the classical description and the remaining quantum computation. This issue is not cosmetic. It determines whether the proposed hybridization is exact, approximate, task-preserving, and even physically realizable.
+
+The central thesis of this manuscript is therefore the following.
+
+\begin{quote}
+\textbf{Hybridizability should be treated as a task-relative property of a circuit's rewrite orbit, not as a property of a single gate list.}
+\end{quote}
+
+The rewrite orbit viewpoint is motivated by recent literature from several directions. First, classical simulation of Clifford-dominated circuits is strongly sensitive to non-Clifford content \cite{bravyi_gosset_2016}. Second, ZX-calculus methods make it possible to rewrite equivalent circuits in ways that expose hidden structure, simplify extraction, or reduce non-Clifford content \cite{duncan_et_al_2020, kissinger_vdw_2020, pyzx_2020}. Third, the 2025 preprint on Clifford/non-Clifford splitting explicitly studies boundary detection in ZX-diagrams and points out that the quality of the detected split depends on the circuit form, with clear room for improving the Clifford section before splitting \cite{splitting_2025}. Fourth, RL-ZX shows that learned policies over ZX-diagrams can outperform strong fixed heuristics while generalizing beyond the training regime \cite{rlzx_2025}. Finally, results on shallow magic depth show that \emph{distribution} of magic matters, not only its total amount \cite{shallow_magic_2025}. Together, these results point toward a research agenda in which AI does not merely compress circuits, but searches over equivalent representations to maximize exact or near-exact hybrid execution opportunities.
+
+This manuscript develops that agenda in theoretical form. Its main contributions are:
+
+\begin{enumerate}[label=(\roman*)]
+    \item a precise distinction between naive circuit factorization and \emph{task-relative classicalization};
+    \item a formal definition of hybridizability over a rewrite orbit, expressed as a Pareto frontier rather than a single hand-chosen scalar objective;
+    \item an exact proposition showing that right-Clifford suffixes are removable for Pauli-sum expectation estimation tasks by classical observable conjugation;
+    \item a principled argument that the strongest AI role is orbit navigation: learning which equivalent rewrites expose operationally removable Clifford structure and localize the remaining magic;
+    \item a research route that identifies expectation-estimation problems as the cleanest first setting, while situating broader extensions to sampling, stabilizer-state preparation, and Pauli-based computation.
+\end{enumerate}
+
+The goal is not to claim that this program is already solved. It is to establish why this is a coherent research problem, why it is not reducible to standard circuit compression, and why AI is unusually well matched to the search space it induces.
+
+\section{Background and literature landscape}
+
+\subsection{Clifford structure, non-Clifford resource, and classical simulation}
+
+The Gottesman--Knill theorem and its descendants explain why Clifford structure is special: stabilizer circuits admit efficient classical simulation in several important regimes. Once non-Clifford gates are introduced, the simulation cost changes sharply. In Clifford+$T$ circuits, one influential line of work shows that classical simulation cost scales exponentially in the amount of non-Clifford resource, with subexponential improvements in the exponent enabled by low-stabilizer-rank methods and related decompositions \cite{bravyi_gosset_2016}. This has helped establish a now-standard viewpoint: Clifford structure is comparatively cheap, while non-Clifford structure is the scarce and expensive resource.
+
+In the fault-tolerant regime, this asymmetry is operational, not just formal. Resource-theoretic work on magic states shows that quantities such as robustness of magic have an operational interpretation in classical simulation and gate synthesis overhead \cite{howard_campbell_2017}. More recent work has accelerated the computation of nonstabilizerness proxies such as stabilizer extent for small systems, which makes them useful as validation tools even if they are too expensive to optimize directly at scale \cite{hamaguchi_et_al_2025}. The practical implication is clear: if a compilation strategy can reduce, isolate, or localize non-Clifford structure while leaving task semantics intact, then it may improve both classical simulability and quantum executability.
+
+\subsection{ZX-calculus and rewrite-based quantum circuit optimization}
+
+ZX-calculus provides a graphical language in which many circuit identities become local graph rewrites. This is crucial because important equivalences are often highly nonlocal when expressed as gate lists. The graph-theoretic simplification program of Duncan, Kissinger, Perdrix, and van de Wetering showed how to reduce circuits by rewriting their ZX representations and extracting improved circuits, while PyZX turned these ideas into usable tooling for large-scale automated diagrammatic reasoning \cite{duncan_et_al_2020, pyzx_2020}. Related work further showed how phase gadgetization and phase teleportation can reduce non-Clifford content by propagating and canceling phases through the diagram \cite{kissinger_vdw_2020}.
+
+For the present problem, ZX matters for two reasons. First, it enlarges the visible space of equivalent representations. Second, it provides a graph-structured state naturally suited to learned search. This matters because extraction from arbitrary ZX-diagrams can itself be hard in the worst case \cite{debeaudrap_et_al_2022}; so if one wants to navigate this space effectively, one needs representation-aware search rather than brute force.
+
+\subsection{Hybrid execution and Clifford/non-Clifford splitting}
+
+The most direct precursor to the present question is the recent preprint \emph{Clifford and Non-Clifford Splitting in Quantum Circuits: Applications and ZX-Calculus Detection Procedure} \cite{splitting_2025}. That work proposes a border-detection procedure in circuit-like ZX-diagrams to isolate a Clifford section and a non-Clifford section, discusses hybrid quantum-classical use cases, and explicitly notes that the relative size of the Clifford part can be improved by additional commutation or maximization rules before splitting. That observation is especially important for the current manuscript: it strongly suggests that the best split is not a property of the input syntax alone.
+
+A complementary line is provided by Pauli-based computation (PBC), which shows that any Clifford+$T$ circuit with $t$ $T$ gates can be compiled into a Pauli-based computation on $t$ qubits, with substantial classical side-processing and useful space-time trade-offs \cite{peres_galvao_2023}. PBC matters here because it turns ``hybrid quantum-classical execution'' into an explicit operational model. It also reveals an important lesson: hybridization does not have to look like a trivial syntactic suffix removal. Sometimes the right representation changes the execution model itself.
+
+\subsection{AI-guided quantum circuit rewriting}
+
+AI has already demonstrated the ability to discover non-obvious reformulations of quantum circuits. RL-ZX trains a PPO agent with graph neural networks over ZX-diagrams and shows that the learned policy improves strong ZX-based baselines, generalizing from small training circuits to substantially larger test instances \cite{rlzx_2025}. AlphaTensor-Quantum tackles $T$-count minimization via deep reinforcement learning over tensor decompositions and discovers new arithmetic constructions and competitive implementations of practically relevant primitives \cite{alphatensor_2025}. These works do not solve the problem studied here, but they establish an important meta-point: learned search over equivalence classes can uncover circuit transformations that fixed heuristics miss.
+
+\subsection{Why existing objectives are not enough}
+
+The existing optimization objectives are not wrong; they are incomplete for hybrid execution. A circuit with lower $T$-count is often preferable, but a circuit with the same $T$-count and a more local, shallower, or more removable non-Clifford structure may be far better suited to a hybrid workflow. The recent shallow-magic-depth results sharpen this point by showing that the distribution of magic affects classical simulability in nontrivial ways \cite{shallow_magic_2025}. This suggests that an AI system trained only to minimize gate count or $T$-count may learn the wrong invariants for hybrid execution. The target should instead be a task-aware structural objective.
+
+\section{From informal splitting to task-relative classicalization}
+
+The sentence ``run the Clifford part classically and the magic part quantumly'' is only meaningful after one specifies \emph{what task is being preserved}. The same factorization may be exact for expectation-value estimation, only partially useful for sampling, and meaningless for coherent continuation.
+
+Consider a unitary decomposition $U = C M$. If the task is to estimate
+\[
+\langle 0^n | U^{\dagger} A U | 0^n \rangle
+\]
+for a Pauli-sum observable $A$, then the right factor $C$ may be removable by conjugating the observable. By contrast, if the task is to execute $U$ as an intermediate block in a larger coherent computation, then replacing $C$ by a classical routine requires an interface capable of representing and re-injecting the relevant quantum information. In general, that interface is the hard part.
+
+This motivates a hierarchy of notions.
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Syntactic splitting:} writing a circuit in a form such as $U = C M$ or $U = M C$.
+    \item \textbf{Structural hybridization:} rewriting the circuit so that Clifford structure becomes larger or the non-Clifford structure becomes more localized.
+    \item \textbf{Operational hybridization:} exhibiting an exact or controlled task-preserving workflow in which some factor is discharged into classical pre-processing, post-processing, tracking, or adaptive control.
+\end{itemize}
+
+Only the third notion corresponds to a real hybrid execution strategy. The first two are useful insofar as they support it.
+
+\begin{remark}
+This distinction is not an implementation detail. It is the main reason the problem is interesting. If every visible Clifford factor were automatically classically executable, then hybridization would collapse into a trivial parsing problem. It does not.
+\end{remark}
+
+\section{A formal framework}
+
+\subsection{Rewrite orbits}
+
+Fix a circuit representation language $\mathcal{R}$ together with an equivalence relation $\equiv$ induced by semantics. In practice, $\mathcal{R}$ could be gate lists, phase-polynomial normal forms, ZX-diagrams, or a richer compilation language.
+
+\begin{definition}[Rewrite orbit]
+Let $U$ be a quantum circuit or unitary represented in $\mathcal{R}$. Its \emph{rewrite orbit} is
+\[
+\orbit(U) := \{V \in \mathcal{R} : V \equiv U\}.
+\]
+When a specific rewrite system is fixed, $\orbit(U)$ denotes the reachable equivalence class under that system.
+\end{definition}
+
+This definition is deliberately broad. The central thesis of this manuscript is that the hybrid properties one cares about should be optimized over $\orbit(U)$, not read off a single representative.
+
+\subsection{Tasks}
+
+Rather than hard-code one execution model, we introduce a task parameter.
+
+\begin{definition}[Task]
+A \emph{task} $\tau \in \Task$ assigns to each circuit $U$ a classical target quantity $q_{\tau}(U)$. Examples include:
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item expectation estimation of a Hermitian observable $A$ on $U|0^n\rangle$,
+    \item sampling from the output distribution of $U$ in a fixed measurement basis,
+    \item preparation of a target state or stabilizer description,
+    \item adaptive Pauli-measurement execution as in Pauli-based computation.
+\end{enumerate}
+\end{definition}
+
+The point of introducing $\tau$ is that classicalizability depends on what quantity must be preserved.
+
+\subsection{Task-relative classicalizable factors}
+
+\begin{definition}[Right-classicalizable factor]
+Let $\tau \in \Task$. A right factor $C$ in a decomposition $V = M C$ is \emph{$\tau$-classicalizable on the right} if there exists an efficiently computable transformation $\Gamma_{C}^{\tau}$ of the task descriptor such that
+\[
+q_{\tau}(M C) = q_{\Gamma_{C}^{\tau}(\tau)}(M).
+\]
+That is, executing the full circuit for task $\tau$ is exactly replaced by executing the reduced circuit $M$ for a classically transformed task.
+\end{definition}
+
+\begin{definition}[Left-classicalizable factor]
+Let $\tau \in \Task$. A left factor $C$ in a decomposition $V = C M$ is \emph{$\tau$-classicalizable on the left} if there exists an efficiently computable transformation $\Lambda_{C}^{\tau}$ such that
+\[
+q_{\tau}(C M) = q_{\Lambda_{C}^{\tau}(\tau)}(M),
+\]
+where $\Lambda_{C}^{\tau}$ may modify the initial data, the measurement prescription, or the side-processing model.
+\end{definition}
+
+The definitions are intentionally abstract. They cover observable conjugation, Pauli-frame tracking, stabilizer-state replacement, and PBC-style adaptive processing, while ruling out vague claims that a Clifford gate is ``classical'' without an interface.
+
+\begin{definition}[Hybrid decomposition]
+A \emph{task-valid hybrid decomposition} of a circuit representative $V \in \orbit(U)$ for task $\tau$ is a factorization
+\[
+V = C_{\mathrm{L}} \, M \, C_{\mathrm{R}}
+\]
+where $C_{\mathrm{L}}$ is $\tau$-classicalizable on the left, $C_{\mathrm{R}}$ is $\tau$-classicalizable on the right, and $M$ is the residual quantum core.
+\end{definition}
+
+\subsection{Hybridizability profiles without a fixed cost model}
+
+A useful theory should not force a single scalar objective too early. The same researcher may care about different trade-offs: fewer active qubits, lower non-Clifford depth, simpler classical side-processing, fewer disjoint magic regions, or some combination of these. To reflect this, we define a profile and compare profiles by Pareto dominance.
+
+For a task-valid hybrid decomposition $V = C_{\mathrm{L}} M C_{\mathrm{R}}$, define three descriptors:
+\begin{align*}
+\Qcore(M) &:= \text{quantum-core descriptor (e.g., active qubits, depth, 2-qubit count, $T$-count, $T$-depth)},\\
+\Magic(M) &:= \text{magic-localization descriptor (e.g., non-Clifford layers, support width, region count)},\\
+\Interface_{\tau}(C_{\mathrm{L}}, C_{\mathrm{R}}) &:= \text{classical interface descriptor for the task.}
+\end{align*}
+
+\begin{definition}[Hybrid profile]
+The \emph{hybrid profile} of a task-valid decomposition is
+\[
+\mathbf{p}_{\tau}(V; C_{\mathrm{L}}, M, C_{\mathrm{R}})
+:=
+\bigl(\Qcore(M),\, \Magic(M),\, \Interface_{\tau}(C_{\mathrm{L}}, C_{\mathrm{R}})\bigr).
+\]
+\end{definition}
+
+\begin{definition}[Hybrid dominance]
+Let $\mathbf{p}$ and $\mathbf{p}'$ be two hybrid profiles for the same task $\tau$. We say that $\mathbf{p}$ \emph{dominates} $\mathbf{p}'$, written $\mathbf{p} \prec_{\tau} \mathbf{p}'$, if $\mathbf{p}$ is no worse in every component and strictly better in at least one component under the chosen partial order on descriptors.
+\end{definition}
+
+\begin{definition}[Orbit-level hybridizability frontier]
+The \emph{hybridizability frontier} of $U$ for task $\tau$ is the Pareto frontier
+\[
+\Hyb_{\tau}(U)
+:=
+\mathrm{ParetoMax}\left\{
+\mathbf{p}_{\tau}(V; C_{\mathrm{L}}, M, C_{\mathrm{R}})
+:
+V \in \orbit(U),\; V = C_{\mathrm{L}} M C_{\mathrm{R}} \text{ task-valid}
+\right\}.
+\]
+\end{definition}
+
+This definition captures the main thesis: hybridizability is a property of an equivalence class together with a task. No single representative is privileged a priori, and no single scalarization is assumed in advance.
+
+\section{Exact task-preserving hybridization: the cleanest case}
+
+The cleanest exact setting is expectation-value estimation for observables built from Pauli operators, as in VQE, many QAOA estimators, and numerous Hamiltonian-simulation subroutines. Here a right-Clifford suffix can be removed exactly.
+
+\begin{proposition}[Right-Clifford removal for Pauli-sum expectation estimation]
+Let
+\[
+\tau_A(U) := \langle 0^n | U^{\dagger} A U | 0^n \rangle,
+\]
+where $A = \sum_j \alpha_j P_j$ is a Hermitian operator written as a real linear combination of Pauli strings $P_j \in \Pauli_n$. Let $V = M C$ where $C$ is an $n$-qubit Clifford unitary. Then
+\[
+\tau_A(MC) = \tau_{A'}(M)
+\qquad\text{with}\qquad
+A' := C A C^{\dagger} = \sum_j \alpha_j (C P_j C^{\dagger}),
+\]
+and each $C P_j C^{\dagger}$ is again a Pauli string up to phase. Hence $C$ is $\tau_A$-classicalizable on the right.
+\end{proposition}
+
+\begin{proof}
+By direct substitution,
+\[
+\tau_A(MC)
+= \langle 0^n | C^{\dagger} M^{\dagger} A M C | 0^n \rangle
+= \langle 0^n | M^{\dagger} (C A C^{\dagger}) M | 0^n \rangle
+= \tau_{A'}(M).
+\]
+Because the Clifford group normalizes the Pauli group, each conjugated term $C P_j C^{\dagger}$ remains in $\Pauli_n$ up to a sign, so if $A$ is a Pauli sum then $A'$ is a Pauli sum of the same size class. The task is therefore preserved exactly by a classical rewrite of the observable rather than quantum execution of $C$.
+\end{proof}
+
+\begin{remark}
+This proposition gives a precise operational meaning to one of the most attractive hybridization ideas in the recent splitting literature: a right-Clifford suffix is not merely ``easy''; for Pauli-sum expectation tasks it is exactly removable from the quantum backend by an efficient classical transformation of the measurement prescription \cite{splitting_2025}.
+\end{remark}
+
+\begin{remark}
+The proposition also explains why expectation-estimation tasks are the strongest initial target for AI-guided hybridization research. They offer exact semantics, a simple interface, and a natural notion of removable right-Clifford structure.
+\end{remark}
+
+\section{Why task-relative definitions are unavoidable}
+
+The previous proposition is strong precisely because it is task-specific. Once we move beyond expectation-value estimation, the situation becomes subtler.
+
+\subsection{Coherent continuation is not a free classicalization regime}
+
+Suppose a Clifford factor appears in the middle of a larger coherent quantum process. Replacing it by a classical routine would require one of the following:
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item a compact classical description of the post-Clifford quantum state that suffices for all future continuations,
+    \item a physically specified measurement-and-feed-forward interface that externalizes the relevant quantum information,
+    \item or a re-expression of the whole computation in a different operational model.
+\end{enumerate}
+
+Without such an interface, ``execute the Clifford part on a classical computer'' is not a valid semantic transformation. This is the main conceptual correction to the naive decomposition idea. A left or interior Clifford factor is useful only when the task itself allows that factor to be externalized.
+
+\subsection{Examples of valid interfaces}
+
+Several interfaces already exist in the literature.
+
+\paragraph{Observable conjugation.}
+This is the exact right-Clifford case above.
+
+\paragraph{Pauli-frame tracking and measurement adaptation.}
+In fault-tolerant and measurement-based settings, some Clifford structure can be removed from the physical circuit and replaced by classical tracking of Pauli frames or adaptive measurement choices. The key point is that the interface is explicitly defined.
+
+\paragraph{Projector replacement and stabilizer-state initialization.}
+If a left-Clifford prefix prepares a stabilizer state, it may be possible to replace the state-preparation block by an alternative classical/stabilizer-mediated description or by projector constructions, as explored in the splitting preprint \cite{splitting_2025}. This route is more delicate than right-Clifford removal because the interface to the remaining non-Clifford computation is a state, not merely an observable rewrite.
+
+\paragraph{Pauli-based computation.}
+PBC shows that a Clifford+$T$ circuit with $t$ $T$ gates can be re-expressed as an adaptive sequence of Pauli measurements on $t$ qubits with classical side-processing \cite{peres_galvao_2023}. Conceptually, this is a global hybridization result: the classicalizable structure is not captured by a naive local factorization alone.
+
+\begin{observation}
+The preceding examples suggest that there is no single universal notion of ``the'' classicalizable Clifford part. Hybridizability is indexed not only by the unitary but also by the task and the available interface model.
+\end{observation}
+
+\section{The strongest research angle}
+
+The strongest angle, in light of current literature, is not to ask whether AI can ``optimize quantum circuits'' in the generic sense. That question has already received strong positive answers \cite{rlzx_2025, alphatensor_2025}. The sharper and more original question is this:
+
+\begin{quote}
+\textbf{Can AI search a circuit's rewrite orbit for representations that maximize exact or near-exact task-preserving hybridization, rather than merely minimizing standard syntactic cost metrics?}
+\end{quote}
+
+This reframing produces three important consequences.
+
+\subsection{The target is operational hybridizability, not compression alone}
+
+A learned optimizer trained only on gate count or $T$-count may improve standard metrics while leaving hybrid utility nearly unchanged. Conversely, an optimizer that exposes a long classicalizable suffix or localizes non-Clifford structure into a narrower residual block may produce a much better hybrid workflow without achieving the best $T$-count in the usual sense. The hybrid frontier defined earlier makes this distinction explicit.
+
+\subsection{The learned object need not be only a rewrite policy}
+
+Several learned components fit naturally inside the framework:
+\begin{itemize}[leftmargin=1.5em]
+    \item a \emph{rewrite policy} that selects equivalence-preserving transformations,
+    \item a \emph{boundary detector} that identifies promising classicalizable factors,
+    \item a \emph{hybridizability scorer} that predicts where in the orbit good representatives are likely to lie,
+    \item or a \emph{joint system} that alternates between rewriting and split evaluation.
+\end{itemize}
+
+The literature makes the first component especially plausible. RL-ZX already demonstrates that graph-neural policies can navigate ZX rewrite spaces effectively, and its results explicitly highlight that rewards can be tailored to backend- or application-specific objectives \cite{rlzx_2025}. The novelty here is to replace generic compression rewards with objectives derived from the hybrid frontier.
+
+\subsection{The cleanest initial target is exact hybridization of expectation tasks}
+
+Among the available settings, expectation-value estimation with Pauli-sum observables stands out for three reasons:
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item the semantics are exact,
+    \item the interface is simple and efficient,
+    \item the resulting notion of removable Clifford structure is directly measurable.
+\end{enumerate}
+
+This suggests a research progression: start from exact right-Clifford removal, then broaden toward left-classicalizable structure, sampling tasks, and PBC-like global hybridization.
+
+\section{Why ZX is the natural but not exclusive backbone}
+
+The current best backbone for the problem is ZX-calculus, although the framework developed here does not logically depend on it.
+
+\subsection{Why ZX is attractive}
+
+ZX offers three advantages.
+
+\paragraph{Equivalence is native.}
+The problem is inherently about moving through an equivalence class. ZX-diagrams make equivalence-preserving rewrites explicit and local in a way that gate lists typically do not.
+
+\paragraph{Graphs are the right inductive bias for learning.}
+A ZX-diagram is already a graph. That makes graph neural networks an unusually natural model class for rewrite selection or hybridizability scoring.
+
+\paragraph{Tooling and literature already exist.}
+PyZX provides a mature optimization and extraction stack \cite{pyzx_2020}, RL-ZX provides a learned-search baseline \cite{rlzx_2025}, and the splitting preprint formulates the closest known version of the target problem directly in ZX terms \cite{splitting_2025}.
+
+\subsection{Why ZX is not logically mandatory}
+
+The underlying theory of this manuscript only requires a rewrite orbit and a task-relative notion of classicalizability. Those could, in principle, be instantiated in other languages: phase-polynomial forms, parity-matrix representations, tensor-decomposition search spaces, or even hybrid symbolic-neural formulations. Indeed, AlphaTensor-Quantum shows that some non-Clifford optimization problems may be attacked more naturally through tensor decomposition than through ZX rewriting \cite{alphatensor_2025}. The best practical route may therefore be hybrid: ZX for orbit exploration in mixed-structure circuits, and algebraic or tensorial methods for selected diagonal or Hadamard-free subfamilies.
+
+\section{Theoretical consequences and conjectures}
+
+The framework suggests several statements worth treating as explicit research hypotheses.
+
+\begin{conjecture}[Orbit sensitivity of hybridizability]
+There exist families of equivalent Clifford+$T$ circuits whose best task-valid hybrid decompositions differ substantially across representatives in the same rewrite orbit, even when standard scalar metrics such as $T$-count are identical or nearly identical.
+\end{conjecture}
+
+This conjecture is plausible for two reasons. First, the splitting literature already reports that the size of the Clifford section can depend strongly on the input representation and can be improved by additional commutation rules before splitting \cite{splitting_2025}. Second, shallow-magic-depth results indicate that the geometry of non-Clifford structure matters independently of raw count \cite{shallow_magic_2025}.
+
+\begin{conjecture}[Magic localization beats raw count for hybrid utility]
+For at least some task families, a descriptor that tracks localization of non-Clifford structure---for example, the number of non-Clifford layers, their support width, or their separation into regions---predicts hybrid utility better than raw $T$-count alone.
+\end{conjecture}
+
+\begin{observation}
+If this conjecture is correct, then an AI system optimized only for $T$-count may systematically miss the best hybridizable representatives, even if it remains state of the art on conventional compilation benchmarks.
+\end{observation}
+
+\begin{conjecture}[Task-relative frontier collapse]
+For some tasks, especially coherent continuation without an explicit interface, the hybrid frontier may collapse to trivial or near-trivial decompositions, whereas for expectation-estimation tasks the frontier can be substantial. This would confirm that task-relativity is not optional but constitutive of the problem.
+\end{conjecture}
+
+\section{A research route toward empirical validation}
+
+The present manuscript is theoretical, but it points to a clear empirical agenda. The most revealing experimental program should test not just whether learned rewrites reduce standard syntactic metrics, but whether they enlarge the exact task-valid hybrid frontier.
+
+\subsection{Best first setting: expectation-estimation tasks}
+
+The cleanest starting point is the proposition proved earlier. One should study circuit families where the evaluation target is a Pauli-sum expectation value and ask whether learned rewrites expose longer right-Clifford suffixes or otherwise improve the hybrid frontier. Variational ansatze, small chemistry-inspired circuits, and structured benchmark subroutines are all reasonable candidates, but the essential feature is not the application label; it is the exact observable-conjugation interface.
+
+\subsection{Representative testbeds}
+
+A strong empirical program would likely combine three kinds of instances:
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item small exact Clifford+$T$ instances, where one can verify equivalence and compute or estimate finer nonstabilizerness diagnostics;
+    \item benchmark suites such as QASMBench and MQT Bench, which provide low-level and cross-level diversity respectively \cite{qasmbench_2020, mqtbench_2023};
+    \item structured variational or simulation-oriented circuits, where right-Clifford removal has immediate operational meaning for expectation estimation.
+\end{enumerate}
+
+\subsection{What should be compared}
+
+The most informative comparisons are not merely ``AI versus no AI.'' They are comparisons between objective functions and search paradigms:
+\begin{itemize}[leftmargin=1.5em]
+    \item fixed ZX simplification versus learned rewrite search,
+    \item standard compression objectives versus hybrid-frontier objectives,
+    \item representation-sensitive splitting after rewriting versus splitting on the original input,
+    \item and, where appropriate, ZX-based learned search versus algebraic or tensor-based learned search.
+\end{itemize}
+
+\subsection{What should be measured}
+
+The most meaningful measurements are those aligned with the hybrid profile rather than a single scalar score. Concretely, one should track:
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item descriptors of the residual quantum core,
+    \item descriptors of magic localization,
+    \item descriptors of classical interface complexity,
+    \item and, on small instances, the consistency of these descriptors with more expensive measures of nonstabilizerness such as robustness or extent-style quantities \cite{howard_campbell_2017, hamaguchi_et_al_2025}.
+\end{enumerate}
+
+The broad point is that the experimental program should test the theory, not merely the convenience of one implementation.
+
+\section{Failure modes and limits}
+
+A convincing theory should identify where it may fail.
+
+\paragraph{Hybridizability may coincide with standard objectives on some families.}
+If, on a given family, the only way to improve the hybrid frontier is to reduce the same metrics already optimized by conventional compilers, then the present framework adds little. This is a legitimate negative outcome and would itself be informative.
+
+\paragraph{Task-relativity can make the frontier narrow.}
+For some tasks, especially those requiring coherent continuation without a clean classical interface, hybridization opportunities may be scarce. In such cases, the theory predicts that the relevant frontier should be small.
+
+\paragraph{Rewrite-space navigation can be hard.}
+Even if the best representative exists in principle, searching for it may be difficult. This is one reason learned search is attractive, but it is not a guarantee of success. Moreover, circuit extraction from arbitrary ZX-diagrams is hard in the worst case \cite{debeaudrap_et_al_2022}.
+
+\paragraph{Scalar rewards can distort the frontier.}
+Any concrete AI system will eventually need a training signal. If that signal poorly approximates the true hybrid frontier, the learned system may optimize a surrogate that looks impressive numerically but misses the actual operational objective.
+
+\section{Conclusion}
+
+The problem considered in this manuscript began from a natural intuition: perhaps one can separate a quantum circuit into a Clifford part that is treated classically and a non-Clifford part that is left to the quantum processor. The main conclusion is that this intuition becomes both stronger and more precise when reformulated in two steps.
+
+First, hybridization must be defined \emph{relative to a task}. A Clifford factor is not automatically classically executable merely because it is Clifford. It becomes operationally removable only when a valid interface exists, such as observable conjugation, Pauli-frame tracking, projector replacement, or a global re-expression like Pauli-based computation.
+
+Second, the right object of optimization is the circuit's \emph{rewrite orbit}. The best hybridizable representative need not be the one initially supplied. This is why AI enters the picture so naturally: the main difficulty is not just evaluating a split, but searching a large and structured equivalence class for the representations in which classicalizable structure becomes maximally exposed and the irreducibly non-Clifford core becomes maximally localized.
+
+Under this view, the strongest immediate research direction is clear. One should develop AI-guided orbit search, most naturally over ZX-diagrams but not necessarily limited to them, with the goal of maximizing \emph{task-valid hybridizability} rather than generic circuit compression. Expectation-estimation tasks provide the cleanest exact setting, because right-Clifford factors can be removed by classical observable conjugation. Beyond that setting, the larger agenda is to understand which interfaces make classicalization exact, which representations reveal them, and which learning systems can discover those representations better than fixed heuristics.
+
+That, in the end, is the central proposal of this manuscript: the path to AI-assisted hybrid quantum-classical compilation is to learn not merely how to shrink circuits, but how to move through their equivalence classes until their classically manageable structure is maximally exposed.
+
+\begin{thebibliography}{99}
+
+\bibitem{bravyi_gosset_2016}
+Sergey Bravyi and David Gosset.
+\newblock Improved classical simulation of quantum circuits dominated by Clifford gates.
+\newblock \emph{Physical Review Letters}, 116:250501, 2016.
+\newblock arXiv:1601.07601.
+\newblock \url{https://arxiv.org/abs/1601.07601}.
+
+\bibitem{howard_campbell_2017}
+Mark Howard and Earl T. Campbell.
+\newblock Application of a resource theory for magic states to fault-tolerant quantum computing.
+\newblock \emph{Physical Review Letters}, 118:090501, 2017.
+\newblock arXiv:1609.07488.
+\newblock \url{https://arxiv.org/abs/1609.07488}.
+
+\bibitem{duncan_et_al_2020}
+Ross Duncan, Aleks Kissinger, Simon Perdrix, and John van de Wetering.
+\newblock Graph-theoretic simplification of quantum circuits with the ZX-calculus.
+\newblock \emph{Quantum}, 4:279, 2020.
+\newblock arXiv:1902.03178.
+\newblock \url{https://arxiv.org/abs/1902.03178}.
+
+\bibitem{pyzx_2020}
+Aleks Kissinger and John van de Wetering.
+\newblock PyZX: Large scale automated diagrammatic reasoning.
+\newblock \emph{Electronic Proceedings in Theoretical Computer Science}, 318:229--241, 2020.
+\newblock arXiv:1904.04735.
+\newblock \url{https://arxiv.org/abs/1904.04735}.
+
+\bibitem{kissinger_vdw_2020}
+Aleks Kissinger and John van de Wetering.
+\newblock Reducing the number of non-Clifford gates in quantum circuits.
+\newblock \emph{Physical Review A}, 102:022406, 2020.
+\newblock \url{https://doi.org/10.1103/PhysRevA.102.022406}.
+
+\bibitem{gidney_2021}
+Craig Gidney.
+\newblock Stim: a fast stabilizer circuit simulator.
+\newblock \emph{Quantum}, 5:497, 2021.
+\newblock arXiv:2103.02202.
+\newblock \url{https://arxiv.org/abs/2103.02202}.
+
+\bibitem{debeaudrap_et_al_2022}
+Niel de Beaudrap, Aleks Kissinger, and John van de Wetering.
+\newblock Circuit extraction for ZX-diagrams can be \#P-hard.
+\newblock In \emph{Proceedings of ICALP 2022}, pages 119:1--119:19, 2022.
+\newblock arXiv:2202.09194.
+\newblock \url{https://arxiv.org/abs/2202.09194}.
+
+\bibitem{peres_galvao_2023}
+Filipa C. R. Peres and Ernesto F. Galv\~ao.
+\newblock Quantum circuit compilation and hybrid computation using Pauli-based computation.
+\newblock \emph{Quantum}, 7:1126, 2023.
+\newblock arXiv:2203.01789.
+\newblock \url{https://arxiv.org/abs/2203.01789}.
+
+\bibitem{qasmbench_2020}
+Ang Li, Samuel Stein, Sriram Krishnamoorthy, and James Ang.
+\newblock QASMBench: A low-level QASM benchmark suite for NISQ evaluation and simulation.
+\newblock arXiv:2005.13018, 2020.
+\newblock \url{https://arxiv.org/abs/2005.13018}.
+
+\bibitem{mqtbench_2023}
+Nils Quetschlich, Lukas Burgholzer, and Robert Wille.
+\newblock MQT Bench: Benchmarking software and design automation tools for quantum computing.
+\newblock \emph{Quantum}, 7:1062, 2023.
+\newblock \url{https://quantum-journal.org/papers/q-2023-07-20-1062/}.
+
+\bibitem{rlzx_2025}
+Jordi Riu, Jan Nogu\'e, Gerard Vilaplana, Artur Garcia-Saez, and Marta P. Estarellas.
+\newblock Reinforcement learning based quantum circuit optimization via ZX-calculus.
+\newblock \emph{Quantum}, 9:1758, 2025.
+\newblock \url{https://quantum-journal.org/papers/q-2025-05-28-1758/}.
+
+\bibitem{splitting_2025}
+Fernando Lima and Arcesio Casta\~neda Medina.
+\newblock Clifford and non-Clifford splitting in quantum circuits: Applications and ZX-calculus detection procedure.
+\newblock arXiv:2504.16004, 2025.
+\newblock \url{https://arxiv.org/abs/2504.16004}.
+
+\bibitem{alphatensor_2025}
+Francisco J. R. Ruiz, Tuomas Laakkonen, Johannes Bausch, Matej Balog, Mohammadamin Barekatain, Francisco J. H. Heras, Alexander Novikov, Nathan Fitzpatrick, Bernardino Romera-Paredes, John van de Wetering, Alhussein Fawzi, Konstantinos Meichanetzidis, and Pushmeet Kohli.
+\newblock Quantum circuit optimization with AlphaTensor.
+\newblock \emph{Nature Machine Intelligence}, 7:374--385, 2025.
+\newblock \url{https://doi.org/10.1038/s42256-025-01001-1}.
+
+\bibitem{shallow_magic_2025}
+Yifan Zhang and Yuxuan Zhang.
+\newblock Classical simulability of quantum circuits with shallow magic depth.
+\newblock \emph{PRX Quantum}, 6:010337, 2025.
+\newblock \url{https://doi.org/10.1103/PRXQuantum.6.010337}.
+
+\bibitem{hamaguchi_et_al_2025}
+Hiroki Hamaguchi, Kou Hamada, Naoki Marumo, and Nobuyuki Yoshioka.
+\newblock Faster computation of nonstabilizerness.
+\newblock \emph{Physical Review Applied}, 23:014069, 2025.
+\newblock arXiv:2406.16673.
+\newblock \url{https://arxiv.org/abs/2406.16673}.
+
+\end{thebibliography}
+
+\end{document}

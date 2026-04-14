@@ -30,6 +30,15 @@ uv run python scripts/run_demo_train.py --mode smoke --profile cpu --log-dir res
 ./scripts/run_resynth.sh --decomposition results/compile/mod_5_4/mod_5_4.block1.matrix.npy --mapping results/compile/mod_5_4/mod_5_4.block1.mapping.txt --original results/compile/mod_5_4/mod_5_4.block1.matrix.npy --output-dir results/resynth/mod_5_4 --gadgets off
 ```
 
+## Reproducao de figura
+
+```bash
+cd /Users/caio/Deep-Learning/project
+uv sync --group demo-cpu --group dev
+uv run python scripts/reproduce_fig4b_binary_addition.py
+uv run python scripts/reproduce_fig4.py
+```
+
 ## Observações
 
 - O demo oficial continua sendo o entrypoint upstream `python -m alphatensor_quantum.src.demo.run_demo`.
