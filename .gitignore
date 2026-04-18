@@ -1,3 +1,6 @@
 .DS_Store
-main.pdf
-main.synctex.gz
+
+*.synctex.gz
+.venv
+*.pdf
+/tmp
