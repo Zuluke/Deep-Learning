@@ -1,0 +1,10 @@
+family_file,family_label,method,num_decomposition_keys,num_candidates,num_circuits,num_best_totals,num_tensor_equal_candidates,num_missing_tensor_candidates,mean_best_effective_tcount
+benchmarks_gadgets.npz,benchmark,paper_gadgets,48,366,26,26,366,0,65.38461538461539
+benchmarks_no_gadgets.npz,benchmark,paper_no_gadgets,48,392,26,26,392,0,117.57692307692308
+binary_addition.npz,binary_addition,paper_gadgets,8,8,8,8,8,0,11.0
+hamming_weight_phase_gradient.npz,hamming_weight_phase_gradient,paper_gadgets,17,17,17,17,17,0,19.529411764705884
+multiplication_finite_fields_gadgets.npz,finite_field_multiplication,paper_gadgets,9,82,9,9,82,0,40.22222222222222
+multiplication_finite_fields_no_gadgets.npz,finite_field_multiplication,paper_no_gadgets,9,53,9,9,53,0,89.44444444444444
+quantum_chemistry.npz,quantum_chemistry,paper_gadgets,7,60,7,7,60,0,29.142857142857142
+unary_iteration_gadgets.npz,unary_iteration,paper_gadgets,3,30,3,3,30,0,35.333333333333336
+unary_iteration_no_gadgets.npz,unary_iteration,paper_no_gadgets,3,30,3,3,30,0,73.66666666666667

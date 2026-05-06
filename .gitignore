@@ -1,6 +1,15 @@
 .DS_Store
 
 *.synctex.gz
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
 .venv
 *.pdf
+!paper/main.pdf
+paper/IEEEexample.bib
+paper/IEEEfull.bib
+paper/IEEEtranS.bst
 /tmp

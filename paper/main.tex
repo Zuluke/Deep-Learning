@@ -1,0 +1,208 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xcolor}
+
+\graphicspath{
+  {../project/results/reproducibility/paper/figures/}
+  {../project/results/figures/entrega1/}
+  {../project/results/figures/entrega1_formal/}
+}
+
+\newcommand{\atq}{AlphaTensor-Quantum}
+\newcommand{\tcount}{\textit{T-count}}
+\newcommand{\tdepth}{\textit{T-depth}}
+\newcommand{\tdag}{T^{\dagger}}
+
+\begin{document}
+
+\title{AlphaTensor-Quantum, Clifford Splitting e Hibridizacao Estrutural: Reproducao Auditavel para a Entrega 1}
+
+\author{
+\IEEEauthorblockN{Caio Almeida Carneiro Leao}
+\IEEEauthorblockA{
+Centro de Informatica, UFPE\\
+Recife, Pernambuco, Brasil\\
+\texttt{cacl2@cin.ufpe.br}}
+\and
+\IEEEauthorblockN{Joao Victor Moreira Cardoso}
+\IEEEauthorblockA{
+Centro de Informatica, UFPE\\
+Recife, Pernambuco, Brasil\\
+\texttt{jvmc@cin.ufpe.br}}
+}
+
+\maketitle
+
+\begin{abstract}
+Este draft documenta a primeira etapa experimental de um projeto de Deep Learning sobre otimizacao de circuitos quanticos Clifford+T. O objetivo imediato nao e retreinar o \atq, mas construir uma base auditavel para reproduzir os resultados publicos do artigo original e, sobre ela, introduzir metricas estruturais inspiradas em Clifford/non-Clifford splitting. A reproducao principal usa as decomposicoes oficiais publicadas pelo DeepMind: cada decomposicao e validada por igualdade tensorial sobre GF(2), os padroes de gadgets Toffoli/CS sao detectados e o \tcount{} efetivo e recalculado. No estado atual, o pipeline reproduz 96 de 96 valores esperados codificados a partir das tabelas e figuras do artigo, com 1038 de 1038 candidatos validados tensorialmente. Como auditoria complementar, circuitos QASM reconstruidos sao comparados a baselines original e PyZX, com verificacao formal por \texttt{feynver} quando o provador termina. Os resultados preliminares indicam que a reducao de \tcount{} pode ser dissociada de melhorias estruturais do nucleo nao-Clifford, justificando a extensao proposta para metricas de localidade, span temporal e concentracao.
+\end{abstract}
+
+\begin{IEEEkeywords}
+otimizacao de circuitos quanticos, Clifford+T, AlphaTensor-Quantum, \tcount, PyZX, Clifford splitting, reproducibilidade
+\end{IEEEkeywords}
+
+\section{Solucao Proposta}
+
+Circuitos Clifford+T sao um alvo natural para otimizacao porque as portas nao-Clifford, em especial $T$ e $\tdag$, estao associadas ao custo dominante em regimes tolerantes a falhas. A motivacao operacional e que circuitos compostos apenas por portas Clifford possuem estrutura estabilizadora e admitem simulacao classica eficiente em varios regimes, conforme a familia de resultados associada ao teorema de Gottesman--Knill e ao algoritmo de Aaronson--Gottesman~\cite{aaronsonImprovedSimulationStabilizer2004}. Assim, a reducao de \tcount{} e uma metrica central, mas nao esgota o problema: dois circuitos com o mesmo numero de portas $T$ podem apresentar distribuicoes temporais e espaciais muito diferentes da parte nao-Clifford.
+
+O artigo-base de Ruiz \textit{et al.} introduz o \atq, que reformula a otimizacao de \tcount{} como um problema de decomposicao tensorial e usa aprendizado por reforco profundo para descobrir decomposicoes de menor custo~\cite{ruizQuantumCircuitOptimization2025}. A contribuicao desta primeira entrega e construir uma camada de reproducao e analise que permita separar tres questoes: se os resultados publicos do \atq{} sao reproduzidos fielmente; como eles se comparam a baselines praticos em QASM, incluindo PyZX~\cite{kissingerPyzxLargeScale2020}; e se a parte nao-Clifford resultante se torna mais concentrada ou localizada.
+
+A extensao estrutural e inspirada por Clifford/non-Clifford splitting, onde o interesse nao e apenas contar portas nao-Clifford, mas identificar se um circuito pode ser organizado como uma regiao Clifford ampla acompanhada de um nucleo nao-Clifford menor~\cite{limaCliffordNonCliffordSplitting2025}. Nesta entrega, implementamos uma aproximacao mensuravel e auditavel dessa ideia. Para cada circuito normalizado, calculamos o numero de qubits tocados por $T/\tdag$, o span temporal entre a primeira e a ultima porta nao-Clifford, a area aproximada desse nucleo, razoes de prefixo/sufixo Clifford e um score heuristico de concentracao. Essas metricas ainda nao implementam o procedimento completo via ZX-calculus de Lima e Castañeda Medina; elas servem como proxies experimentais para sustentar a pergunta de pesquisa e guiar as proximas etapas.
+
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.90\linewidth}
+\scriptsize
+\textbf{Pipeline auditavel do Draft 1.}
+\begin{center}
+\begin{tabular}{p{0.42\linewidth}p{0.42\linewidth}}
+Decomposicoes oficiais \texttt{.npz} $\rightarrow$ validacao tensorial GF(2) $\rightarrow$ \tcount{} efetivo com gadgets $\rightarrow$ comparacao com o artigo.
+&
+QASM original $\rightarrow$ PyZX/AlphaTensor-public $\rightarrow$ metricas Clifford+T $\rightarrow$ figuras e auditoria formal.
+\end{tabular}
+\end{center}
+\end{minipage}}
+\caption{Organizacao logica da solucao. A reproducao tensorial e tratada como evidencia primaria para os resultados do artigo; a reconstrucao QASM e a verificacao formal sao usadas como auditoria complementar para os artefatos executaveis da Entrega 1.}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Experimentos}
+
+O repositorio foi reorganizado para que a reproducao nao dependa de passos manuais. A camada reutilizavel fica em \texttt{project/src/atq\_repro/} e contem funcoes para carregar benchmarks, mapear chaves dos arquivos \texttt{.npz} para tensores \texttt{.tensor.npy}, reconstruir tensores simetricos por soma de fatores rank-1 em GF(2), validar igualdade tensorial, detectar padroes Toffoli/CS e gerar tabelas e figuras. Os scripts em \texttt{project/scripts/} funcionam como wrappers de linha de comando, enquanto o notebook da Entrega 1 executa a narrativa experimental completa.
+
+A primeira familia de experimentos reproduz os resultados do artigo a partir das decomposicoes oficiais. Para uma decomposicao com fatores binarios $v_i$, o tensor reconstruido e calculado como
+\begin{equation}
+\hat{T} = \bigoplus_i v_i \otimes v_i \otimes v_i,
+\end{equation}
+onde $\oplus$ denota soma modulo 2. A decomposicao e aceita quando $\hat{T}$ coincide exatamente com o tensor alvo do benchmark. Quando a familia usa gadgets, o custo efetivo e computado como
+\begin{equation}
+T_{\mathrm{eff}} = 2n_{\mathrm{Toffoli}} + 2n_{\mathrm{CS}} + n_{T,\mathrm{rem}},
+\end{equation}
+em que grupos Toffoli e CS sao detectados por padroes lineares nos fatores binarios. Essa etapa e mais alinhada ao artigo original do que a comparacao direta de QASM, pois os resultados publicos do \atq{} sao decomposicoes otimizadas.
+
+A segunda familia de experimentos gera a tabela pratica da disciplina. Selecionamos sete circuitos Clifford+T pequenos ou moderados disponiveis localmente: \texttt{mod\_5\_4}, \texttt{gf\_2pow2\_mult}, \texttt{cuccaro\_adder\_n3}, \texttt{qft\_4}, \texttt{vbe\_adder\_3}, \texttt{hamming\_15\_low} e \texttt{qcla\_mod\_7}. Para cada circuito, medimos o circuito original, o baseline PyZX e a melhor reconstrucao AlphaTensor-public disponivel. A tabela completa preserva todos os status de auditoria. A tabela principal formalmente verificada remove candidatos cujo status em \texttt{feynver} foi \texttt{timeout} ou \texttt{inconclusive}.
+
+\begin{table}[t]
+\caption{Cobertura da reproducao fiel do artigo.}
+\label{tab:paper-repro}
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Fonte reproduzida & Linhas & Matches & Tensor ok\\
+\midrule
+Benchmarks sem gadgets & 35 & 35 & 35\\
+Benchmarks com gadgets & 35 & 35 & 35\\
+GF sem gadgets & 9 & 9 & 9\\
+GF com gadgets & 9 & 9 & 9\\
+Binary addition & 8 & 8 & 8\\
+\midrule
+Total & 96 & 96 & 96\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Resultados Preliminares}
+
+A Tabela~\ref{tab:paper-repro} resume a reproducao fiel do artigo. O pipeline atual reproduz todos os 96 valores esperados codificados para as tabelas e figuras publicas usadas no Draft 1. Alem disso, a validacao detalhada percorre 1038 candidatos de decomposicao, todos com igualdade tensorial contra seus respectivos tensores alvo. Esse resultado e o principal suporte para afirmar que a entrega replica o baseline publico do \atq{} dentro do escopo localmente factivel.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{paper_benchmark_comparison.pdf}
+\caption{Visao geral da reproducao local dos resultados publicos do \atq. O painel A resume a cobertura por fonte reproduzida; o painel B mostra a concordancia valor-a-valor entre \tcount{} efetivo reportado e reproduzido. Todos os 96 pontos avaliados ficam sobre a diagonal de paridade, indicando match exato dentro do escopo codificado para esta entrega.}
+\label{fig:paper-benchmark}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{gf_multiplication_effective_tcount.pdf}
+\caption{Reproducao da tendencia de multiplicacao em corpos finitos. A curva com gadgets reduz o \tcount{} efetivo em relacao a decomposicao sem gadgets, de acordo com o artefato publico do \atq.}
+\label{fig:gf}
+\end{figure}
+
+Para a camada QASM, a Tabela~\ref{tab:formal-main} apresenta apenas os resultados que permanecem na tabela formal principal. Essa escolha e deliberadamente conservadora: candidatos com \texttt{timeout} ou \texttt{inconclusive} continuam documentados na auditoria, mas nao sao usados como resultado formal. Em \texttt{mod\_5\_4}, por exemplo, PyZX reduz o \tcount{} de 28 para 8, enquanto AlphaTensor-public reduz para 7, ambos com igualdade formal. Em \texttt{gf\_2pow2\_mult}, AlphaTensor-public tambem melhora PyZX em \tcount{} formalmente verificado, embora produza maior profundidade no QASM reconstruido. Em \texttt{qft\_4}, a reducao de \tcount{} do AlphaTensor-public vem acompanhada de aumento substancial de profundidade e de qubits tocados por portas $T/\tdag$, ilustrando que a metrica tradicional nao captura toda a estrutura relevante. A coluna ``Qubits $T$'' e medida no artefato QASM normalizado de cada metodo; portanto, pode incluir fios auxiliares introduzidos pela reconstrucao e nao deve ser lida como o numero logico de qubits do benchmark original.
+
+\begin{table*}[t]
+\caption{Tabela principal da Entrega 1 com candidatos formalmente verificados.}
+\label{tab:formal-main}
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Circuito & Metodo & \tcount{} & \tdepth{} & Depth & Qubits $T$ & Span nao-Clifford\\
+\midrule
+\texttt{cuccaro\_adder\_n3} & Original & 42 & 10 & 73 & 7 & 66\\
+\texttt{cuccaro\_adder\_n3} & PyZX & 16 & 6 & 110 & 6 & 79\\
+\texttt{gf\_2pow2\_mult} & Original & 28 & 8 & 42 & 6 & 39\\
+\texttt{gf\_2pow2\_mult} & PyZX & 18 & 4 & 111 & 6 & 85\\
+\texttt{gf\_2pow2\_mult} & AlphaTensor-public & 17 & 6 & 161 & 5 & 73\\
+\texttt{mod\_5\_4} & Original & 28 & 16 & 59 & 5 & 50\\
+\texttt{mod\_5\_4} & PyZX & 8 & 2 & 45 & 4 & 31\\
+\texttt{mod\_5\_4} & AlphaTensor-public & 7 & 4 & 57 & 3 & 27\\
+\texttt{qft\_4} & Original & 69 & 40 & 152 & 5 & 150\\
+\texttt{qft\_4} & PyZX & 67 & 37 & 239 & 5 & 228\\
+\texttt{qft\_4} & AlphaTensor-public & 53 & 25 & 529 & 19 & 146\\
+\texttt{vbe\_adder\_3} & Original & 70 & 18 & 97 & 10 & 90\\
+\texttt{vbe\_adder\_3} & PyZX & 24 & 6 & 143 & 8 & 106\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.82\textwidth]{../project/results/figures/entrega1_formal/tcount_comparison.pdf}
+\caption{Comparacao de \tcount{} na tabela principal formalmente verificada. Os candidatos com timeout ou inconclusivos sao excluidos desta figura e permanecem apenas na tabela completa de auditoria.}
+\label{fig:tcount}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.88\textwidth]{../project/results/figures/entrega1_formal/nonclifford_core_comparison.pdf}
+\caption{Metricas estruturais para a tabela formal. A reducao de \tcount{} nao implica necessariamente reducao simultanea de span temporal ou de qubits tocados por portas nao-Clifford.}
+\label{fig:core}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{../project/results/figures/entrega1/t_gate_heatmap_mod_5_4.pdf}
+\caption{Heatmap de localizacao de portas $T/\tdag$ para \texttt{mod\_5\_4}. O caso ilustra uma situacao favoravel em que AlphaTensor-public reduz tanto \tcount{} quanto a extensao aproximada do nucleo nao-Clifford.}
+\label{fig:heatmap}
+\end{figure*}
+
+\section{Discussao e Insights Preliminares}
+
+O resultado mais importante do Draft 1 e metodologico: conseguimos transformar o projeto em um pipeline auditavel em vez de uma demonstracao ad hoc. A reproducao tensorial oferece uma evidencia forte de que os artefatos publicos do \atq{} estao sendo interpretados corretamente, pois todos os candidatos avaliados coincidem com os tensores alvo. Isso tambem resolve a principal duvida sobre retreinamento. Para esta entrega, nao retreinar o modelo nao enfraquece o trabalho; pelo contrario, evita uma comparacao mal controlada e concentra o esforco em uma reproducao fiel dos artefatos oficiais.
+
+A segunda observacao e que PyZX e AlphaTensor-public nao devem ser comparados apenas por \tcount. Em alguns circuitos, como \texttt{mod\_5\_4}, a reducao de \tcount{} e acompanhada por uma melhora estrutural clara. Em outros, como \texttt{qft\_4}, a reducao de \tcount{} aparece junto de aumento de profundidade ou de dispersao espacial das portas $T/\tdag$. Esse comportamento sustenta a motivacao do projeto: se o objetivo final envolve hibridizacao Clifford/non-Clifford, precisamos medir a localizacao da parte nao-Clifford, nao apenas sua cardinalidade.
+
+A verificacao formal tambem delimita o que pode ser afirmado com rigor. Dos 34 pares candidatos avaliados no escopo da Entrega 1, 21 foram provados equivalentes, 5 ficaram inconclusivos e 8 atingiram timeout de 30 segundos. Portanto, a tabela formal principal e deliberadamente menor do que a tabela experimental completa. Essa decisao reduz o numero de resultados apresentados, mas aumenta a confiabilidade do draft. Os casos inconclusivos continuam relevantes como resultados exploratorios e indicam onde o pipeline de reconstrucao QASM ou o tempo de provador precisa ser melhorado.
+
+\section{Limitacoes e Proximos Passos}
+
+As metricas estruturais atuais sao proxies sobre uma lista de portas normalizada. Elas nao implementam ainda a deteccao de fronteiras via ZX-calculus proposta por Lima e Castañeda Medina~\cite{limaCliffordNonCliffordSplitting2025}. Alem disso, a reconstrucao QASM a partir das decomposicoes publicas nao deve ser confundida com a evidencia primaria do artigo, que opera no nivel tensorial. Para a proxima etapa, pretendemos expandir o conjunto de benchmarks formalmente verificados, investigar por que alguns circuitos reconstruidos geram \texttt{timeout}, e substituir o score heuristico por uma metrica de splitting mais proxima da formulacao ZX.
+
+Do ponto de vista de Deep Learning, a etapa posterior natural e incorporar as metricas estruturais como recompensa auxiliar ou criterio de selecao no ambiente do \atq. O Draft 1, entretanto, ja estabelece a base necessaria para que essa extensao seja cientificamente controlada: os dados publicos foram reproduzidos, os baselines foram organizados, as figuras foram geradas automaticamente e as limitacoes foram explicitadas.
+
+\section*{Artefatos de Reprodutibilidade}
+
+Os principais comandos para reproduzir este draft sao:
+{\scriptsize
+\begin{verbatim}
+cd project
+uv run python scripts/run_draft1_pipeline.py \
+  --run-formal
+\end{verbatim}
+}
+O protocolo completo esta documentado em \texttt{project/DRAFT1\_REPRODUCIBILITY.md}; os comandos individuais e os artefatos esperados tambem estao listados nesse arquivo.
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,refs}
+
+\end{document}

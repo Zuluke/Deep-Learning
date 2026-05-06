@@ -1,0 +1,84 @@
+{
+  "project_root": "/Users/caio/Deep-Learning/project",
+  "run_formal": true,
+  "formal_timeout_sec": 30,
+  "steps": [
+    {
+      "name": "paper-reproduction",
+      "command": [
+        "/Users/caio/Deep-Learning/project/.venv/bin/python3",
+        "scripts/reproduce_paper_results.py"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 10.392668008804321,
+      "stdout_tail": "{\n  \"figure_benchmark_comparison\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/paper_benchmark_comparison.png\",\n  \"figure_binary_addition\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/binary_addition_effective_tcount.png\",\n  \"figure_family_coverage\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/paper_family_coverage.png\",\n  \"figure_gf_multiplication\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/gf_multiplication_effective_tcount.png\",\n  \"paper_aggregate_best_csv\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_aggregate_best.csv\",\n  \"paper_benchmark_comparison_csv\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_benchmark_comparison.csv\",\n  \"paper_family_summary_csv\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_family_summary.csv\",\n  \"paper_reproduction_report\": \"/Users/caio/Deep-Learning/project/results/reports/paper_reproduction_summary.md\",\n  \"paper_results_long_csv\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_results_long.csv\",\n  \"paper_summary_json\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_summary.json\",\n  \"paper_tensor_validation_csv\": \"/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_tensor_validation.csv\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "formal-verification",
+      "command": [
+        "/Users/caio/Deep-Learning/project/.venv/bin/python3",
+        "scripts/run_formal_verification.py",
+        "--scope",
+        "entrega1",
+        "--timeout-sec",
+        "30"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 261.1458230018616,
+      "stdout_tail": "[1/34] cuccaro_adder_n3/compile_no_quizx: equal\n[2/34] cuccaro_adder_n3/compile_quizx: equal\n[3/34] cuccaro_adder_n3/public_resynth_gadgets: inconclusive\n[4/34] cuccaro_adder_n3/pyzx: equal\n[5/34] gf_2pow2_mult/compile_no_quizx: equal\n[6/34] gf_2pow2_mult/compile_quizx: equal\n[7/34] gf_2pow2_mult/public_resynth_gadgets: equal\n[8/34] gf_2pow2_mult/public_resynth_no_gadgets: equal\n[9/34] gf_2pow2_mult/pyzx: equal\n[10/34] hamming_15_low/compile_no_quizx: inconclusive\n[11/34] hamming_15_low/compile_quizx: equal\n[12/34] hamming_15_low/public_resynth_gadgets: timeout\n[13/34] hamming_15_low/public_resynth_no_gadgets: timeout\n[14/34] hamming_15_low/pyzx: timeout\n[15/34] mod_5_4/compile_no_quizx: equal\n[16/34] mod_5_4/compile_quizx: equal\n[17/34] mod_5_4/public_resynth_gadgets: equal\n[18/34] mod_5_4/public_resynth_no_gadgets: equal\n[19/34] mod_5_4/pyzx: equal\n[20/34] qcla_mod_7/compile_no_quizx: timeout\n[21/34] qcla_mod_7/compile_quizx: timeout\n[22/34] qcla_mod_7/public_resynth_gadgets: timeout\n[23/34] qcla_mod_7/public_resynth_no_gadgets: timeout\n[24/34] qcla_mod_7/pyzx: timeout\n[25/34] qft_4/compile_no_quizx: equal\n[26/34] qft_4/compile_quizx: equal\n[27/34] qft_4/public_resynth_gadgets: inconclusive\n[28/34] qft_4/public_resynth_no_gadgets: equal\n[29/34] qft_4/pyzx: equal\n[30/34] vbe_adder_3/compile_no_quizx: equal\n[31/34] vbe_adder_3/compile_quizx: equal\n[32/34] vbe_adder_3/public_resynth_gadgets: inconclusive\n[33/34] vbe_adder_3/public_resynth_no_gadgets: inconclusive\n[34/34] vbe_adder_3/pyzx: equal\n{\n  \"summary_csv\": \"/Users/caio/Deep-Learning/project/results/verification/entrega1/verification_summary.csv\",\n  \"summary_json\": \"/Users/caio/Deep-Learning/project/results/verification/entrega1/verification_summary.json\",\n  \"report_path\": \"/Users/caio/Deep-Learning/project/results/reports/formal_verification_entrega1_summary.md\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "entrega1-outputs",
+      "command": [
+        "/Users/caio/Deep-Learning/project/.venv/bin/python3",
+        "scripts/make_entrega1_outputs.py"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 3.958106756210327,
+      "stdout_tail": "{'output_csv': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics.csv', 'output_json': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics.json', 'formal_output_csv': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics_formally_verified.csv', 'formal_output_json': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics_formally_verified.json', 'figure_dir': '/Users/caio/Deep-Learning/project/results/figures/entrega1', 'formal_figure_dir': '/Users/caio/Deep-Learning/project/results/figures/entrega1_formal', 'report_path': '/Users/caio/Deep-Learning/project/results/reports/entrega1_experimental_summary.md', 'formal_report_path': '/Users/caio/Deep-Learning/project/results/reports/entrega1_formally_verified_summary.md', 'heatmaps': ['/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_mod_5_4.png', '/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_qft_4.png', '/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_vbe_adder_3.png']}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/Users/caio/Deep-Learning/project/.venv/bin/python3",
+        "-m",
+        "pytest",
+        "tests",
+        "-q"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 19.35599708557129,
+      "stdout_tail": "..................                                                       [100%]\n18 passed in 18.88s\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "notebook",
+      "command": [
+        "/Users/caio/Deep-Learning/project/.venv/bin/python3",
+        "-m",
+        "jupyter",
+        "nbconvert",
+        "--to",
+        "notebook",
+        "--execute",
+        "notebooks/entrega1_reproducao_alphatensor_quantum.ipynb",
+        "--inplace",
+        "--ExecutePreprocessor.timeout=1200"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 16.04064702987671,
+      "stdout_tail": "{'output_csv': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics.csv', 'output_json': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics.json', 'formal_output_csv': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics_formally_verified.csv', 'formal_output_json': '/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics_formally_verified.json', 'figure_dir': '/Users/caio/Deep-Learning/project/results/figures/entrega1', 'formal_figure_dir': '/Users/caio/Deep-Learning/project/results/figures/entrega1_formal', 'report_path': '/Users/caio/Deep-Learning/project/results/reports/entrega1_experimental_summary.md', 'formal_report_path': '/Users/caio/Deep-Learning/project/results/reports/entrega1_formally_verified_summary.md', 'heatmaps': ['/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_mod_5_4.png', '/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_qft_4.png', '/Users/caio/Deep-Learning/project/results/figures/entrega1/t_gate_heatmap_vbe_adder_3.png']}\n",
+      "stderr_tail": "[NbConvertApp] Converting notebook notebooks/entrega1_reproducao_alphatensor_quantum.ipynb to notebook\n[NbConvertApp] Writing 2300156 bytes to notebooks/entrega1_reproducao_alphatensor_quantum.ipynb\n"
+    }
+  ],
+  "artifacts": {
+    "paper_summary": "results/reproducibility/paper/paper_summary.json",
+    "paper_comparison": "results/reproducibility/paper/paper_benchmark_comparison.csv",
+    "entrega1_metrics": "results/csv/entrega1_metrics.csv",
+    "entrega1_formal_metrics": "results/csv/entrega1_metrics_formally_verified.csv",
+    "notebook": "notebooks/entrega1_reproducao_alphatensor_quantum.ipynb"
+  }
+}

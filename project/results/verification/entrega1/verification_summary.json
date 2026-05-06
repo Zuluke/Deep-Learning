@@ -1,0 +1,8 @@
+{
+  "circuit_to_tensor_binary": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/target/release/circuit-to-tensor",
+  "feynver_path": "/Users/caio/.local/bin/feynver",
+  "num_rows": 34,
+  "scope": "entrega1",
+  "summary_csv": "/Users/caio/Deep-Learning/project/results/verification/entrega1/verification_summary.csv",
+  "timeout_sec": 30
+}

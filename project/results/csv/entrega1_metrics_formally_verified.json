@@ -1,0 +1,14 @@
+{
+  "circuit_ids": [
+    "cuccaro_adder_n3",
+    "gf_2pow2_mult",
+    "mod_5_4",
+    "qft_4",
+    "vbe_adder_3"
+  ],
+  "criterion": "original rows plus candidate rows with formal_verification_status == equal",
+  "final_metrics_csv": "/Users/caio/Deep-Learning/project/results/csv/final_metrics.csv",
+  "num_rows": 13,
+  "output_csv": "/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics_formally_verified.csv",
+  "verification_csv": "/Users/caio/Deep-Learning/project/results/verification/entrega1/verification_summary.csv"
+}

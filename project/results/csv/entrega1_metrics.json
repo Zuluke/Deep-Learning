@@ -1,0 +1,16 @@
+{
+  "circuit_ids": [
+    "mod_5_4",
+    "gf_2pow2_mult",
+    "cuccaro_adder_n3",
+    "qft_4",
+    "vbe_adder_3",
+    "hamming_15_low",
+    "qcla_mod_7"
+  ],
+  "final_metrics_csv": "/Users/caio/Deep-Learning/project/results/csv/final_metrics.csv",
+  "num_rows": 21,
+  "output_csv": "/Users/caio/Deep-Learning/project/results/csv/entrega1_metrics.csv",
+  "paper_comparison_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_benchmark_comparison.csv",
+  "verification_csv": "/Users/caio/Deep-Learning/project/results/verification/entrega1/verification_summary.csv"
+}

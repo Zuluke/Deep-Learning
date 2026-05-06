@@ -1,0 +1,19 @@
+{
+  "num_comparison_rows": 96,
+  "num_exact_matches": 96,
+  "num_long_rows": 1038,
+  "num_tensor_equal_candidates": 1038,
+  "outputs": {
+    "figure_benchmark_comparison": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/paper_benchmark_comparison.png",
+    "figure_binary_addition": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/binary_addition_effective_tcount.png",
+    "figure_family_coverage": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/paper_family_coverage.png",
+    "figure_gf_multiplication": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/figures/gf_multiplication_effective_tcount.png",
+    "paper_aggregate_best_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_aggregate_best.csv",
+    "paper_benchmark_comparison_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_benchmark_comparison.csv",
+    "paper_family_summary_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_family_summary.csv",
+    "paper_reproduction_report": "/Users/caio/Deep-Learning/project/results/reports/paper_reproduction_summary.md",
+    "paper_results_long_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_results_long.csv",
+    "paper_summary_json": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_summary.json",
+    "paper_tensor_validation_csv": "/Users/caio/Deep-Learning/project/results/reproducibility/paper/paper_tensor_validation.csv"
+  }
+}
