@@ -23,6 +23,13 @@ def circuit_selection_row_from_qasm(path: Path) -> dict[str, Any]:
         "tdepth_after": qasm_metrics.get("tdepth"),
         "depth_after": qasm_metrics.get("normalized_qasm_depth"),
         "gate_count_after": qasm_metrics.get("normalized_qasm_size"),
+        "rho_t": qasm_metrics.get("rho_t"),
+        "rho_w": qasm_metrics.get("rho_w"),
+        "n_clifford_blocks": qasm_metrics.get("n_clifford_blocks"),
+        "n_nonclifford_blocks": qasm_metrics.get("n_nonclifford_blocks"),
+        "avg_nonclifford_block_len": qasm_metrics.get("avg_nonclifford_block_len"),
+        "hadamard_boundary_density": qasm_metrics.get("hadamard_boundary_density"),
+        "tdepth_over_tcount": qasm_metrics.get("tdepth_over_tcount"),
         **zx_metrics,
     }
 
@@ -37,16 +44,33 @@ def compute_selection_metrics(
         candidate_row.get("tcount_after"),
         original_row.get("tcount_after"),
     )
+    tdepth_ratio = _ratio(
+        candidate_row.get("tdepth_after"),
+        original_row.get("tdepth_after"),
+    )
+    gate_count_ratio = _ratio(
+        candidate_row.get("gate_count_after"),
+        original_row.get("gate_count_after"),
+    )
     primary_ratio = target_metrics.get(PRIMARY_RATIO_KEY)
     return {
         "selection_status": "ok" if status == "ok" else status,
         "selection_error": target_metrics.get("structural_target_error"),
         "structural_cost": primary_ratio if status == "ok" else None,
         "tcount_ratio": tcount_ratio,
+        "tdepth_ratio": tdepth_ratio,
+        "gate_count_ratio": gate_count_ratio,
         "tcount_after": candidate_row.get("tcount_after"),
         "tdepth_after": candidate_row.get("tdepth_after"),
         "depth_after": candidate_row.get("depth_after"),
         "gate_count_after": candidate_row.get("gate_count_after"),
+        "rho_t": candidate_row.get("rho_t"),
+        "rho_w": candidate_row.get("rho_w"),
+        "n_clifford_blocks": candidate_row.get("n_clifford_blocks"),
+        "n_nonclifford_blocks": candidate_row.get("n_nonclifford_blocks"),
+        "avg_nonclifford_block_len": candidate_row.get("avg_nonclifford_block_len"),
+        "hadamard_boundary_density": candidate_row.get("hadamard_boundary_density"),
+        "tdepth_over_tcount": candidate_row.get("tdepth_over_tcount"),
         **target_metrics,
     }
 

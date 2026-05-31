@@ -139,6 +139,10 @@ def safe_source_stem(npz_path: Path, key: str) -> str:
     return f"{npz_path.stem}.{clean_key}"
 
 
+def bool_as_int(value: bool) -> int:
+    return 1 if value else 0
+
+
 def choose_best_block_candidate(
     *,
     artifact_stem: str,
@@ -309,6 +313,7 @@ def choose_structural_circuit_candidate(
         candidates_by_block.append((artifact_stem, block_candidates))
 
     best_combo: dict[str, Any] | None = None
+    frontier_rows: list[dict[str, Any]] = []
     combinations_root = ensure_dir(method_dir / "structural_combinations")
     ordered_block_stems = [artifact_stem for artifact_stem, _ in candidates_by_block]
     candidate_lists = [candidates for _, candidates in candidates_by_block]
@@ -354,6 +359,12 @@ def choose_structural_circuit_candidate(
             "assembled_summary": assembled_summary,
             **selection_metrics,
         }
+        frontier_rows.append(
+            candidate_frontier_row(
+                circuit_id=circuit_row["circuit_id"],
+                combo_summary=combo_summary,
+            )
+        )
         if combo_summary["status"] != "ok":
             continue
         if best_combo is None or structural_selection_key(
@@ -365,6 +376,7 @@ def choose_structural_circuit_candidate(
         return {
             "status": "no-structural-candidate",
             "error": "No assembled candidate had valid structural target metrics.",
+            "candidate_frontier_rows": frontier_rows,
         }
 
     for block_choice in best_combo["block_choices"]:
@@ -381,6 +393,71 @@ def choose_structural_circuit_candidate(
         "final_qasm_path": str(assembled_qasm),
         "assembled_qasm_path": str(assembled_qasm),
         "assembled_summary": assembled_summary,
+        "candidate_frontier_rows": frontier_rows,
+    }
+
+
+def candidate_frontier_row(
+    *,
+    circuit_id: str,
+    combo_summary: dict[str, Any],
+) -> dict[str, Any]:
+    block_choices = combo_summary.get("block_choices", [])
+    num_blocks = len(block_choices)
+    num_gadget_blocks = sum(
+        1 for block in block_choices if block.get("source_method") == GADGET_METHOD
+    )
+    block_tcounts = [
+        value for block in block_choices if (value := block.get("tcount")) is not None
+    ]
+    block_tdepths = [
+        value for block in block_choices if (value := block.get("tdepth")) is not None
+    ]
+    return {
+        "circuit_id": circuit_id,
+        "candidate_id": f"{circuit_id}:combo{combo_summary.get('combo_index')}",
+        "combo_index": combo_summary.get("combo_index"),
+        "status": combo_summary.get("status"),
+        "selection_status": combo_summary.get("selection_status"),
+        "selection_error": combo_summary.get("selection_error"),
+        "source_methods": ";".join(
+            str(block.get("source_method")) for block in block_choices
+        ),
+        "decomposition_keys": ";".join(
+            str(block.get("decomposition_key")) for block in block_choices
+        ),
+        "candidate_indices": ";".join(
+            str(block.get("candidate_index")) for block in block_choices
+        ),
+        "num_blocks": num_blocks,
+        "num_gadget_blocks": num_gadget_blocks,
+        "num_no_gadget_blocks": num_blocks - num_gadget_blocks,
+        "gadget_block_fraction": 0.0 if num_blocks == 0 else num_gadget_blocks / num_blocks,
+        "uses_any_gadget_source": bool_as_int(num_gadget_blocks > 0),
+        "block_tcount_sum": sum(block_tcounts) if block_tcounts else None,
+        "block_tdepth_sum": sum(block_tdepths) if block_tdepths else None,
+        "structural_cost": combo_summary.get("structural_cost"),
+        "primary_nc_depth_ratio": combo_summary.get("primary_nc_depth_ratio"),
+        "primary_nc_depth_delta_vs_original": combo_summary.get(
+            "primary_nc_depth_delta_vs_original"
+        ),
+        "zx_total_depth_ratio": combo_summary.get("zx_total_depth_ratio"),
+        "qasm_depth_ratio": combo_summary.get("qasm_depth_ratio"),
+        "tcount_ratio": combo_summary.get("tcount_ratio"),
+        "tdepth_ratio": combo_summary.get("tdepth_ratio"),
+        "gate_count_ratio": combo_summary.get("gate_count_ratio"),
+        "tcount_after": combo_summary.get("tcount_after"),
+        "tdepth_after": combo_summary.get("tdepth_after"),
+        "depth_after": combo_summary.get("depth_after"),
+        "gate_count_after": combo_summary.get("gate_count_after"),
+        "rho_t": combo_summary.get("rho_t"),
+        "rho_w": combo_summary.get("rho_w"),
+        "n_clifford_blocks": combo_summary.get("n_clifford_blocks"),
+        "n_nonclifford_blocks": combo_summary.get("n_nonclifford_blocks"),
+        "avg_nonclifford_block_len": combo_summary.get("avg_nonclifford_block_len"),
+        "hadamard_boundary_density": combo_summary.get("hadamard_boundary_density"),
+        "tdepth_over_tcount": combo_summary.get("tdepth_over_tcount"),
+        "candidate_qasm_path": combo_summary.get("candidate_qasm_path"),
     }
 
 
@@ -473,9 +550,10 @@ def replay_structural_method(
     inventory_rows: list[dict[str, str]],
     output_root: Path,
     max_candidates_per_key: int,
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     decomposition_index = load_structural_decomposition_index()
     summary_rows: list[dict[str, Any]] = []
+    frontier_rows: list[dict[str, Any]] = []
 
     for row in inventory_rows:
         if not row.get("vendored_compile_dir"):
@@ -504,6 +582,9 @@ def replay_structural_method(
             method_dir=method_dir,
             max_candidates_per_key=max_candidates_per_key,
         )
+        candidate_frontier_rows = structural_result.pop("candidate_frontier_rows", [])
+        frontier_rows.extend(candidate_frontier_rows)
+        write_csv_rows(candidate_frontier_rows, method_dir / "candidate_frontier.csv")
         write_json(
             {
                 "circuit_id": row["circuit_id"],
@@ -533,7 +614,7 @@ def replay_structural_method(
                 "error": structural_result.get("error"),
             }
         )
-    return summary_rows
+    return summary_rows, frontier_rows
 
 
 def parse_args() -> argparse.Namespace:
@@ -565,14 +646,14 @@ def main() -> int:
     ensure_dir(args.output_root)
 
     summary_rows = []
+    frontier_rows = []
     if args.selection_objective == "structural":
-        summary_rows.extend(
-            replay_structural_method(
-                inventory_rows=inventory_rows,
-                output_root=args.output_root,
-                max_candidates_per_key=args.max_candidates_per_key,
-            )
+        structural_summary_rows, frontier_rows = replay_structural_method(
+            inventory_rows=inventory_rows,
+            output_root=args.output_root,
+            max_candidates_per_key=args.max_candidates_per_key,
         )
+        summary_rows.extend(structural_summary_rows)
     else:
         summary_rows.extend(
             replay_for_method(
@@ -593,7 +674,10 @@ def main() -> int:
 
     summary_csv = args.output_root / "public_resynth_summary.csv"
     summary_json = args.output_root / "public_resynth_summary.json"
+    frontier_csv = args.output_root / "candidate_frontier.csv"
     write_csv_rows(summary_rows, summary_csv)
+    if frontier_rows:
+        write_csv_rows(frontier_rows, frontier_csv)
     write_json(
         {
             "inventory_csv": str(args.inventory_csv),
@@ -602,6 +686,8 @@ def main() -> int:
             "max_candidates_per_key": args.max_candidates_per_key,
             "circuit_ids": [row["circuit_id"] for row in inventory_rows],
             "num_rows": len(summary_rows),
+            "candidate_frontier_csv": str(frontier_csv) if frontier_rows else None,
+            "num_candidate_frontier_rows": len(frontier_rows),
         },
         summary_json,
     )
@@ -624,6 +710,7 @@ def main() -> int:
             "circuit_ids": [row["circuit_id"] for row in inventory_rows],
             "summary_csv": str(summary_csv),
             "summary_json": str(summary_json),
+            "candidate_frontier_csv": str(frontier_csv) if frontier_rows else None,
             "exit_code": 0,
         }
     )
