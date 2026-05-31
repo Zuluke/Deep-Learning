@@ -35,7 +35,7 @@ DEFAULT_REPORT_PATH = DEFAULT_REPORTS_ROOT / "alphatensor_reranker_report.md"
 DEFAULT_SELECTION_ROOT = DEFAULT_RESULTS_ROOT / "public_resynth_reranker"
 LABEL_COLUMN = "primary_nc_depth_ratio"
 RERANKER_METHOD = "public_resynth_reranker"
-DEFAULT_PREDICTION_TOLERANCE = 0.05
+DEFAULT_PREDICTION_TOLERANCE = 0.10
 DEFAULT_ENSEMBLE_SIZE = 7
 DEFAULT_SEED_STRIDE = 9_973
 
@@ -275,10 +275,12 @@ def select_with_prediction_tolerance(
     def tolerance_key(index: int) -> tuple[float, float, float, int]:
         row = rows[index]
         tcount = coerce_float(row.get("tcount_after"))
+        zx_total_depth = coerce_float(row.get("zx_total_depth_ratio"))
         qasm_depth = coerce_float(row.get("qasm_depth_ratio"))
         combo_index = coerce_int(row.get("combo_index"))
         return (
             float("inf") if tcount is None else tcount,
+            float("inf") if zx_total_depth is None else zx_total_depth,
             float("inf") if qasm_depth is None else qasm_depth,
             float(predictions[index]),
             10**9 if combo_index is None else combo_index,

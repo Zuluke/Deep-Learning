@@ -744,22 +744,35 @@ def write_report(
                 f"{primary_gain:.3f} relative to T-count best while changing T-count by "
                 f"{t_delta:+.0f}."
             )
-    qft_row = next(
-        (row for row in diagnostics if row["circuit_id"] == "qft_4" and row["candidate_id"] == "qft_4:combo0"),
-        None,
-    )
     qft_structural = next(
         (row for row in diagnostics if row["circuit_id"] == "qft_4" and row["is_structural_best"]),
         None,
     )
+    qft_selected_id = full_tolerance_row.get("qft_4_selected_candidate")
+    qft_row = next(
+        (
+            row
+            for row in diagnostics
+            if row["circuit_id"] == "qft_4" and row["candidate_id"] == qft_selected_id
+        ),
+        None,
+    )
     qft_note = ""
     if qft_row and qft_structural:
-        qft_note = (
-            f"For `qft_4`, the tolerance-aware reranker can choose a candidate with "
-            f"T-count {fmt(qft_row.get('tcount_after'), 0)} instead of "
-            f"{fmt(qft_structural.get('tcount_after'), 0)}, paying only "
-            f"{fmt(qft_row.get('primary_regret_vs_structural_best'))} primary regret."
-        )
+        qft_regret = coerce_float(qft_row.get("primary_regret_vs_structural_best"))
+        qft_t_delta = coerce_float(qft_row.get("tcount_delta_vs_structural_best"))
+        if qft_regret is not None and abs(qft_regret) < 1e-9 and qft_t_delta == 0:
+            qft_note = (
+                f"For `qft_4`, the tolerance-aware reranker now matches the "
+                f"structural oracle at `{qft_row['candidate_id']}`."
+            )
+        else:
+            qft_note = (
+                f"For `qft_4`, the tolerance-aware reranker selects `{qft_row['candidate_id']}` with "
+                f"T-count {fmt(qft_row.get('tcount_after'), 0)} instead of "
+                f"{fmt(qft_structural.get('tcount_after'), 0)} for the structural oracle, paying "
+                f"{fmt(qft_row.get('primary_regret_vs_structural_best'))} primary regret."
+            )
 
     text = [
         "# Splitting Phenomenon Analysis",
@@ -816,9 +829,9 @@ def write_report(
         "",
         (
             "The strongest correlations should be read as mechanistic hints, not as stable "
-            "feature importance: there are only 19 candidates and 5 circuits. The within-circuit "
-            "centered correlations are more informative than global correlations because they "
-            "remove most benchmark-size effects."
+            f"feature importance: there are only {len(rows)} candidates and "
+            f"{len(circuits)} circuits. The within-circuit centered correlations are more "
+            "informative than global correlations because they remove most benchmark-size effects."
         ),
         "",
         *top_correlation_lines(correlations),
@@ -884,7 +897,7 @@ def write_report(
         "## Validity cautions",
         "",
         (
-            "The evidence is promising but weak: n=19 candidates, singleton circuit cases, and "
+            f"The evidence is promising but weak: n={len(rows)} candidates, singleton circuit cases, and "
             "full-fit selections are optimistic. Leave-one-circuit-out, seed-sensitivity, "
             "permutation tests and Pareto audits reduce the risk of over-interpreting the "
             "result, but the correct claim is still a mechanistic hypothesis supported by "

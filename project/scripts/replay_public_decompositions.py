@@ -35,6 +35,7 @@ from scripts._manifest import append_command
 GADGET_METHOD = "public_resynth_gadgets"
 NO_GADGET_METHOD = "public_resynth_no_gadgets"
 STRUCTURAL_METHOD = "public_resynth_structural"
+DEFAULT_STRUCTURAL_MAX_CANDIDATES_PER_KEY = 10
 DEFAULT_STRUCTURAL_CIRCUIT_IDS = (
     "mod_5_4",
     "gf_2pow2_mult",
@@ -626,7 +627,11 @@ def parse_args() -> argparse.Namespace:
         choices=("tcount", "structural"),
         default="tcount",
     )
-    parser.add_argument("--max-candidates-per-key", type=int, default=3)
+    parser.add_argument(
+        "--max-candidates-per-key",
+        type=int,
+        default=DEFAULT_STRUCTURAL_MAX_CANDIDATES_PER_KEY,
+    )
     parser.add_argument("--circuit-id", action="append", dest="circuit_ids", default=None)
     return parser.parse_args()
 

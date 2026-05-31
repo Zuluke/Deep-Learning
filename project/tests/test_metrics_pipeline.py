@@ -18,6 +18,7 @@ from scripts.alphatensor_reranker import baseline_rows
 from scripts.alphatensor_reranker import leave_one_circuit_out_eval
 from scripts.alphatensor_reranker import MLPModel
 from scripts.alphatensor_reranker import predictions_rows
+from scripts.alphatensor_reranker import select_with_prediction_tolerance
 from scripts.alphatensor_reranker import train_ensemble
 from scripts.alphatensor_reranker import train_mlp
 from scripts._analysis_common import compute_structural_metrics
@@ -510,6 +511,34 @@ def test_alphatensor_reranker_tolerance_prefers_lower_tcount() -> None:
     assert selected == ["a1"]
 
 
+def test_alphatensor_reranker_tolerance_uses_zx_total_tiebreak() -> None:
+    rows = [
+        {
+            "candidate_id": "lower-qasm",
+            "tcount_after": "5",
+            "zx_total_depth_ratio": "2.0",
+            "qasm_depth_ratio": "1.0",
+            "combo_index": "0",
+        },
+        {
+            "candidate_id": "lower-zx-total",
+            "tcount_after": "5",
+            "zx_total_depth_ratio": "1.0",
+            "qasm_depth_ratio": "2.0",
+            "combo_index": "1",
+        },
+    ]
+    predictions = np.array([0.10, 0.12])
+
+    selected_index = select_with_prediction_tolerance(
+        rows,
+        predictions,
+        prediction_tolerance=0.05,
+    )
+
+    assert rows[selected_index]["candidate_id"] == "lower-zx-total"
+
+
 def test_alphatensor_reranker_ensemble_reports_uncertainty() -> None:
     rows = [
         {
@@ -620,7 +649,7 @@ def test_alphatensor_reranker_leave_one_circuit_out_reports_regret() -> None:
     assert {"primary_regret_vs_true_best", "primary_gain_vs_tcount_best"} <= set(
         eval_rows[0]
     )
-    assert eval_rows[0]["prediction_tolerance"] == 0.05
+    assert eval_rows[0]["prediction_tolerance"] == 0.10
 
 
 def test_formal_verification_classifies_feynver_outputs() -> None:
