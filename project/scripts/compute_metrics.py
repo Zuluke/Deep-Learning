@@ -26,7 +26,9 @@ from scripts._manifest import append_command
 
 
 DEFAULT_STRUCTURAL_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_structural"
+DEFAULT_RERANKER_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_reranker"
 STRUCTURAL_PUBLIC_METHODS = ("public_resynth_structural",)
+RERANKER_PUBLIC_METHODS = ("public_resynth_reranker",)
 STRUCTURAL_SUMMARY_COLUMNS = (
     "selection_objective",
     "selection_status",
@@ -39,6 +41,14 @@ STRUCTURAL_SUMMARY_COLUMNS = (
     "tcount_after_selection",
     "tdepth_after_selection",
     "combo_index",
+)
+RERANKER_SUMMARY_COLUMNS = (
+    *STRUCTURAL_SUMMARY_COLUMNS,
+    "source_candidate_id",
+    "predicted_primary_nc_depth_ratio",
+    "prediction_tolerance",
+    "prediction_margin_from_best",
+    "model_json",
 )
 
 
@@ -183,10 +193,10 @@ def latest_demo_logs(log_dir: Path) -> dict[tuple[str, bool], dict[str, Any]]:
     return {key: {"path": value[0], "payload": value[1]} for key, value in latest.items()}
 
 
-def structural_extra(public_row: dict[str, str] | None) -> dict[str, Any]:
+def summary_extra(public_row: dict[str, str] | None, columns: tuple[str, ...]) -> dict[str, Any]:
     if public_row is None:
-        return {column: None for column in STRUCTURAL_SUMMARY_COLUMNS}
-    return {column: public_row.get(column) for column in STRUCTURAL_SUMMARY_COLUMNS}
+        return {column: None for column in columns}
+    return {column: public_row.get(column) for column in columns}
 
 
 def build_rows(
@@ -196,6 +206,7 @@ def build_rows(
     compile_quizx_rows: list[dict[str, str]],
     public_resynth_rows: list[dict[str, str]],
     structural_resynth_rows: list[dict[str, str]],
+    reranker_resynth_rows: list[dict[str, str]],
     demo_log_dir: Path,
 ) -> list[dict[str, Any]]:
     pyzx_by_id = {row["circuit_id"]: row for row in pyzx_rows}
@@ -207,6 +218,10 @@ def build_rows(
         (row["circuit_id"], row["method"]): row for row in structural_resynth_rows
     }
     structural_circuit_ids = {row["circuit_id"] for row in structural_resynth_rows}
+    reranker_resynth_by_key = {
+        (row["circuit_id"], row["method"]): row for row in reranker_resynth_rows
+    }
+    reranker_circuit_ids = {row["circuit_id"] for row in reranker_resynth_rows}
     demo_by_key = latest_demo_logs(demo_log_dir)
     rows: list[dict[str, Any]] = []
 
@@ -362,7 +377,35 @@ def build_rows(
                         tensor_size_quizx=tensor_size_quizx,
                         tcount_before=original_tcount,
                         tdepth_before=original_tdepth,
-                        extra=structural_extra(structural_row),
+                        extra=summary_extra(structural_row, STRUCTURAL_SUMMARY_COLUMNS),
+                    )
+                )
+
+        if circuit_row["circuit_id"] in reranker_circuit_ids:
+            for method in RERANKER_PUBLIC_METHODS:
+                reranker_row = reranker_resynth_by_key.get(
+                    (circuit_row["circuit_id"], method)
+                )
+                reranker_qasm = None
+                reranker_status = "not-run"
+                if reranker_row:
+                    reranker_status = reranker_row.get("status", "unknown")
+                    assembled_qasm = reranker_row.get("assembled_qasm_path")
+                    if assembled_qasm:
+                        reranker_qasm = project_path(assembled_qasm)
+                rows.append(
+                    row_from_metrics(
+                        circuit_row=circuit_row,
+                        method=method,
+                        method_status=reranker_status,
+                        qasm_path=reranker_qasm if reranker_status == "ok" else None,
+                        runtime_sec=None,
+                        verify_status="not-run",
+                        tensor_size_no_quizx=tensor_size_no_quizx,
+                        tensor_size_quizx=tensor_size_quizx,
+                        tcount_before=original_tcount,
+                        tdepth_before=original_tdepth,
+                        extra=summary_extra(reranker_row, RERANKER_SUMMARY_COLUMNS),
                     )
                 )
 
@@ -450,6 +493,11 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_STRUCTURAL_RESYNTH_ROOT / "public_resynth_summary.csv",
     )
     parser.add_argument(
+        "--reranker-resynth-summary-csv",
+        type=Path,
+        default=DEFAULT_RERANKER_RESYNTH_ROOT / "public_resynth_summary.csv",
+    )
+    parser.add_argument(
         "--demo-log-dir",
         type=Path,
         default=PROJECT_ROOT / "results" / "logs" / "demo",
@@ -467,6 +515,7 @@ def main() -> int:
     compile_quizx_rows = load_csv_rows(args.compile_quizx_summary_csv)
     public_resynth_rows = load_csv_rows(args.public_resynth_summary_csv)
     structural_resynth_rows = load_csv_rows(args.structural_resynth_summary_csv)
+    reranker_resynth_rows = load_csv_rows(args.reranker_resynth_summary_csv)
 
     rows = build_rows(
         inventory_rows=inventory_rows,
@@ -474,6 +523,7 @@ def main() -> int:
         compile_quizx_rows=compile_quizx_rows,
         public_resynth_rows=public_resynth_rows,
         structural_resynth_rows=structural_resynth_rows,
+        reranker_resynth_rows=reranker_resynth_rows,
         demo_log_dir=args.demo_log_dir,
     )
     write_csv_rows(rows, args.output_csv)
@@ -484,6 +534,7 @@ def main() -> int:
             "compile_quizx_summary_csv": str(args.compile_quizx_summary_csv),
             "public_resynth_summary_csv": str(args.public_resynth_summary_csv),
             "structural_resynth_summary_csv": str(args.structural_resynth_summary_csv),
+            "reranker_resynth_summary_csv": str(args.reranker_resynth_summary_csv),
             "demo_log_dir": str(args.demo_log_dir),
             "num_rows": len(rows),
         },
@@ -495,6 +546,7 @@ def main() -> int:
             "command": (
                 f"{sys.executable} scripts/compute_metrics.py --inventory-csv {args.inventory_csv} "
                 f"--structural-resynth-summary-csv {args.structural_resynth_summary_csv} "
+                f"--reranker-resynth-summary-csv {args.reranker_resynth_summary_csv} "
                 f"--output-csv {args.output_csv} --output-json {args.output_json}"
             ),
             "cwd": str(PROJECT_ROOT),

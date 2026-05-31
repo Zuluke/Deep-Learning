@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+import numpy as np
 from qiskit import QuantumCircuit
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -12,6 +13,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from scripts.alphatensor_structural_cost import compute_selection_metrics
 from scripts.alphatensor_structural_cost import structural_selection_key
 from scripts.alphatensor_structural_cost import tcount_selection_key
+from scripts.alphatensor_reranker import FeatureStats
+from scripts.alphatensor_reranker import leave_one_circuit_out_eval
+from scripts.alphatensor_reranker import MLPModel
+from scripts.alphatensor_reranker import predictions_rows
+from scripts.alphatensor_reranker import train_mlp
 from scripts._analysis_common import compute_structural_metrics
 from scripts.assemble_resynth_circuit import assemble_circuit
 from scripts.make_entrega1_outputs import compute_locality_metrics_from_circuit
@@ -389,6 +395,160 @@ def test_tcount_selection_key_matches_legacy_ordering() -> None:
         "tcount": 5,
         "tdepth": 2,
     }
+
+
+def test_alphatensor_reranker_learns_simple_structural_ordering() -> None:
+    rows = [
+        {
+            "circuit_id": "a",
+            "candidate_id": "a0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.1",
+            "tcount_after": "1",
+            "tdepth_after": "1",
+            "depth_after": "1",
+            "gate_count_after": "1",
+            "tcount_ratio": "0.1",
+            "qasm_depth_ratio": "1",
+            "uses_any_gadget_source": "0",
+        },
+        {
+            "circuit_id": "a",
+            "candidate_id": "a1",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.9",
+            "tcount_after": "9",
+            "tdepth_after": "9",
+            "depth_after": "9",
+            "gate_count_after": "9",
+            "tcount_ratio": "0.9",
+            "qasm_depth_ratio": "9",
+            "uses_any_gadget_source": "1",
+        },
+        {
+            "circuit_id": "b",
+            "candidate_id": "b0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.2",
+            "tcount_after": "2",
+            "tdepth_after": "2",
+            "depth_after": "2",
+            "gate_count_after": "2",
+            "tcount_ratio": "0.2",
+            "qasm_depth_ratio": "2",
+            "uses_any_gadget_source": "0",
+        },
+        {
+            "circuit_id": "b",
+            "candidate_id": "b1",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.8",
+            "tcount_after": "8",
+            "tdepth_after": "8",
+            "depth_after": "8",
+            "gate_count_after": "8",
+            "tcount_ratio": "0.8",
+            "qasm_depth_ratio": "8",
+            "uses_any_gadget_source": "1",
+        },
+    ]
+
+    model = train_mlp(rows, hidden_size=4, epochs=300, learning_rate=0.03, seed=7)
+    selected = [
+        row["candidate_id"]
+        for row in predictions_rows(rows, model)
+        if row["reranker_selected"]
+    ]
+
+    assert selected == ["a0", "b0"]
+
+
+def test_alphatensor_reranker_tolerance_prefers_lower_tcount() -> None:
+    rows = [
+        {
+            "circuit_id": "a",
+            "candidate_id": "a0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.10",
+            "depth_after": "0.10",
+            "tcount_after": "9",
+            "qasm_depth_ratio": "1.0",
+            "combo_index": "0",
+        },
+        {
+            "circuit_id": "a",
+            "candidate_id": "a1",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.12",
+            "depth_after": "0.12",
+            "tcount_after": "1",
+            "qasm_depth_ratio": "1.0",
+            "combo_index": "1",
+        },
+    ]
+    model = MLPModel(
+        feature_columns=("depth_after",),
+        stats=FeatureStats(
+            means=np.array([0.0]),
+            stds=np.array([1.0]),
+            impute_values=np.array([0.0]),
+        ),
+        w1=np.array([[1.0]]),
+        b1=np.array([0.0]),
+        w2=np.array([[1.0]]),
+        b2=np.array([0.0]),
+    )
+
+    selected = [
+        row["candidate_id"]
+        for row in predictions_rows(rows, model, prediction_tolerance=0.05)
+        if row["reranker_selected"]
+    ]
+
+    assert selected == ["a1"]
+
+
+def test_alphatensor_reranker_leave_one_circuit_out_reports_regret() -> None:
+    rows = [
+        {
+            "circuit_id": "a",
+            "candidate_id": "a0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.2",
+            "tcount_after": "2",
+            "tdepth_after": "2",
+            "depth_after": "2",
+            "gate_count_after": "2",
+            "tcount_ratio": "0.2",
+            "qasm_depth_ratio": "2",
+        },
+        {
+            "circuit_id": "b",
+            "candidate_id": "b0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.3",
+            "tcount_after": "3",
+            "tdepth_after": "3",
+            "depth_after": "3",
+            "gate_count_after": "3",
+            "tcount_ratio": "0.3",
+            "qasm_depth_ratio": "3",
+        },
+    ]
+
+    eval_rows = leave_one_circuit_out_eval(
+        rows,
+        hidden_size=2,
+        epochs=10,
+        learning_rate=0.01,
+        weight_decay=0.0,
+        seed=3,
+    )
+
+    assert len(eval_rows) == 2
+    assert {"primary_regret_vs_true_best", "primary_gain_vs_tcount_best"} <= set(
+        eval_rows[0]
+    )
 
 
 def test_formal_verification_classifies_feynver_outputs() -> None:
