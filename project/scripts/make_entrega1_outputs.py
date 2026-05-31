@@ -19,13 +19,14 @@ from scripts._analysis_common import DEFAULT_FIGURES_ROOT
 from scripts._analysis_common import DEFAULT_REPORTS_ROOT
 from scripts._analysis_common import DEFAULT_RESULTS_ROOT
 from scripts._analysis_common import NON_CLIFFORD_GATES
-from scripts._analysis_common import compute_metrics_from_qasm_path
 from scripts._analysis_common import ensure_dir
 from scripts._analysis_common import load_qasm_circuit
 from scripts._analysis_common import natural_sort_key
 from scripts._analysis_common import normalize_circuit_to_basis
 from scripts._analysis_common import write_csv_rows
 from scripts._analysis_common import write_json
+from scripts.structural_target import attach_structural_target_metrics
+from scripts.zx_splitting import compute_zx_splitting_metrics_from_qasm
 
 
 DEFAULT_CIRCUIT_IDS = (
@@ -34,12 +35,9 @@ DEFAULT_CIRCUIT_IDS = (
     "cuccaro_adder_n3",
     "qft_4",
     "vbe_adder_3",
-    "hamming_15_low",
-    "qcla_mod_7",
 )
 
 HEATMAP_CIRCUIT_IDS = ("mod_5_4", "qft_4", "vbe_adder_3")
-VERIFIED_REPORT_SUFFIX = "_formal"
 
 METHOD_LABELS = {
     "original": "Original",
@@ -243,6 +241,11 @@ def build_entrega1_rows(
                 if qasm_path and qasm_path.exists()
                 else {"locality_status": "missing-qasm", "locality_error": "Missing QASM artifact."}
             )
+            zx_metrics = (
+                compute_zx_splitting_metrics_from_qasm(qasm_path)
+                if qasm_path and qasm_path.exists()
+                else {"zx_split_status": "missing-qasm", "zx_split_error": "Missing QASM artifact."}
+            )
             row = {
                 "circuit_id": circuit_id,
                 "method": entrega1_method,
@@ -276,6 +279,7 @@ def build_entrega1_rows(
                 ),
             }
             row.update(locality_metrics)
+            row.update(zx_metrics)
             output_rows.append(row)
     return output_rows
 
@@ -497,6 +501,45 @@ def save_reduction_vs_locality_plot(
     return png_path
 
 
+def save_zx_splitting_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], output_dir: Path) -> Path:
+    methods = ("original", "pyzx", "alphatensor_public")
+    values = grouped_values(rows, circuit_ids, methods, "zx_best_clifford_fraction")
+    x = np.arange(len(circuit_ids))
+    width = 0.26
+
+    fig, ax = plt.subplots(figsize=(12, 5.8), constrained_layout=True)
+    for offset, method in enumerate(methods):
+        heights = [
+            100.0 * value if not np.isnan(value) else np.nan
+            for value in values[method]
+        ]
+        bars = ax.bar(
+            x + (offset - 1) * width,
+            heights,
+            width,
+            label=METHOD_LABELS[method],
+            color=METHOD_COLORS[method],
+        )
+        ax.bar_label(
+            bars,
+            fmt=lambda value: "" if np.isnan(value) else f"{value:.0f}%",
+            fontsize=8,
+        )
+
+    ax.set_title("Best ZX-detected Clifford section")
+    ax.set_ylabel("fraction of circuit-like ZX depth")
+    ax.set_xticks(x, circuit_ids, rotation=25, ha="right")
+    ax.set_ylim(0, 105)
+    ax.legend(frameon=False, ncols=3)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    png_path = output_dir / "zx_splitting_comparison.png"
+    fig.savefig(png_path, dpi=300)
+    fig.savefig(output_dir / "zx_splitting_comparison.pdf")
+    plt.close(fig)
+    return png_path
+
+
 def t_heatmap_matrix(qasm_path: Path) -> tuple[np.ndarray, int, str | None]:
     normalized, status, error = load_normalized_qasm(qasm_path)
     if normalized is None:
@@ -650,8 +693,8 @@ def write_report(
     selected_ids = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     limitations = [
         "O metodo `AlphaTensor-public` usa replay/ressintese de decomposicoes publicas, nao treino completo do artigo.",
-        "A verificacao formal usa QASM normalizado para a base Clifford+T local; alguns circuitos ficam `inconclusive` ou `timeout` por limite do provador.",
-        "As metricas de splitting sao proxies em lista de gates normalizada; ainda nao implementam a deteccao ZX-calculus do artigo de Clifford splitting.",
+        "A verificacao formal usa QASM normalizado para a base Clifford+T local; candidatos `inconclusive` ou `timeout` ficam fora da tabela principal.",
+        "A deteccao ZX implementada e conservadora: usa a fronteira em diagramas circuit-like e fecha recursivamente portas de dois qubits que cruzam a separacao.",
         "O T-depth reportado segue a implementacao local atual e deve ser tratado como estimativa simples para a Entrega 1.",
     ]
 
@@ -675,6 +718,7 @@ def write_report(
         "",
         f"- ![T-count comparison]({figure_paths['tcount']})",
         f"- ![Non-Clifford core comparison]({figure_paths['core']})",
+        f"- ![ZX splitting comparison]({figure_paths['zx']})",
         f"- ![Reduction vs core area]({figure_paths['scatter']})",
         "",
         "## Heatmaps de portas T/Tdg",
@@ -699,8 +743,9 @@ def write_report(
             "Os resultados ja permitem uma Entrega 1 experimental: PyZX reduz T-count em todos os "
             "casos selecionados em que ha ganho, enquanto o replay publico AlphaTensor frequentemente "
             "melhora PyZX nos circuitos com decomposicoes publicas compativeis. As figuras estruturais "
-            "mostram que a reducao de T-count nem sempre coincide com uma reducao monotona do span "
-            "temporal do nucleo nao-Clifford, o que sustenta a motivacao de medir estrutura e nao apenas contagem."
+            "e a fronteira detectada em ZX mostram que a reducao de T-count nem sempre coincide com "
+            "uma melhora monotona da separacao Clifford/nao-Clifford, o que sustenta a motivacao de "
+            "medir estrutura e nao apenas contagem."
         ),
         "",
         "## Limitacoes documentadas",
@@ -748,14 +793,15 @@ def write_formal_report(
         "",
         f"- ![T-count comparison]({figure_paths['tcount']})",
         f"- ![Non-Clifford core comparison]({figure_paths['core']})",
+        f"- ![ZX splitting comparison]({figure_paths['zx']})",
         f"- ![Reduction vs core area]({figure_paths['scatter']})",
         "",
         "## Observacao para o texto",
         "",
         (
-            "Os resultados de `hamming_15_low`, `qcla_mod_7` e candidatos AlphaTensor-public "
-            "inconclusivos em circuitos como `cuccaro_adder_n3` e `vbe_adder_3` devem ser citados "
-            "como reproducao experimental/auditoria, nao como tabela principal formalmente provada."
+            "A tabela principal se limita aos benchmarks com candidatos formalmente verificados. "
+            "Candidatos AlphaTensor-public inconclusivos em circuitos como `cuccaro_adder_n3` e "
+            "`vbe_adder_3` permanecem apenas na tabela completa de auditoria."
         ),
         "",
     ]
@@ -815,10 +861,10 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     circuit_ids = tuple(args.circuit_ids) if args.circuit_ids else DEFAULT_CIRCUIT_IDS
-    rows = attach_formal_verification_status(
-        build_entrega1_rows(load_csv_rows(args.final_metrics_csv), circuit_ids),
-        args.verification_csv,
+    rows = attach_structural_target_metrics(
+        build_entrega1_rows(load_csv_rows(args.final_metrics_csv), circuit_ids)
     )
+    rows = attach_formal_verification_status(rows, args.verification_csv)
     formal_rows = rows_for_formal_report(rows)
     ensure_dir(args.figure_dir)
     ensure_dir(args.formal_figure_dir)
@@ -852,6 +898,7 @@ def main() -> int:
 
     tcount_path = save_tcount_plot(rows, circuit_ids, args.figure_dir)
     core_path = save_core_plot(rows, circuit_ids, args.figure_dir)
+    zx_path = save_zx_splitting_plot(rows, circuit_ids, args.figure_dir)
     scatter_path = save_reduction_vs_locality_plot(rows, args.figure_dir)
     heatmap_paths = [
         path
@@ -864,6 +911,7 @@ def main() -> int:
         {
             "tcount": tcount_path,
             "core": core_path,
+            "zx": zx_path,
             "scatter": scatter_path,
             "heatmaps": heatmap_paths,
         },
@@ -880,6 +928,9 @@ def main() -> int:
     formal_core_path = save_core_plot(
         formal_rows, formal_circuit_ids, args.formal_figure_dir
     )
+    formal_zx_path = save_zx_splitting_plot(
+        formal_rows, formal_circuit_ids, args.formal_figure_dir
+    )
     formal_scatter_path = save_reduction_vs_locality_plot(
         formal_rows, args.formal_figure_dir
     )
@@ -889,6 +940,7 @@ def main() -> int:
         {
             "tcount": formal_tcount_path,
             "core": formal_core_path,
+            "zx": formal_zx_path,
             "scatter": formal_scatter_path,
         },
         args.formal_output_csv,

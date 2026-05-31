@@ -25,6 +25,23 @@ from scripts._analysis_common import write_json
 from scripts._manifest import append_command
 
 
+DEFAULT_STRUCTURAL_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_structural"
+STRUCTURAL_PUBLIC_METHODS = ("public_resynth_structural",)
+STRUCTURAL_SUMMARY_COLUMNS = (
+    "selection_objective",
+    "selection_status",
+    "selection_error",
+    "structural_cost",
+    "primary_nc_depth_ratio",
+    "zx_total_depth_ratio",
+    "qasm_depth_ratio",
+    "tcount_ratio",
+    "tcount_after_selection",
+    "tdepth_after_selection",
+    "combo_index",
+)
+
+
 def load_csv_rows(path: Path | None) -> list[dict[str, str]]:
     if path is None or not path.exists():
         return []
@@ -48,6 +65,13 @@ def coerce_int(value: Any) -> int | None:
         return int(float(value))
     except (TypeError, ValueError):
         return None
+
+
+def project_path(value: str | None) -> Path | None:
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else PROJECT_ROOT / path
 
 
 def classify_faixa(tensor_size: int | None) -> str:
@@ -159,12 +183,19 @@ def latest_demo_logs(log_dir: Path) -> dict[tuple[str, bool], dict[str, Any]]:
     return {key: {"path": value[0], "payload": value[1]} for key, value in latest.items()}
 
 
+def structural_extra(public_row: dict[str, str] | None) -> dict[str, Any]:
+    if public_row is None:
+        return {column: None for column in STRUCTURAL_SUMMARY_COLUMNS}
+    return {column: public_row.get(column) for column in STRUCTURAL_SUMMARY_COLUMNS}
+
+
 def build_rows(
     *,
     inventory_rows: list[dict[str, str]],
     pyzx_rows: list[dict[str, str]],
     compile_quizx_rows: list[dict[str, str]],
     public_resynth_rows: list[dict[str, str]],
+    structural_resynth_rows: list[dict[str, str]],
     demo_log_dir: Path,
 ) -> list[dict[str, Any]]:
     pyzx_by_id = {row["circuit_id"]: row for row in pyzx_rows}
@@ -172,6 +203,10 @@ def build_rows(
     public_resynth_by_key = {
         (row["circuit_id"], row["method"]): row for row in public_resynth_rows
     }
+    structural_resynth_by_key = {
+        (row["circuit_id"], row["method"]): row for row in structural_resynth_rows
+    }
+    structural_circuit_ids = {row["circuit_id"] for row in structural_resynth_rows}
     demo_by_key = latest_demo_logs(demo_log_dir)
     rows: list[dict[str, Any]] = []
 
@@ -287,7 +322,7 @@ def build_rows(
                 public_status = public_row.get("status", "unknown")
                 assembled_qasm = public_row.get("assembled_qasm_path")
                 if assembled_qasm:
-                    public_qasm = Path(assembled_qasm)
+                    public_qasm = project_path(assembled_qasm)
             rows.append(
                 row_from_metrics(
                     circuit_row=circuit_row,
@@ -302,6 +337,34 @@ def build_rows(
                     tdepth_before=original_tdepth,
                 )
             )
+
+        if circuit_row["circuit_id"] in structural_circuit_ids:
+            for method in STRUCTURAL_PUBLIC_METHODS:
+                structural_row = structural_resynth_by_key.get(
+                    (circuit_row["circuit_id"], method)
+                )
+                structural_qasm = None
+                structural_status = "not-run"
+                if structural_row:
+                    structural_status = structural_row.get("status", "unknown")
+                    assembled_qasm = structural_row.get("assembled_qasm_path")
+                    if assembled_qasm:
+                        structural_qasm = project_path(assembled_qasm)
+                rows.append(
+                    row_from_metrics(
+                        circuit_row=circuit_row,
+                        method=method,
+                        method_status=structural_status,
+                        qasm_path=structural_qasm if structural_status == "ok" else None,
+                        runtime_sec=None,
+                        verify_status="not-run",
+                        tensor_size_no_quizx=tensor_size_no_quizx,
+                        tensor_size_quizx=tensor_size_quizx,
+                        tcount_before=original_tcount,
+                        tdepth_before=original_tdepth,
+                        extra=structural_extra(structural_row),
+                    )
+                )
 
         for use_gadgets, method in (
             (False, "demo_control_no_gadgets"),
@@ -382,6 +445,11 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_RESYNTH_ROOT / "public_resynth_summary.csv",
     )
     parser.add_argument(
+        "--structural-resynth-summary-csv",
+        type=Path,
+        default=DEFAULT_STRUCTURAL_RESYNTH_ROOT / "public_resynth_summary.csv",
+    )
+    parser.add_argument(
         "--demo-log-dir",
         type=Path,
         default=PROJECT_ROOT / "results" / "logs" / "demo",
@@ -398,12 +466,14 @@ def main() -> int:
     pyzx_rows = load_csv_rows(args.pyzx_summary_csv)
     compile_quizx_rows = load_csv_rows(args.compile_quizx_summary_csv)
     public_resynth_rows = load_csv_rows(args.public_resynth_summary_csv)
+    structural_resynth_rows = load_csv_rows(args.structural_resynth_summary_csv)
 
     rows = build_rows(
         inventory_rows=inventory_rows,
         pyzx_rows=pyzx_rows,
         compile_quizx_rows=compile_quizx_rows,
         public_resynth_rows=public_resynth_rows,
+        structural_resynth_rows=structural_resynth_rows,
         demo_log_dir=args.demo_log_dir,
     )
     write_csv_rows(rows, args.output_csv)
@@ -413,6 +483,7 @@ def main() -> int:
             "pyzx_summary_csv": str(args.pyzx_summary_csv),
             "compile_quizx_summary_csv": str(args.compile_quizx_summary_csv),
             "public_resynth_summary_csv": str(args.public_resynth_summary_csv),
+            "structural_resynth_summary_csv": str(args.structural_resynth_summary_csv),
             "demo_log_dir": str(args.demo_log_dir),
             "num_rows": len(rows),
         },
@@ -423,6 +494,7 @@ def main() -> int:
             "tool": "compute_metrics.py",
             "command": (
                 f"{sys.executable} scripts/compute_metrics.py --inventory-csv {args.inventory_csv} "
+                f"--structural-resynth-summary-csv {args.structural_resynth_summary_csv} "
                 f"--output-csv {args.output_csv} --output-json {args.output_json}"
             ),
             "cwd": str(PROJECT_ROOT),
