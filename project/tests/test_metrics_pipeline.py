@@ -14,9 +14,11 @@ from scripts.alphatensor_structural_cost import compute_selection_metrics
 from scripts.alphatensor_structural_cost import structural_selection_key
 from scripts.alphatensor_structural_cost import tcount_selection_key
 from scripts.alphatensor_reranker import FeatureStats
+from scripts.alphatensor_reranker import baseline_rows
 from scripts.alphatensor_reranker import leave_one_circuit_out_eval
 from scripts.alphatensor_reranker import MLPModel
 from scripts.alphatensor_reranker import predictions_rows
+from scripts.alphatensor_reranker import train_ensemble
 from scripts.alphatensor_reranker import train_mlp
 from scripts._analysis_common import compute_structural_metrics
 from scripts.assemble_resynth_circuit import assemble_circuit
@@ -506,6 +508,75 @@ def test_alphatensor_reranker_tolerance_prefers_lower_tcount() -> None:
     ]
 
     assert selected == ["a1"]
+
+
+def test_alphatensor_reranker_ensemble_reports_uncertainty() -> None:
+    rows = [
+        {
+            "circuit_id": "a",
+            "candidate_id": "a0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.1",
+            "tcount_after": "1",
+            "depth_after": "1",
+            "qasm_depth_ratio": "1",
+        },
+        {
+            "circuit_id": "a",
+            "candidate_id": "a1",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.9",
+            "tcount_after": "9",
+            "depth_after": "9",
+            "qasm_depth_ratio": "9",
+        },
+        {
+            "circuit_id": "b",
+            "candidate_id": "b0",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.2",
+            "tcount_after": "2",
+            "depth_after": "2",
+            "qasm_depth_ratio": "2",
+        },
+    ]
+
+    model = train_ensemble(rows, hidden_size=3, epochs=25, ensemble_size=3, seed=11)
+    predictions = predictions_rows(rows, model, prediction_tolerance=0.01)
+
+    assert all("prediction_std" in row for row in predictions)
+    assert all(float(row["prediction_std"]) >= 0.0 for row in predictions)
+
+
+def test_alphatensor_reranker_baselines_report_proxy_regret() -> None:
+    rows = [
+        {
+            "circuit_id": "a",
+            "candidate_id": "structural",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.1",
+            "tcount_after": "5",
+            "qasm_depth_ratio": "1",
+            "zx_total_depth_ratio": "1",
+            "tdepth_after": "3",
+        },
+        {
+            "circuit_id": "a",
+            "candidate_id": "tcount",
+            "selection_status": "ok",
+            "primary_nc_depth_ratio": "0.4",
+            "tcount_after": "1",
+            "qasm_depth_ratio": "2",
+            "zx_total_depth_ratio": "2",
+            "tdepth_after": "1",
+        },
+    ]
+
+    baselines = baseline_rows(rows)
+    tcount_baseline = next(row for row in baselines if row["objective"] == "tcount")
+
+    assert tcount_baseline["selected_candidate_id"] == "tcount"
+    assert tcount_baseline["primary_regret_vs_structural_best"] == 0.30000000000000004
 
 
 def test_alphatensor_reranker_leave_one_circuit_out_reports_regret() -> None:

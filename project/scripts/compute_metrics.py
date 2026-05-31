@@ -46,6 +46,7 @@ RERANKER_SUMMARY_COLUMNS = (
     *STRUCTURAL_SUMMARY_COLUMNS,
     "source_candidate_id",
     "predicted_primary_nc_depth_ratio",
+    "prediction_std",
     "prediction_tolerance",
     "prediction_margin_from_best",
     "model_json",

@@ -30,11 +30,14 @@ DEFAULT_MODEL_JSON = DEFAULT_RESULTS_ROOT / "models" / "alphatensor_structural_r
 DEFAULT_PREDICTIONS_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_predictions.csv"
 DEFAULT_EVAL_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_eval.csv"
 DEFAULT_COMPARISON_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_comparison.csv"
+DEFAULT_BASELINES_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_baselines.csv"
 DEFAULT_REPORT_PATH = DEFAULT_REPORTS_ROOT / "alphatensor_reranker_report.md"
 DEFAULT_SELECTION_ROOT = DEFAULT_RESULTS_ROOT / "public_resynth_reranker"
 LABEL_COLUMN = "primary_nc_depth_ratio"
 RERANKER_METHOD = "public_resynth_reranker"
 DEFAULT_PREDICTION_TOLERANCE = 0.05
+DEFAULT_ENSEMBLE_SIZE = 7
+DEFAULT_SEED_STRIDE = 9_973
 
 FEATURE_COLUMNS = (
     "tcount_after",
@@ -78,6 +81,15 @@ class MLPModel:
     b1: np.ndarray
     w2: np.ndarray
     b2: np.ndarray
+
+
+@dataclasses.dataclass(frozen=True)
+class EnsembleModel:
+    models: tuple[MLPModel, ...]
+
+    @property
+    def feature_columns(self) -> tuple[str, ...]:
+        return self.models[0].feature_columns
 
 
 def load_csv_rows(path: Path) -> list[dict[str, str]]:
@@ -198,10 +210,53 @@ def train_mlp(
     )
 
 
+def train_ensemble(
+    rows: list[dict[str, Any]],
+    *,
+    feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
+    hidden_size: int = 8,
+    epochs: int = 2_000,
+    learning_rate: float = 0.03,
+    weight_decay: float = 1e-4,
+    seed: int = 2026,
+    ensemble_size: int = DEFAULT_ENSEMBLE_SIZE,
+) -> EnsembleModel:
+    if ensemble_size < 1:
+        raise ValueError("ensemble_size must be at least 1")
+    models = tuple(
+        train_mlp(
+            rows,
+            feature_columns=feature_columns,
+            hidden_size=hidden_size,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            seed=seed + index * DEFAULT_SEED_STRIDE,
+        )
+        for index in range(ensemble_size)
+    )
+    return EnsembleModel(models=models)
+
+
 def predict(model: MLPModel, rows: list[dict[str, Any]]) -> np.ndarray:
     x = transform_features(feature_matrix(rows, model.feature_columns), model.stats)
     hidden = np.tanh(x @ model.w1 + model.b1)
     return (hidden @ model.w2 + model.b2).reshape(-1)
+
+
+def predict_ensemble(model: EnsembleModel, rows: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray]:
+    stacked = np.vstack([predict(member, rows) for member in model.models])
+    return stacked.mean(axis=0), stacked.std(axis=0)
+
+
+def predict_with_uncertainty(
+    model: MLPModel | EnsembleModel,
+    rows: list[dict[str, Any]],
+) -> tuple[np.ndarray, np.ndarray]:
+    if isinstance(model, EnsembleModel):
+        return predict_ensemble(model, rows)
+    predictions = predict(model, rows)
+    return predictions, np.zeros_like(predictions)
 
 
 def select_with_prediction_tolerance(
@@ -241,6 +296,7 @@ def leave_one_circuit_out_eval(
     weight_decay: float,
     seed: int,
     prediction_tolerance: float = DEFAULT_PREDICTION_TOLERANCE,
+    ensemble_size: int = DEFAULT_ENSEMBLE_SIZE,
 ) -> list[dict[str, Any]]:
     circuits = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     eval_rows = []
@@ -249,15 +305,16 @@ def leave_one_circuit_out_eval(
         test_rows = [row for row in rows if row["circuit_id"] == circuit_id]
         if not train_rows or not test_rows:
             continue
-        model = train_mlp(
+        model = train_ensemble(
             train_rows,
             hidden_size=hidden_size,
             epochs=epochs,
             learning_rate=learning_rate,
             weight_decay=weight_decay,
             seed=seed,
+            ensemble_size=ensemble_size,
         )
-        predictions = predict(model, test_rows)
+        predictions, prediction_std = predict_ensemble(model, test_rows)
         selected_index = select_with_prediction_tolerance(
             test_rows,
             predictions,
@@ -290,10 +347,12 @@ def leave_one_circuit_out_eval(
                 "num_test_candidates": len(test_rows),
                 "selected_candidate_id": selected["candidate_id"],
                 "selected_predicted_primary": float(predictions[selected_index]),
+                "selected_prediction_std": float(prediction_std[selected_index]),
                 "selected_prediction_margin_from_best": float(
                     predictions[selected_index] - np.min(predictions)
                 ),
                 "prediction_tolerance": prediction_tolerance,
+                "ensemble_size": ensemble_size,
                 "selected_true_primary": selected_true,
                 "selected_tcount": selected.get("tcount_after"),
                 "true_best_candidate_id": true_best["candidate_id"],
@@ -311,11 +370,11 @@ def leave_one_circuit_out_eval(
 
 def predictions_rows(
     rows: list[dict[str, str]],
-    model: MLPModel,
+    model: MLPModel | EnsembleModel,
     *,
     prediction_tolerance: float = DEFAULT_PREDICTION_TOLERANCE,
 ) -> list[dict[str, Any]]:
-    preds = predict(model, rows)
+    preds, prediction_std = predict_with_uncertainty(model, rows)
     selected_by_circuit = {}
     for circuit_id in sorted({row["circuit_id"] for row in rows}, key=natural_sort_key):
         indices = [idx for idx, row in enumerate(rows) if row["circuit_id"] == circuit_id]
@@ -331,6 +390,7 @@ def predictions_rows(
         {
             **row,
             "predicted_primary_nc_depth_ratio": float(preds[index]),
+            "prediction_std": float(prediction_std[index]),
             "prediction_margin_from_best": float(
                 preds[index]
                 - min(
@@ -344,6 +404,79 @@ def predictions_rows(
         }
         for index, row in enumerate(rows)
     ]
+
+
+def selected_row_by_key(
+    rows: list[dict[str, Any]],
+    key: tuple[str, ...],
+) -> dict[str, Any]:
+    def row_key(row: dict[str, Any]) -> tuple[float, ...]:
+        return tuple(rank_float(row.get(column)) for column in key)
+
+    return min(rows, key=row_key)
+
+
+def baseline_rows(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    objectives = {
+        "structural_oracle": (LABEL_COLUMN, "tcount_after", "qasm_depth_ratio"),
+        "tcount": ("tcount_after", LABEL_COLUMN, "qasm_depth_ratio"),
+        "tdepth": ("tdepth_after", LABEL_COLUMN, "tcount_after"),
+        "qasm_depth": ("qasm_depth_ratio", LABEL_COLUMN, "tcount_after"),
+        "zx_total_depth": ("zx_total_depth_ratio", LABEL_COLUMN, "tcount_after"),
+    }
+    baseline_results = []
+    for circuit_id in sorted({row["circuit_id"] for row in rows}, key=natural_sort_key):
+        circuit_rows = [row for row in rows if row["circuit_id"] == circuit_id]
+        structural_best = selected_row_by_key(
+            circuit_rows, (LABEL_COLUMN, "tcount_after", "qasm_depth_ratio")
+        )
+        tcount_best = selected_row_by_key(
+            circuit_rows, ("tcount_after", LABEL_COLUMN, "qasm_depth_ratio")
+        )
+        structural_primary = coerce_float(structural_best.get(LABEL_COLUMN))
+        tcount_primary = coerce_float(tcount_best.get(LABEL_COLUMN))
+        for objective, key in objectives.items():
+            selected = selected_row_by_key(circuit_rows, key)
+            selected_primary = coerce_float(selected.get(LABEL_COLUMN))
+            selected_tcount = coerce_float(selected.get("tcount_after"))
+            structural_tcount = coerce_float(structural_best.get("tcount_after"))
+            tcount_tcount = coerce_float(tcount_best.get("tcount_after"))
+            baseline_results.append(
+                {
+                    "circuit_id": circuit_id,
+                    "objective": objective,
+                    "selected_candidate_id": selected.get("candidate_id"),
+                    "selected_primary": selected_primary,
+                    "selected_tcount": selected_tcount,
+                    "structural_best_candidate_id": structural_best.get("candidate_id"),
+                    "structural_best_primary": structural_primary,
+                    "structural_best_tcount": structural_tcount,
+                    "tcount_best_candidate_id": tcount_best.get("candidate_id"),
+                    "tcount_best_primary": tcount_primary,
+                    "tcount_best_tcount": tcount_tcount,
+                    "primary_regret_vs_structural_best": (
+                        None
+                        if selected_primary is None or structural_primary is None
+                        else selected_primary - structural_primary
+                    ),
+                    "primary_gain_vs_tcount_best": (
+                        None
+                        if selected_primary is None or tcount_primary is None
+                        else tcount_primary - selected_primary
+                    ),
+                    "tcount_delta_vs_structural_best": (
+                        None
+                        if selected_tcount is None or structural_tcount is None
+                        else selected_tcount - structural_tcount
+                    ),
+                    "tcount_delta_vs_tcount_best": (
+                        None
+                        if selected_tcount is None or tcount_tcount is None
+                        else selected_tcount - tcount_tcount
+                    ),
+                }
+            )
+    return baseline_results
 
 
 def comparison_rows(prediction_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -455,6 +588,7 @@ def materialize_reranker_selection(
             "predicted_primary_nc_depth_ratio": row.get(
                 "predicted_primary_nc_depth_ratio"
             ),
+            "prediction_std": row.get("prediction_std"),
             "prediction_tolerance": prediction_tolerance,
             "prediction_margin_from_best": row.get("prediction_margin_from_best"),
             "structural_cost": row.get("structural_cost"),
@@ -489,19 +623,8 @@ def materialize_reranker_selection(
     return summary_rows, summary_csv, summary_json
 
 
-def model_payload(model: MLPModel, args: argparse.Namespace, rows: list[dict[str, str]]) -> dict[str, Any]:
+def mlp_payload(model: MLPModel) -> dict[str, Any]:
     return {
-        "model_type": "one_hidden_layer_tanh_mlp",
-        "feature_columns": list(model.feature_columns),
-        "label_column": LABEL_COLUMN,
-        "num_training_candidates": len(rows),
-        "circuits": sorted({row["circuit_id"] for row in rows}, key=natural_sort_key),
-        "hidden_size": int(model.w1.shape[1]),
-        "epochs": args.epochs,
-        "learning_rate": args.learning_rate,
-        "weight_decay": args.weight_decay,
-        "seed": args.seed,
-        "prediction_tolerance": args.prediction_tolerance,
         "feature_means": model.stats.means.tolist(),
         "feature_stds": model.stats.stds.tolist(),
         "feature_impute_values": model.stats.impute_values.tolist(),
@@ -509,6 +632,25 @@ def model_payload(model: MLPModel, args: argparse.Namespace, rows: list[dict[str
         "b1": model.b1.tolist(),
         "w2": model.w2.tolist(),
         "b2": model.b2.tolist(),
+    }
+
+
+def model_payload(model: EnsembleModel, args: argparse.Namespace, rows: list[dict[str, str]]) -> dict[str, Any]:
+    return {
+        "model_type": "one_hidden_layer_tanh_mlp_ensemble",
+        "feature_columns": list(model.feature_columns),
+        "label_column": LABEL_COLUMN,
+        "num_training_candidates": len(rows),
+        "circuits": sorted({row["circuit_id"] for row in rows}, key=natural_sort_key),
+        "hidden_size": int(model.models[0].w1.shape[1]),
+        "epochs": args.epochs,
+        "learning_rate": args.learning_rate,
+        "weight_decay": args.weight_decay,
+        "seed": args.seed,
+        "seed_stride": DEFAULT_SEED_STRIDE,
+        "ensemble_size": args.ensemble_size,
+        "prediction_tolerance": args.prediction_tolerance,
+        "members": [mlp_payload(member) for member in model.models],
     }
 
 
@@ -523,8 +665,11 @@ def write_report(
     predictions_csv: Path,
     comparison_csv: Path,
     comparison_rows_for_report: list[dict[str, Any]],
+    baseline_csv: Path,
+    baseline_rows_for_report: list[dict[str, Any]],
     selection_summary_csv: Path,
     prediction_tolerance: float,
+    ensemble_size: int,
 ) -> Path:
     circuits = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     hit_rate = (
@@ -549,6 +694,7 @@ def write_report(
                 (
                     f"- `{row['circuit_id']}`: `{row['candidate_id']}` "
                     f"pred={float(row['predicted_primary_nc_depth_ratio']):.3f}, "
+                    f"std={float(row['prediction_std']):.3f}, "
                     f"true={float(row[LABEL_COLUMN]):.3f}, T={row['tcount_after']}."
                 )
             )
@@ -574,6 +720,17 @@ def write_report(
         )
         for row in comparison_rows_for_report
     ]
+    objective_summaries = []
+    for objective in sorted({row["objective"] for row in baseline_rows_for_report}):
+        subset = [row for row in baseline_rows_for_report if row["objective"] == objective]
+        regrets = [coerce_float(row["primary_regret_vs_structural_best"]) for row in subset]
+        regrets = [item for item in regrets if item is not None]
+        t_delta = [coerce_float(row["tcount_delta_vs_structural_best"]) for row in subset]
+        t_delta = [item for item in t_delta if item is not None]
+        objective_summaries.append(
+            f"- `{objective}`: mean regret={float(np.mean(regrets)):.3f}, "
+            f"total T-delta={float(np.sum(t_delta)):.0f}."
+        )
     text = [
         "# AlphaTensor Structural Reranker",
         "",
@@ -586,9 +743,11 @@ def write_report(
         f"- Predictions CSV: `{predictions_csv}`.",
         f"- Evaluation CSV: `{eval_csv}`.",
         f"- Comparison CSV: `{comparison_csv}`.",
+        f"- Baseline CSV: `{baseline_csv}`.",
         f"- Model JSON: `{model_path}`.",
         f"- Reranker selection summary: `{selection_summary_csv}`.",
         f"- Prediction tolerance: {prediction_tolerance:.3f}.",
+        f"- Ensemble size: {ensemble_size}.",
         "",
         "## Leave-one-circuit-out evaluation",
         "",
@@ -604,6 +763,10 @@ def write_report(
         "## Selection comparison",
         "",
         *comparison_lines,
+        "",
+        "## Objective baselines",
+        "",
+        *objective_summaries,
         "",
         "## Caveat",
         "",
@@ -627,6 +790,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--predictions-csv", type=Path, default=DEFAULT_PREDICTIONS_CSV)
     parser.add_argument("--eval-csv", type=Path, default=DEFAULT_EVAL_CSV)
     parser.add_argument("--comparison-csv", type=Path, default=DEFAULT_COMPARISON_CSV)
+    parser.add_argument("--baselines-csv", type=Path, default=DEFAULT_BASELINES_CSV)
     parser.add_argument("--model-json", type=Path, default=DEFAULT_MODEL_JSON)
     parser.add_argument("--report-path", type=Path, default=DEFAULT_REPORT_PATH)
     parser.add_argument("--selection-output-root", type=Path, default=DEFAULT_SELECTION_ROOT)
@@ -635,6 +799,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=0.03)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--seed", type=int, default=2026)
+    parser.add_argument("--ensemble-size", type=int, default=DEFAULT_ENSEMBLE_SIZE)
     parser.add_argument(
         "--prediction-tolerance",
         type=float,
@@ -661,14 +826,16 @@ def main() -> int:
         weight_decay=args.weight_decay,
         seed=args.seed,
         prediction_tolerance=args.prediction_tolerance,
+        ensemble_size=args.ensemble_size,
     )
-    model = train_mlp(
+    model = train_ensemble(
         rows,
         hidden_size=args.hidden_size,
         epochs=args.epochs,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         seed=args.seed,
+        ensemble_size=args.ensemble_size,
     )
     prediction_rows = predictions_rows(
         rows,
@@ -676,6 +843,7 @@ def main() -> int:
         prediction_tolerance=args.prediction_tolerance,
     )
     comparison = comparison_rows(prediction_rows)
+    baselines = baseline_rows(rows)
     selection_rows, selection_summary_csv, selection_summary_json = (
         materialize_reranker_selection(
             prediction_rows,
@@ -688,6 +856,7 @@ def main() -> int:
     write_csv_rows(eval_rows, args.eval_csv)
     write_csv_rows(prediction_rows, args.predictions_csv)
     write_csv_rows(comparison, args.comparison_csv)
+    write_csv_rows(baselines, args.baselines_csv)
     write_json(model_payload(model, args, rows), args.model_json)
     report_path = write_report(
         output_path=args.report_path,
@@ -699,8 +868,11 @@ def main() -> int:
         predictions_csv=args.predictions_csv,
         comparison_csv=args.comparison_csv,
         comparison_rows_for_report=comparison,
+        baseline_csv=args.baselines_csv,
+        baseline_rows_for_report=baselines,
         selection_summary_csv=selection_summary_csv,
         prediction_tolerance=args.prediction_tolerance,
+        ensemble_size=args.ensemble_size,
     )
     print(
         {
@@ -708,6 +880,7 @@ def main() -> int:
             "eval_csv": str(args.eval_csv),
             "predictions_csv": str(args.predictions_csv),
             "comparison_csv": str(args.comparison_csv),
+            "baselines_csv": str(args.baselines_csv),
             "model_json": str(args.model_json),
             "report_path": str(report_path),
             "selection_summary_csv": str(selection_summary_csv),
