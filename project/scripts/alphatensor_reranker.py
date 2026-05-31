@@ -204,6 +204,34 @@ def predict(model: MLPModel, rows: list[dict[str, Any]]) -> np.ndarray:
     return (hidden @ model.w2 + model.b2).reshape(-1)
 
 
+def select_with_prediction_tolerance(
+    rows: list[dict[str, Any]],
+    predictions: np.ndarray,
+    *,
+    prediction_tolerance: float,
+) -> int:
+    best_prediction = float(np.min(predictions))
+    eligible = [
+        index
+        for index, prediction in enumerate(predictions)
+        if float(prediction) <= best_prediction + prediction_tolerance
+    ]
+
+    def tolerance_key(index: int) -> tuple[float, float, float, int]:
+        row = rows[index]
+        tcount = coerce_float(row.get("tcount_after"))
+        qasm_depth = coerce_float(row.get("qasm_depth_ratio"))
+        combo_index = coerce_int(row.get("combo_index"))
+        return (
+            float("inf") if tcount is None else tcount,
+            float("inf") if qasm_depth is None else qasm_depth,
+            float(predictions[index]),
+            10**9 if combo_index is None else combo_index,
+        )
+
+    return min(eligible, key=tolerance_key)
+
+
 def leave_one_circuit_out_eval(
     rows: list[dict[str, str]],
     *,
@@ -212,6 +240,7 @@ def leave_one_circuit_out_eval(
     learning_rate: float,
     weight_decay: float,
     seed: int,
+    prediction_tolerance: float = DEFAULT_PREDICTION_TOLERANCE,
 ) -> list[dict[str, Any]]:
     circuits = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     eval_rows = []
@@ -229,14 +258,25 @@ def leave_one_circuit_out_eval(
             seed=seed,
         )
         predictions = predict(model, test_rows)
-        selected_index = int(np.argmin(predictions))
+        selected_index = select_with_prediction_tolerance(
+            test_rows,
+            predictions,
+            prediction_tolerance=prediction_tolerance,
+        )
         true_values = labels(test_rows)
         true_best_index = int(np.argmin(true_values))
-        tcounts = np.array(
-            [rank_float(row.get("tcount_after")) for row in test_rows],
-            dtype=float,
+        tcount_best_index = min(
+            range(len(test_rows)),
+            key=lambda index: (
+                rank_float(test_rows[index].get("tcount_after")),
+                float(true_values[index]),
+                (
+                    10**9
+                    if coerce_int(test_rows[index].get("combo_index")) is None
+                    else coerce_int(test_rows[index].get("combo_index"))
+                ),
+            ),
         )
-        tcount_best_index = int(np.argmin(tcounts))
         selected = test_rows[selected_index]
         true_best = test_rows[true_best_index]
         tcount_best = test_rows[tcount_best_index]
@@ -250,6 +290,10 @@ def leave_one_circuit_out_eval(
                 "num_test_candidates": len(test_rows),
                 "selected_candidate_id": selected["candidate_id"],
                 "selected_predicted_primary": float(predictions[selected_index]),
+                "selected_prediction_margin_from_best": float(
+                    predictions[selected_index] - np.min(predictions)
+                ),
+                "prediction_tolerance": prediction_tolerance,
                 "selected_true_primary": selected_true,
                 "selected_tcount": selected.get("tcount_after"),
                 "true_best_candidate_id": true_best["candidate_id"],
@@ -275,26 +319,14 @@ def predictions_rows(
     selected_by_circuit = {}
     for circuit_id in sorted({row["circuit_id"] for row in rows}, key=natural_sort_key):
         indices = [idx for idx, row in enumerate(rows) if row["circuit_id"] == circuit_id]
-        best_prediction = float(min(preds[idx] for idx in indices))
-        eligible = [
-            idx
-            for idx in indices
-            if float(preds[idx]) <= best_prediction + prediction_tolerance
-        ]
-
-        def tolerance_key(index: int) -> tuple[float, float, float, int]:
-            row = rows[index]
-            tcount = coerce_float(row.get("tcount_after"))
-            qasm_depth = coerce_float(row.get("qasm_depth_ratio"))
-            combo_index = coerce_int(row.get("combo_index"))
-            return (
-                float("inf") if tcount is None else tcount,
-                float("inf") if qasm_depth is None else qasm_depth,
-                float(preds[index]),
-                10**9 if combo_index is None else combo_index,
-            )
-
-        selected_by_circuit[circuit_id] = min(eligible, key=tolerance_key)
+        local_rows = [rows[index] for index in indices]
+        local_predictions = np.array([preds[index] for index in indices], dtype=float)
+        selected_local_index = select_with_prediction_tolerance(
+            local_rows,
+            local_predictions,
+            prediction_tolerance=prediction_tolerance,
+        )
+        selected_by_circuit[circuit_id] = indices[selected_local_index]
     return [
         {
             **row,
@@ -628,6 +660,7 @@ def main() -> int:
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         seed=args.seed,
+        prediction_tolerance=args.prediction_tolerance,
     )
     model = train_mlp(
         rows,

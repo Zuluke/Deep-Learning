@@ -549,6 +549,7 @@ def test_alphatensor_reranker_leave_one_circuit_out_reports_regret() -> None:
     assert {"primary_regret_vs_true_best", "primary_gain_vs_tcount_best"} <= set(
         eval_rows[0]
     )
+    assert eval_rows[0]["prediction_tolerance"] == 0.05
 
 
 def test_formal_verification_classifies_feynver_outputs() -> None:
