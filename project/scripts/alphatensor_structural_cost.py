@@ -4,11 +4,13 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from scripts._analysis_common import compute_metrics_from_qasm_path
-from scripts.structural_target import PRIMARY_RATIO_KEY
-from scripts.structural_target import STRUCTURAL_STATUS_KEY
+from scripts.alphaq_border_proxy import ALPHAQ_BORDER_COST_KEY
+from scripts.alphaq_border_proxy import ALPHAQ_DEPENDENCY_COST_KEY
+from scripts.alphaq_border_proxy import ALPHAQ_BORDER_STATUS_KEY
+from scripts.alphaq_border_proxy import compute_alphaq_border_metrics_from_qasm
+from scripts.alphaq_border_proxy import compute_alphaq_border_target_metrics
 from scripts.structural_target import coerce_float
 from scripts.structural_target import compute_structural_target_metrics
-from scripts.zx_splitting import compute_zx_splitting_metrics_from_qasm
 
 
 INF = float("inf")
@@ -16,7 +18,8 @@ INF = float("inf")
 
 def circuit_selection_row_from_qasm(path: Path) -> dict[str, Any]:
     qasm_metrics = compute_metrics_from_qasm_path(path)
-    zx_metrics = compute_zx_splitting_metrics_from_qasm(path)
+    zx_metrics = _safe_zx_splitting_metrics_from_qasm(path)
+    alphaq_metrics = compute_alphaq_border_metrics_from_qasm(path)
     return {
         "qasm_path": str(path),
         "tcount_after": qasm_metrics.get("tcount"),
@@ -31,6 +34,7 @@ def circuit_selection_row_from_qasm(path: Path) -> dict[str, Any]:
         "hadamard_boundary_density": qasm_metrics.get("hadamard_boundary_density"),
         "tdepth_over_tcount": qasm_metrics.get("tdepth_over_tcount"),
         **zx_metrics,
+        **alphaq_metrics,
     }
 
 
@@ -39,7 +43,10 @@ def compute_selection_metrics(
     original_row: Mapping[str, Any],
 ) -> dict[str, Any]:
     target_metrics = compute_structural_target_metrics(candidate_row, original_row)
-    status = target_metrics.get(STRUCTURAL_STATUS_KEY)
+    alphaq_target_metrics = compute_alphaq_border_target_metrics(
+        candidate_row, original_row
+    )
+    status = alphaq_target_metrics.get("alphaq_target_status")
     tcount_ratio = _ratio(
         candidate_row.get("tcount_after"),
         original_row.get("tcount_after"),
@@ -52,11 +59,17 @@ def compute_selection_metrics(
         candidate_row.get("gate_count_after"),
         original_row.get("gate_count_after"),
     )
-    primary_ratio = target_metrics.get(PRIMARY_RATIO_KEY)
+    qasm_depth_ratio = _ratio(
+        candidate_row.get("depth_after"),
+        original_row.get("depth_after"),
+    )
+    structural_cost = alphaq_target_metrics.get(ALPHAQ_DEPENDENCY_COST_KEY)
+    if structural_cost is None:
+        structural_cost = alphaq_target_metrics.get(ALPHAQ_BORDER_COST_KEY)
     return {
         "selection_status": "ok" if status == "ok" else status,
-        "selection_error": target_metrics.get("structural_target_error"),
-        "structural_cost": primary_ratio if status == "ok" else None,
+        "selection_error": alphaq_target_metrics.get("alphaq_target_error"),
+        "structural_cost": structural_cost if status == "ok" else None,
         "tcount_ratio": tcount_ratio,
         "tdepth_ratio": tdepth_ratio,
         "gate_count_ratio": gate_count_ratio,
@@ -72,6 +85,9 @@ def compute_selection_metrics(
         "hadamard_boundary_density": candidate_row.get("hadamard_boundary_density"),
         "tdepth_over_tcount": candidate_row.get("tdepth_over_tcount"),
         **target_metrics,
+        "qasm_depth_ratio": qasm_depth_ratio,
+        **_copy_alphaq_border_fields(candidate_row),
+        **alphaq_target_metrics,
     }
 
 
@@ -84,13 +100,17 @@ def compute_selection_metrics_from_qasm(
     return compute_selection_metrics(candidate_row, original_row)
 
 
-def structural_selection_key(metrics: Mapping[str, Any], tie_breaker: int = 0) -> tuple[float, float, float, float, int]:
+def structural_selection_key(
+    metrics: Mapping[str, Any], tie_breaker: int = 0
+) -> tuple[float, float, float, float, float, float, int]:
     if metrics.get("selection_status") != "ok":
-        return (INF, INF, INF, INF, tie_breaker)
+        return (INF, INF, INF, INF, INF, INF, tie_breaker)
     return (
-        _finite(metrics.get(PRIMARY_RATIO_KEY)),
+        _finite(metrics.get("structural_cost")),
+        _finite(metrics.get("alphaq_dependency_boundary_edge_count")),
+        _finite(metrics.get("alphaq_crossing_closure_count")),
         _finite(metrics.get("tcount_after")),
-        _finite(metrics.get("zx_total_depth_ratio")),
+        _finite(metrics.get("alphaq_total_depth_ratio")),
         _finite(metrics.get("qasm_depth_ratio")),
         tie_breaker,
     )
@@ -115,3 +135,22 @@ def _ratio(numerator: Any, denominator: Any) -> float | None:
 def _finite(value: Any) -> float:
     numeric = coerce_float(value)
     return INF if numeric is None else numeric
+
+
+def _copy_alphaq_border_fields(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in row.items()
+        if key.startswith("alphaq_") or key == ALPHAQ_BORDER_STATUS_KEY
+    }
+
+
+def _safe_zx_splitting_metrics_from_qasm(path: Path) -> dict[str, Any]:
+    try:
+        from scripts.zx_splitting import compute_zx_splitting_metrics_from_qasm
+    except Exception as exc:  # pragma: no cover - optional benchmark dependency
+        return {
+            "zx_split_status": "unavailable",
+            "zx_split_error": str(exc),
+        }
+    return compute_zx_splitting_metrics_from_qasm(path)

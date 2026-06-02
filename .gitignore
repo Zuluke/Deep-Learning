@@ -6,6 +6,8 @@
 *.blg
 *.log
 *.out
+*.loc
+*.soc
 .venv
 *.pdf
 !paper/main.pdf

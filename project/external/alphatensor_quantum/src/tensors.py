@@ -16,11 +16,25 @@
 """Tensor utilities for AlphaTensor-Quantum."""
 
 import enum
+from pathlib import Path
+
 import immutabledict
 
 import jax.numpy as jnp
 import jaxtyping as jt
 import numpy as np
+
+
+_CIRCUIT_TO_TENSOR_BENCHMARKS = (
+    Path(__file__).resolve().parents[2] / 'circuit-to-tensor' / 'benchmarks'
+)
+
+
+def _load_benchmark_tensor(*relative_parts: str) -> np.ndarray:
+  """Loads a circuit-to-tensor benchmark tensor as an int32 NumPy array."""
+  return np.load(_CIRCUIT_TO_TENSOR_BENCHMARKS.joinpath(*relative_parts)).astype(
+      np.int32
+  )
 
 
 _SMALL_TCOUNT_3 = np.array(
@@ -228,6 +242,17 @@ _NC_TOFF_3 = np.array(
     dtype=np.int32,
 )
 
+_GF_2POW2_MULT = _load_benchmark_tensor(
+    'arithmetic', 'gf_2pow2_mult', 'gf_2pow2_mult.tensor.npy'
+)
+_QFT_4 = _load_benchmark_tensor('arithmetic', 'qft_4', 'qft_4.tensor.npy')
+_HAMMING_WEIGHT_N4 = _load_benchmark_tensor(
+    'applications', 'hamming_weight_n4', 'hamming_weight_n4.tensor.npy'
+)
+_HAMMING_WEIGHT_N5 = _load_benchmark_tensor(
+    'applications', 'hamming_weight_n5', 'hamming_weight_n5.tensor.npy'
+)
+
 
 class CircuitType(enum.Enum):
   """Types of circuits."""
@@ -237,6 +262,12 @@ class CircuitType(enum.Enum):
   NC_TOFF_3 = 3
   # A small 3-qubit circuit with optimal T-count of 3, useful for testing.
   SMALL_TCOUNT_3 = 4
+  # Local circuit-to-tensor benchmarks used for split-reward experiments.
+  GF_2POW2_MULT = 5
+  HAMMING_WEIGHT_N4 = 6
+  HAMMING_WEIGHT_N5 = 7
+  # Evaluation-only for the current full-action-space environment.
+  QFT_4 = 8
 
 
 _TENSORS_DICT = immutabledict.immutabledict({
@@ -244,6 +275,10 @@ _TENSORS_DICT = immutabledict.immutabledict({
     CircuitType.MOD_5_4: _MOD_5_4,
     CircuitType.NC_TOFF_3: _NC_TOFF_3,
     CircuitType.SMALL_TCOUNT_3: _SMALL_TCOUNT_3,
+    CircuitType.GF_2POW2_MULT: _GF_2POW2_MULT,
+    CircuitType.HAMMING_WEIGHT_N4: _HAMMING_WEIGHT_N4,
+    CircuitType.HAMMING_WEIGHT_N5: _HAMMING_WEIGHT_N5,
+    CircuitType.QFT_4: _QFT_4,
 })
 
 

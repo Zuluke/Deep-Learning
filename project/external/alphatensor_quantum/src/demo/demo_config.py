@@ -49,6 +49,54 @@ class ExperimentParams:
       reporting purposes only.
     eval_frequency_steps: The frequency (expressed in number of training steps)
       to report the running statistics. This is for reporting purposes only.
+    action_dictionary: Which action dictionary the demo agent should use.
+      "full" preserves the original action space. "low-weight" restricts MCTS
+      and the policy head to factors with Hamming weight at most
+      `max_action_weight`. "tensor-overlap" additionally includes a target
+      tensor guided union of higher-weight factors. "gadget-closure" includes
+      higher-weight linear combinations but masks them unless they continue or
+      complete a CS/Toffoli gadget prefix already present in the state.
+    max_action_weight: Maximum Hamming weight for the "low-weight" action
+      dictionary.
+    tensor_overlap_max_weight: Maximum Hamming weight considered for the
+      tensor-overlap dictionary expansion.
+    tensor_overlap_max_actions_per_target: Maximum number of target-guided
+      extra actions added per target in tensor-overlap mode.
+    gadget_closure_max_weight: Maximum Hamming weight exposed by
+      gadget-closure mode before dynamic gadget-prefix masking.
+    mask_padded_actions: Whether to mask actions that touch padded coordinates
+      beyond the active target tensor size in multi-target runs.
+    action_prior: Optional state-aware logit prior added before MCTS. "none"
+      preserves the learned policy logits. "residual" scores actions by their
+      immediate residual-weight drop. "split" additionally uses the configured
+      tensor partition to reward mixed-residual progress and penalize mixed
+      factor mass.
+    action_prior_beta: Multiplicative scale applied to the standardized prior
+      before it is added to policy logits.
+    action_prior_residual_weight: Weight of the residual-drop component.
+    action_prior_mixed_drop_weight: Weight of the mixed-residual-drop
+      component in split mode.
+    action_prior_mixed_mass_weight: Penalty weight for mixed mass introduced by
+      the candidate rank-one factor.
+    action_prior_hamming_weight: Small penalty on factor Hamming weight.
+    action_prior_gadget_bonus: Bonus for currently valid high-weight gadget
+      closure actions.
+    action_prior_standardize: Whether to standardize prior scores over valid
+      actions before adding them to policy logits.
+    action_prior_top_k: Optional prior-guided action narrowing. Zero preserves
+      the full currently valid action set; positive values keep only the best
+      scored actions before MCTS search.
+    action_prior_canonical_only: If true, disable the prior when the current
+      change of basis is not the identity.
+    frontier_replay_fraction: Fraction of terminated acting episodes to restart
+      from the current best residual frontier for the newly sampled target. Zero
+      preserves ordinary target-tensor restarts.
+    frontier_replay_min_moves: Minimum number of moves a stored frontier must
+      have before it can be used for frontier replay. This avoids over-replaying
+      shallow prefixes that only make trivial residual progress.
+    frontier_replay_min_residual_drop: Minimum normalized total-residual drop a
+      stored frontier must have before it can be archived/replayed when frontier
+      replay is active. For example, 0.04 means at least 4% residual reduction.
     loss: The loss parameters.
   """
   batch_size: int = 2_048
@@ -56,7 +104,43 @@ class ExperimentParams:
   num_training_steps: int = 1_000_000
   avg_return_smoothing: float = 0.9
   eval_frequency_steps: int = 1_000
+  action_dictionary: str = "full"
+  max_action_weight: int = 3
+  tensor_overlap_max_weight: int = 5
+  tensor_overlap_max_actions_per_target: int = 128
+  gadget_closure_max_weight: int = 4
+  mask_padded_actions: bool = False
+  action_prior: str = "none"
+  action_prior_beta: float = 1.0
+  action_prior_residual_weight: float = 1.0
+  action_prior_mixed_drop_weight: float = 1.0
+  action_prior_mixed_mass_weight: float = 0.25
+  action_prior_hamming_weight: float = 0.05
+  action_prior_gadget_bonus: float = 0.25
+  action_prior_standardize: bool = True
+  action_prior_top_k: int = 0
+  action_prior_canonical_only: bool = True
+  frontier_replay_fraction: float = 0.0
+  frontier_replay_min_moves: int = 0
+  frontier_replay_min_residual_drop: float = 0.0
   loss: LossParams
+
+  def __post_init__(self):
+    if self.action_prior not in ("none", "residual", "split"):
+      raise ValueError(
+          f"Unknown action_prior {self.action_prior!r}. Expected 'none', "
+          "'residual' or 'split'."
+      )
+    if self.action_prior_top_k < 0:
+      raise ValueError("action_prior_top_k must be non-negative.")
+    if not 0.0 <= self.frontier_replay_fraction <= 1.0:
+      raise ValueError("frontier_replay_fraction must be between 0 and 1.")
+    if self.frontier_replay_min_moves < 0:
+      raise ValueError("frontier_replay_min_moves must be non-negative.")
+    if self.frontier_replay_min_residual_drop < 0.0:
+      raise ValueError(
+          "frontier_replay_min_residual_drop must be non-negative."
+      )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

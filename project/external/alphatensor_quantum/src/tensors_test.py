@@ -40,6 +40,10 @@ class TensorsTest(parameterized.TestCase):
   @parameterized.parameters(
       (tensors.CircuitType.BARENCO_TOFF_3, 8),
       (tensors.CircuitType.MOD_5_4, 5),
+      (tensors.CircuitType.GF_2POW2_MULT, 6),
+      (tensors.CircuitType.HAMMING_WEIGHT_N4, 9),
+      (tensors.CircuitType.HAMMING_WEIGHT_N5, 10),
+      (tensors.CircuitType.QFT_4, 43),
       (tensors.CircuitType.NC_TOFF_3, 7),
       (tensors.CircuitType.SMALL_TCOUNT_3, 3),
   )

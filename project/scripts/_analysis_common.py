@@ -82,7 +82,7 @@ def write_csv_rows(rows: list[dict[str, Any]], path: Path) -> Path:
             if key not in fieldnames:
                 fieldnames.append(key)
     with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     return path
@@ -513,6 +513,11 @@ def artifact_stem_candidates(decomposition_key: str) -> list[str]:
         candidates.append(f"{decomposition_key.removesuffix('_comp2')}_comp1")
     elif decomposition_key.endswith("_comp1"):
         candidates.append(decomposition_key.removesuffix("_comp1"))
+    for candidate in list(candidates):
+        if "_toff_" in candidate:
+            candidates.append(candidate.replace("_toff_", "_tof_"))
+        if "_tof_" in candidate:
+            candidates.append(candidate.replace("_tof_", "_toff_"))
     return list(dict.fromkeys(candidates))
 
 

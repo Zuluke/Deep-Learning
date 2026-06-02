@@ -32,24 +32,46 @@ from scripts.zx_splitting import compute_zx_splitting_metrics_from_qasm
 DEFAULT_CIRCUIT_IDS = (
     "mod_5_4",
     "gf_2pow2_mult",
-    "cuccaro_adder_n3",
     "qft_4",
-    "vbe_adder_3",
+    "hamming_weight_n4",
+    "hamming_weight_n5",
 )
 
-HEATMAP_CIRCUIT_IDS = ("mod_5_4", "qft_4", "vbe_adder_3")
+HEATMAP_CIRCUIT_IDS = ("mod_5_4", "qft_4", "hamming_weight_n4")
 
 METHOD_LABELS = {
     "original": "Original",
     "pyzx": "PyZX",
     "alphatensor_public": "AlphaTensor-public",
+    "alphaq_tensor_v3": "AlphaQ tensor-v3",
+    "alphaq_tensor_v3_phase_slack": "AlphaQ tensor-v3 phase-slack",
+    "alphaq_final": "AlphaQ-final",
 }
 
 METHOD_COLORS = {
     "original": "#4D4D4D",
     "pyzx": "#0072B2",
     "alphatensor_public": "#009E73",
+    "alphaq_tensor_v3": "#D55E00",
+    "alphaq_tensor_v3_phase_slack": "#56B4E9",
+    "alphaq_final": "#CC79A7",
 }
+
+ENTREGA_METHODS = (
+    "original",
+    "pyzx",
+    "alphatensor_public",
+    "alphaq_tensor_v3",
+    "alphaq_tensor_v3_phase_slack",
+    "alphaq_final",
+)
+CANDIDATE_METHODS = (
+    "pyzx",
+    "alphatensor_public",
+    "alphaq_tensor_v3",
+    "alphaq_tensor_v3_phase_slack",
+    "alphaq_final",
+)
 
 
 @dataclass(frozen=True)
@@ -221,6 +243,12 @@ def build_entrega1_rows(
             ("original", rows_by_method.get("original")),
             ("pyzx", rows_by_method.get("pyzx")),
             ("alphatensor_public", choose_alphatensor_public_row(rows_by_method)),
+            ("alphaq_tensor_v3", rows_by_method.get("public_resynth_tensor_v3")),
+            (
+                "alphaq_tensor_v3_phase_slack",
+                rows_by_method.get("public_resynth_tensor_v3_phase_slack"),
+            ),
+            ("alphaq_final", rows_by_method.get("public_resynth_alphaq_final")),
         ]
         for entrega1_method, source_row in selected:
             if source_row is None:
@@ -277,6 +305,99 @@ def build_entrega1_rows(
                 "hadamard_boundary_density": coerce_float(
                     source_row.get("hadamard_boundary_density")
                 ),
+                "selection_objective": source_row.get("selection_objective"),
+                "tensor_v3_selection_status": source_row.get(
+                    "tensor_v3_selection_status"
+                ),
+                "tensor_v3_selection_error": source_row.get(
+                    "tensor_v3_selection_error"
+                ),
+                "tensor_v3_ranking_strategy": source_row.get(
+                    "tensor_v3_ranking_strategy"
+                ),
+                "tensor_v3_profile": source_row.get("tensor_v3_profile"),
+                "tensor_v3_mixed_slack": coerce_float(
+                    source_row.get("tensor_v3_mixed_slack")
+                ),
+                "structural_cost": coerce_float(source_row.get("structural_cost")),
+                "predicted_structural_cost": coerce_float(
+                    source_row.get("predicted_structural_cost")
+                ),
+                "prediction_std": coerce_float(source_row.get("prediction_std")),
+                "prediction_tolerance": coerce_float(
+                    source_row.get("prediction_tolerance")
+                ),
+                "alphaq_target_status": source_row.get("alphaq_target_status"),
+                "alphaq_nc_core_area_ratio": coerce_float(
+                    source_row.get("alphaq_nc_core_area_ratio")
+                ),
+                "alphaq_dependency_core_area_ratio": coerce_float(
+                    source_row.get("alphaq_dependency_core_area_ratio")
+                ),
+                "alphaq_nc_core_depth_ratio": coerce_float(
+                    source_row.get("alphaq_nc_core_depth_ratio")
+                ),
+                "alphaq_nc_core_width_ratio": coerce_float(
+                    source_row.get("alphaq_nc_core_width_ratio")
+                ),
+                "alphaq_dependency_core_depth_ratio": coerce_float(
+                    source_row.get("alphaq_dependency_core_depth_ratio")
+                ),
+                "alphaq_dependency_core_width_ratio": coerce_float(
+                    source_row.get("alphaq_dependency_core_width_ratio")
+                ),
+                "alphaq_total_depth_ratio": coerce_float(
+                    source_row.get("alphaq_total_depth_ratio")
+                ),
+                "alphaq_total_area_ratio": coerce_float(
+                    source_row.get("alphaq_total_area_ratio")
+                ),
+                "alphaq_crossing_closure_count": coerce_int(
+                    source_row.get("alphaq_crossing_closure_count")
+                ),
+                "alphaq_nc_core_depth": coerce_int(
+                    source_row.get("alphaq_nc_core_depth")
+                ),
+                "alphaq_nc_core_width": coerce_int(
+                    source_row.get("alphaq_nc_core_width")
+                ),
+                "alphaq_nc_core_area": coerce_int(
+                    source_row.get("alphaq_nc_core_area")
+                ),
+                "alphaq_dependency_core_depth": coerce_int(
+                    source_row.get("alphaq_dependency_core_depth")
+                ),
+                "alphaq_dependency_core_width": coerce_int(
+                    source_row.get("alphaq_dependency_core_width")
+                ),
+                "alphaq_dependency_core_area": coerce_int(
+                    source_row.get("alphaq_dependency_core_area")
+                ),
+                "alphaq_dependency_boundary_edge_count": coerce_int(
+                    source_row.get("alphaq_dependency_boundary_edge_count")
+                ),
+                "alphaq_dependency_component_count": coerce_int(
+                    source_row.get("alphaq_dependency_component_count")
+                ),
+                "alphaq_dependency_chain_depth": coerce_int(
+                    source_row.get("alphaq_dependency_chain_depth")
+                ),
+                "tensor_v3_status": source_row.get("tensor_v3_status"),
+                "tensor_v3_partition_id": source_row.get("tensor_v3_partition_id"),
+                "tensor_v3_partition_kind": source_row.get("tensor_v3_partition_kind"),
+                "tensor_v3_tcount_tolerance": coerce_float(
+                    source_row.get("tensor_v3_tcount_tolerance")
+                ),
+                "tensor_v3_mixed_excess_norm": coerce_float(
+                    source_row.get("tensor_v3_mixed_excess_norm")
+                ),
+                "tensor_v3_mixed_auc_greedy_norm": coerce_float(
+                    source_row.get("tensor_v3_mixed_auc_greedy_norm")
+                ),
+                "tensor_v3_singleton_bridge_count_norm": coerce_float(
+                    source_row.get("tensor_v3_singleton_bridge_count_norm")
+                ),
+                "tensor_v3_score_lex": source_row.get("tensor_v3_score_lex"),
             }
             row.update(locality_metrics)
             row.update(zx_metrics)
@@ -349,7 +470,7 @@ def rows_for_formal_report(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         [*original_rows, *candidate_rows],
         key=lambda row: (
             natural_sort_key(row["circuit_id"]),
-            ("original", "pyzx", "alphatensor_public").index(row["method"]),
+            ENTREGA_METHODS.index(row["method"]),
         ),
     )
 
@@ -375,14 +496,27 @@ def grouped_values(
     return values
 
 
+def methods_with_finite_values(
+    values: dict[str, list[float]],
+    methods: tuple[str, ...],
+) -> tuple[str, ...]:
+    active = tuple(
+        method
+        for method in methods
+        if any(np.isfinite(value) for value in values.get(method, []))
+    )
+    return active or methods
+
+
 def save_tcount_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], output_dir: Path) -> Path:
-    methods = ("original", "pyzx", "alphatensor_public")
+    methods = ENTREGA_METHODS
     values = grouped_values(rows, circuit_ids, methods, "tcount_after")
+    active_methods = methods_with_finite_values(values, methods)
     x = np.arange(len(circuit_ids))
-    width = 0.26
+    width = 0.82 / len(active_methods)
     fig, ax = plt.subplots(figsize=(12, 5.8), constrained_layout=True)
-    for offset, method in enumerate(methods):
-        bar_positions = x + (offset - 1) * width
+    for offset, method in enumerate(active_methods):
+        bar_positions = x + (offset - (len(active_methods) - 1) / 2) * width
         bars = ax.bar(
             bar_positions,
             values[method],
@@ -391,10 +525,10 @@ def save_tcount_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], o
             color=METHOD_COLORS[method],
         )
         ax.bar_label(bars, fmt=lambda value: "" if np.isnan(value) else f"{value:.0f}", fontsize=8)
-    ax.set_title("T-count: Original vs PyZX vs AlphaTensor-public")
+    ax.set_title("T-count: Original vs baselines vs AlphaQ tensor-v3")
     ax.set_ylabel("T-count normalizado")
     ax.set_xticks(x, circuit_ids, rotation=25, ha="right")
-    ax.legend(frameon=False, ncols=3)
+    ax.legend(frameon=False, ncols=min(len(active_methods), 4))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     png_path = output_dir / "tcount_comparison.png"
@@ -405,20 +539,21 @@ def save_tcount_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], o
 
 
 def save_core_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], output_dir: Path) -> Path:
-    methods = ("original", "pyzx", "alphatensor_public")
+    methods = ENTREGA_METHODS
     active = grouped_values(rows, circuit_ids, methods, "active_t_qubits")
     core_layers = grouped_values(rows, circuit_ids, methods, "nonclifford_core_layers")
+    active_methods = methods_with_finite_values(active, methods)
     x = np.arange(len(circuit_ids))
-    width = 0.26
+    width = 0.82 / len(active_methods)
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 8), sharex=True, constrained_layout=True)
     for axis, values, ylabel, title in [
         (axes[0], active, "qubits", "Qubits tocados por portas T/Tdg"),
         (axes[1], core_layers, "camadas", "Span temporal do nucleo nao-Clifford"),
     ]:
-        for offset, method in enumerate(methods):
+        for offset, method in enumerate(active_methods):
             axis.bar(
-                x + (offset - 1) * width,
+                x + (offset - (len(active_methods) - 1) / 2) * width,
                 values[method],
                 width,
                 label=METHOD_LABELS[method],
@@ -428,7 +563,7 @@ def save_core_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], out
         axis.set_title(title)
         axis.spines["top"].set_visible(False)
         axis.spines["right"].set_visible(False)
-    axes[0].legend(frameon=False, ncols=3)
+    axes[0].legend(frameon=False, ncols=min(len(active_methods), 4))
     axes[1].set_xticks(x, circuit_ids, rotation=25, ha="right")
     png_path = output_dir / "nonclifford_core_comparison.png"
     fig.savefig(png_path, dpi=300)
@@ -448,7 +583,7 @@ def save_reduction_vs_locality_plot(
     }
     points = []
     for row in rows:
-        if row["method"] not in {"pyzx", "alphatensor_public"} or row.get("method_status") != "ok":
+        if row["method"] not in CANDIDATE_METHODS or row.get("method_status") != "ok":
             continue
         original = original_by_id.get(row["circuit_id"])
         if not original:
@@ -468,7 +603,7 @@ def save_reduction_vs_locality_plot(
         )
 
     fig, ax = plt.subplots(figsize=(7.5, 5.4), constrained_layout=True)
-    for method in ("pyzx", "alphatensor_public"):
+    for method in CANDIDATE_METHODS:
         subset = [point for point in points if point["method"] == method]
         ax.scatter(
             [point["delta_core_area"] for point in subset],
@@ -502,19 +637,20 @@ def save_reduction_vs_locality_plot(
 
 
 def save_zx_splitting_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, ...], output_dir: Path) -> Path:
-    methods = ("original", "pyzx", "alphatensor_public")
+    methods = ENTREGA_METHODS
     values = grouped_values(rows, circuit_ids, methods, "zx_best_clifford_fraction")
+    active_methods = methods_with_finite_values(values, methods)
     x = np.arange(len(circuit_ids))
-    width = 0.26
+    width = 0.82 / len(active_methods)
 
     fig, ax = plt.subplots(figsize=(12, 5.8), constrained_layout=True)
-    for offset, method in enumerate(methods):
+    for offset, method in enumerate(active_methods):
         heights = [
             100.0 * value if not np.isnan(value) else np.nan
             for value in values[method]
         ]
         bars = ax.bar(
-            x + (offset - 1) * width,
+            x + (offset - (len(active_methods) - 1) / 2) * width,
             heights,
             width,
             label=METHOD_LABELS[method],
@@ -530,7 +666,7 @@ def save_zx_splitting_plot(rows: list[dict[str, Any]], circuit_ids: tuple[str, .
     ax.set_ylabel("fraction of circuit-like ZX depth")
     ax.set_xticks(x, circuit_ids, rotation=25, ha="right")
     ax.set_ylim(0, 105)
-    ax.legend(frameon=False, ncols=3)
+    ax.legend(frameon=False, ncols=min(len(active_methods), 4))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     png_path = output_dir / "zx_splitting_comparison.png"
@@ -558,7 +694,7 @@ def save_heatmap_for_circuit(
 ) -> Path | None:
     method_rows = [
         row
-        for method in ("original", "pyzx", "alphatensor_public")
+        for method in ENTREGA_METHODS
         for row in rows
         if row["circuit_id"] == circuit_id and row["method"] == method and row.get("method_status") == "ok"
     ]
@@ -689,6 +825,11 @@ def write_report(
     paper_comparison_csv_path: Path | None,
 ) -> Path:
     ok_alpha = len(rows_for_method(rows, "alphatensor_public"))
+    ok_tensor_v3 = len(rows_for_method(rows, "alphaq_tensor_v3"))
+    ok_tensor_v3_phase_slack = len(
+        rows_for_method(rows, "alphaq_tensor_v3_phase_slack")
+    )
+    ok_alphaq_final = len(rows_for_method(rows, "alphaq_final"))
     ok_pyzx = len(rows_for_method(rows, "pyzx"))
     selected_ids = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     limitations = [
@@ -712,6 +853,12 @@ def write_report(
         f"- Circuitos selecionados: {', '.join(f'`{item}`' for item in selected_ids)}.",
         f"- PyZX disponivel para {ok_pyzx}/{len(selected_ids)} circuitos.",
         f"- AlphaTensor-public disponivel para {ok_alpha}/{len(selected_ids)} circuitos.",
+        f"- AlphaQ tensor-v3 disponivel para {ok_tensor_v3}/{len(selected_ids)} circuitos.",
+        (
+            "- AlphaQ tensor-v3 phase-slack disponivel para "
+            f"{ok_tensor_v3_phase_slack}/{len(selected_ids)} circuitos."
+        ),
+        f"- AlphaQ-final disponivel para {ok_alphaq_final}/{len(selected_ids)} circuitos.",
         f"- Tabela consolidada: `{table_path}`.",
         "",
         "## Figuras geradas",
@@ -742,10 +889,12 @@ def write_report(
         (
             "Os resultados ja permitem uma Entrega 1 experimental: PyZX reduz T-count em todos os "
             "casos selecionados em que ha ganho, enquanto o replay publico AlphaTensor frequentemente "
-            "melhora PyZX nos circuitos com decomposicoes publicas compativeis. As figuras estruturais "
-            "e a fronteira detectada em ZX mostram que a reducao de T-count nem sempre coincide com "
-            "uma melhora monotona da separacao Clifford/nao-Clifford, o que sustenta a motivacao de "
-            "medir estrutura e nao apenas contagem."
+            "melhora PyZX nos circuitos com decomposicoes publicas compativeis. A variante AlphaQ "
+            "tensor-v3 aparece como selecao AlphaQuantum-only orientada pela geometria tensorial, "
+            "sem usar ZX/feynver no loop de escolha. As figuras estruturais e a fronteira detectada "
+            "em ZX mostram que a reducao de T-count nem sempre coincide com uma melhora monotona da "
+            "separacao Clifford/nao-Clifford, o que sustenta a motivacao de medir estrutura e nao "
+            "apenas contagem."
         ),
         "",
         "## Limitacoes documentadas",

@@ -35,6 +35,8 @@ DEFAULT_ENTREGA1_CIRCUITS = {
     "cuccaro_adder_n3",
     "qft_4",
     "vbe_adder_3",
+    "hamming_weight_n4",
+    "hamming_weight_n5",
     "hamming_15_low",
     "qcla_mod_7",
 }
@@ -121,7 +123,7 @@ def normalize_qasm_for_verifier(source: Path, output: Path) -> tuple[str, str | 
 
 
 def classify_proof(returncode: int, stdout: str, stderr: str) -> tuple[str, str | None]:
-    combined = (stdout + "\n" + stderr).strip()
+    combined = normalize_tool_output(stdout + "\n" + stderr)
     if stdout.startswith("Equal"):
         return "equal", None
     if "Error:" in combined or "Unexpected:" in combined:
@@ -133,6 +135,10 @@ def classify_proof(returncode: int, stdout: str, stderr: str) -> tuple[str, str 
     if combined:
         return "inconclusive", combined[:1200]
     return "inconclusive", "Verifier returned no output."
+
+
+def normalize_tool_output(text: str) -> str:
+    return "\n".join(line.rstrip() for line in text.strip().splitlines())
 
 
 def compact_message(value: Any, *, max_chars: int = 240) -> str:
@@ -190,7 +196,7 @@ def run_verification_pair(
     )
     if timed_out:
         runtime = time.time() - start
-        output = (stdout + "\n" + stderr).strip()
+        output = normalize_tool_output(stdout + "\n" + stderr)
         proof_path.write_text(output + "\n", encoding="utf-8")
         return {
             "verification_status": "timeout",
@@ -202,7 +208,7 @@ def run_verification_pair(
         }
 
     runtime = time.time() - start
-    output = stdout + stderr
+    output = normalize_tool_output(stdout + stderr)
     proof_path.write_text(output, encoding="utf-8")
     status, error = classify_proof(returncode, stdout, stderr)
     return {
@@ -215,11 +221,20 @@ def run_verification_pair(
     }
 
 
-def build_tasks(rows: list[dict[str, str]], scope: str) -> list[dict[str, str]]:
+def build_tasks(
+    rows: list[dict[str, str]],
+    scope: str,
+    methods: set[str] | None = None,
+    circuit_ids: set[str] | None = None,
+) -> list[dict[str, str]]:
     originals = {row["circuit_id"]: row for row in rows if row["method"] == "original"}
     tasks = []
     for row in rows:
         if row["method"] == "original":
+            continue
+        if methods is not None and row["method"] not in methods:
+            continue
+        if circuit_ids is not None and row["circuit_id"] not in circuit_ids:
             continue
         if row.get("method_status") not in OK_METHOD_STATUSES:
             continue
@@ -248,11 +263,13 @@ def run_verifications(
     output_root: Path,
     timeout_sec: int,
     limit: int | None,
+    methods: set[str] | None,
+    circuit_ids: set[str] | None,
 ) -> list[dict[str, Any]]:
     ensure_dir(output_root)
     proof_root = ensure_dir(output_root / "proofs")
     normalized_root = ensure_dir(output_root / "normalized_qasm")
-    tasks = build_tasks(final_rows, scope)
+    tasks = build_tasks(final_rows, scope, methods, circuit_ids)
     if limit is not None:
         tasks = tasks[:limit]
 
@@ -359,6 +376,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scope", choices=("entrega1", "all"), default="entrega1")
     parser.add_argument("--timeout-sec", type=int, default=30)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--method", action="append", dest="methods", default=None)
+    parser.add_argument("--circuit-id", action="append", dest="circuit_ids", default=None)
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -398,6 +417,8 @@ def main() -> int:
         output_root=scope_root,
         timeout_sec=args.timeout_sec,
         limit=args.limit,
+        methods=None if args.methods is None else set(args.methods),
+        circuit_ids=None if args.circuit_ids is None else set(args.circuit_ids),
     )
     write_csv_rows(rows, summary_csv)
     write_json(
@@ -405,6 +426,8 @@ def main() -> int:
             "scope": args.scope,
             "timeout_sec": args.timeout_sec,
             "num_rows": len(rows),
+            "methods": args.methods,
+            "circuit_ids": args.circuit_ids,
             "feynver_path": feynver_path(),
             "circuit_to_tensor_binary": str(circuit_to_tensor_binary()),
             "summary_csv": str(summary_csv),

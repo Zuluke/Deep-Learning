@@ -665,7 +665,7 @@ def make_tradeoff_figure(diagnostics: list[dict[str, Any]], output_path: Path) -
                     linewidth=0.8,
                 )
     ax.set_xlabel("T-count after resynthesis")
-    ax.set_ylabel("primary_nc_depth_ratio")
+    ax.set_ylabel(LABEL_COLUMN)
     ax.set_title("Candidate tradeoff: T-count vs structural non-Clifford core")
     ax.grid(True, alpha=0.25)
     ax.legend(fontsize=8, ncols=2)
@@ -781,7 +781,7 @@ def write_report(
         "",
         f"- Candidate rows: {len(rows)}.",
         f"- Circuits: {', '.join(f'`{item}`' for item in circuits)}.",
-        f"- Primary target: `{LABEL_COLUMN}`.",
+        f"- Structural target: `{LABEL_COLUMN}`.",
         f"- Tradeoff figure: `{tradeoff_figure}`.",
         f"- Tolerance figure: `{tolerance_figure}`.",
         "",
@@ -789,9 +789,9 @@ def write_report(
         "",
         (
             "The current public-resynthesis frontier is not a simple T-count frontier. "
-            "Several candidates reduce T-count while expanding the ZX non-Clifford core, "
+            "Several candidates reduce T-count while expanding the AlphaQ border core, "
             "and several structural winners accept more T gates because they keep the "
-            "non-Clifford portion more compact after Clifford closure."
+            "non-Clifford portion more compact after Clifford-border closure."
         ),
         "",
         *separation_lines,
@@ -803,7 +803,7 @@ def write_report(
         ),
         (
             f"- {pareto_count}/{len(diagnostics)} candidates remain on the "
-            "primary/T-count/QASM-depth Pareto surface; the rest are dominated by another "
+            "structural/T-count/QASM-depth Pareto surface; the rest are dominated by another "
             "candidate in all three audit dimensions."
         ),
         f"- {qft_note}" if qft_note else "",
@@ -819,7 +819,7 @@ def write_report(
         "",
         (
             f"At tolerance {DEFAULT_PREDICTION_TOLERANCE:.3f}, the full-frontier selection has "
-            f"mean primary regret {fmt(full_tolerance_row['full_mean_primary_regret_vs_structural_best'])} "
+            f"mean structural regret {fmt(full_tolerance_row['full_mean_primary_regret_vs_structural_best'])} "
             "against the exact structural best and total T-count delta "
             f"{fmt(full_tolerance_row['full_total_tcount_delta_vs_structural_best'], 0)} "
             "against the exact structural best."
@@ -840,7 +840,7 @@ def write_report(
         "",
         (
             "A robust claim needs explicit comparators. The structural oracle is the exact "
-            "primary target; the other rows show how much is lost by using simpler proxies."
+            "AlphaQ border target; the other rows show how much is lost by using simpler proxies."
         ),
         "",
         *baseline_summary_lines(objective_baselines),
@@ -857,12 +857,12 @@ def write_report(
         "## Scientific interpretation",
         "",
         (
-            "`primary_nc_depth_ratio` is probing whether Clifford regions can be peeled away "
-            "without leaving a long residual non-Clifford kernel. T-count is only a count of "
-            "phase resources; it does not say whether those resources are geometrically or "
-            "causally isolated after CNOT/Hadamard interactions. A candidate can therefore "
-            "have fewer T gates but a worse splitting target if the remaining phase gates are "
-            "spread across a deeper entangled core."
+            "`structural_cost` now measures an AlphaQ-only approximation to whether Clifford "
+            "regions can be peeled away without leaving a large residual non-Clifford kernel. "
+            "T-count is only a count of phase resources; it does not say whether those resources "
+            "are geometrically or causally isolated after CNOT/Hadamard interactions. A candidate "
+            "can therefore have fewer T gates but a worse splitting target if the remaining phase "
+            "gates are spread across a deeper entangled core."
         ),
         "",
         (
@@ -885,9 +885,9 @@ def write_report(
             "frontier, not absolute prediction of a scalar."
         ),
         (
-            "3. Add cheap features that approximate non-Clifford closure: T-span, CNOTs crossing "
-            "the first/last T boundary, Hadamard-boundary counts near T layers, Clifford scaffold "
-            "ratio, and interaction width of the T support."
+            "3. Use the AlphaQ border closure as the optimization-side proxy and keep ZX/PyZX "
+            "as an external benchmark for whether the circuit-level approximation tracks the "
+            "paper's diagrammatic splitting signal."
         ),
         (
             "4. Expand candidate generation deliberately around frontier diversity. The current "

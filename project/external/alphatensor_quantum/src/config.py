@@ -26,6 +26,21 @@ import functools
 from alphatensor_quantum.src import tensors
 
 
+_SPLIT_REWARD_MODES = frozenset(
+    (
+        'none',
+        'mixed_drop',
+        'mixed_auc',
+        'v1',
+        'v1_guarded',
+        'v1_tiebreak',
+        'v2_progress',
+        'v3_frontier',
+        'v4_sticky_frontier',
+    )
+)
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ChangeOfBasisParams:
   """Hyperparameters for the generation of basis changes.
@@ -40,6 +55,70 @@ class ChangeOfBasisParams:
   prob_zero_entry: float = 0.985
   num_change_of_basis_matrices: int = 50_000
   prob_canonical_basis: float = 0.16
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class SplitRewardParams:
+  """Hyperparameters for optional splitting-aware environment rewards.
+
+  Attributes:
+    mode: Which splitting reward variant to use. The default, "none", preserves
+      the original AlphaTensor-Quantum reward exactly. The "v2_progress" mode
+      is a positive-only search-shaping variant: it rewards mixed residual
+      drops and gadget refunds without dense mixed-mass/AUC penalties. The
+      "v3_frontier" mode additionally adds dense normalized total-residual
+      progress so good partial frontiers produce training signal before the
+      terminal step. The "v4_sticky_frontier" mode also rewards new
+      intra-episode residual frontiers and penalizes drifting away from the
+      best frontier already observed in the episode.
+    lambda_drop: Weight of the clipped mixed residual drop term.
+    lambda_auc: Weight of the mixed residual level after each action.
+    lambda_mass: Weight of the mixed rank-one/gadget mass term.
+    lambda_residual: Weight of dense normalized total residual progress used by
+      frontier-oriented reward modes.
+    lambda_frontier: Weight of frontier bonus/regret terms used by sticky
+      frontier reward modes.
+    lambda_budget: Weight of the over-budget effective T-cost penalty.
+    drop_clip: Symmetric clipping threshold for mixed residual drop.
+    canonical_basis_only: If true, disable split rewards when the state is not
+      in the canonical basis.
+    partition_blocks_by_target: Optional partition blocks with shape
+      [num_targets][num_partitions][tensor_size]. Missing values trigger a
+      balanced contiguous partition.
+    partition_weights_by_target: Optional partition weights with shape
+      [num_targets][num_partitions]. Missing values use uniform weights.
+    baseline_t_costs: Optional T-cost budget base per target, used by guarded
+      mode. Missing values disable the budget.
+    t_guard_delta: Additive slack applied to each guarded T-cost budget.
+    interim_budget_slack: Temporary slack for non-terminal gadget buildup. This
+      lets a Toffoli/CS sequence exceed the final budget before its gadget
+      refund is applied.
+    terminal_tiebreak_clip: Maximum terminal splitting penalty used by
+      tiebreak mode. This keeps splitting strictly secondary to one unit of
+      effective T-cost.
+  """
+  mode: str = 'none'
+  lambda_drop: float = 0.05
+  lambda_auc: float = 0.05
+  lambda_mass: float = 0.05
+  lambda_residual: float = 0.10
+  lambda_frontier: float = 0.10
+  lambda_budget: float = 1.0
+  drop_clip: float = 1.0
+  canonical_basis_only: bool = True
+  partition_blocks_by_target: Sequence[Sequence[Sequence[int]]] | None = None
+  partition_weights_by_target: Sequence[Sequence[float]] | None = None
+  baseline_t_costs: Sequence[float] | None = None
+  t_guard_delta: float = 0.0
+  interim_budget_slack: float = 5.0
+  terminal_tiebreak_clip: float = 0.25
+
+  def __post_init__(self):
+    if self.mode not in _SPLIT_REWARD_MODES:
+      raise ValueError(
+          f'Unknown split reward mode {self.mode!r}. Expected one of '
+          f'{sorted(_SPLIT_REWARD_MODES)}.'
+      )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -58,6 +137,7 @@ class EnvironmentParams:
     max_tensor_size: The maximum size of the signature tensors corresponding to
       the given `target_circuit_types`.
     change_of_basis: The hyperparameters for the change of basis.
+    split_reward: The optional splitting-aware reward hyperparameters.
   """
   target_circuit_types: Sequence[tensors.CircuitType]
   target_circuit_probabilities: Sequence[float] | None = None
@@ -68,6 +148,9 @@ class EnvironmentParams:
 
   change_of_basis: ChangeOfBasisParams = dataclasses.field(
       default_factory=ChangeOfBasisParams
+  )
+  split_reward: SplitRewardParams = dataclasses.field(
+      default_factory=SplitRewardParams
   )
 
   @functools.cached_property

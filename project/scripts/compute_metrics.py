@@ -26,14 +26,83 @@ from scripts._manifest import append_command
 
 
 DEFAULT_STRUCTURAL_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_structural"
+DEFAULT_TENSOR_V3_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_tensor_v3"
+DEFAULT_TENSOR_V3_PHASE_SLACK_RESYNTH_ROOT = (
+    PROJECT_ROOT / "results" / "public_resynth_tensor_v3_phase_slack"
+)
+DEFAULT_TENSOR_V3_PHASE_SLACK_AGGRESSIVE_RESYNTH_ROOT = (
+    PROJECT_ROOT / "results" / "public_resynth_tensor_v3_phase_slack_aggressive"
+)
+DEFAULT_TENSOR_V3_PHASE_SLACK_GUARDED_RESYNTH_ROOT = (
+    PROJECT_ROOT / "results" / "public_resynth_tensor_v3_phase_slack_guarded"
+)
 DEFAULT_RERANKER_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_reranker"
+DEFAULT_ALPHAQ_FINAL_RESYNTH_ROOT = PROJECT_ROOT / "results" / "public_resynth_alphaq_final"
 STRUCTURAL_PUBLIC_METHODS = ("public_resynth_structural",)
-RERANKER_PUBLIC_METHODS = ("public_resynth_reranker",)
+TENSOR_V3_PUBLIC_METHODS = ("public_resynth_tensor_v3",)
+TENSOR_V3_PHASE_SLACK_PUBLIC_METHODS = ("public_resynth_tensor_v3_phase_slack",)
+TENSOR_V3_EXTRA_PUBLIC_METHODS = (
+    "public_resynth_tensor_v3_phase_slack_aggressive",
+    "public_resynth_tensor_v3_phase_slack_guarded",
+)
+RERANKER_PUBLIC_METHODS = ("public_resynth_reranker", "public_resynth_alphaq_final")
 STRUCTURAL_SUMMARY_COLUMNS = (
     "selection_objective",
     "selection_status",
     "selection_error",
+    "tensor_v3_selection_status",
+    "tensor_v3_selection_error",
+    "tensor_v3_ranking_strategy",
+    "tensor_v3_profile",
+    "tensor_v3_mixed_slack",
     "structural_cost",
+    "alphaq_target_status",
+    "alphaq_target_error",
+    "alphaq_nc_core_area_ratio",
+    "alphaq_dependency_core_area_ratio",
+    "alphaq_nc_core_area_delta_vs_original",
+    "alphaq_dependency_core_area_delta_vs_original",
+    "alphaq_nc_core_depth_ratio",
+    "alphaq_nc_core_width_ratio",
+    "alphaq_dependency_core_depth_ratio",
+    "alphaq_dependency_core_width_ratio",
+    "alphaq_total_depth_ratio",
+    "alphaq_total_area_ratio",
+    "alphaq_border_status",
+    "alphaq_border_error",
+    "alphaq_total_depth",
+    "alphaq_total_width",
+    "alphaq_total_area",
+    "alphaq_nc_core_depth",
+    "alphaq_nc_core_width",
+    "alphaq_nc_core_area",
+    "alphaq_core_tcount",
+    "alphaq_crossing_closure_count",
+    "alphaq_dependency_core_depth",
+    "alphaq_dependency_core_width",
+    "alphaq_dependency_core_area",
+    "alphaq_dependency_core_size",
+    "alphaq_dependency_core_tcount",
+    "alphaq_dependency_entangling_count",
+    "alphaq_dependency_closure_rounds",
+    "alphaq_dependency_internal_edge_count",
+    "alphaq_dependency_boundary_edge_count",
+    "alphaq_dependency_component_count",
+    "alphaq_dependency_largest_component_size",
+    "alphaq_dependency_largest_component_fraction",
+    "alphaq_dependency_chain_depth",
+    "alphaq_dependency_edge_density",
+    "alphaq_left_nc_core_depth",
+    "alphaq_left_nc_core_width",
+    "alphaq_left_nc_core_area",
+    "alphaq_left_crossing_closure_count",
+    "alphaq_right_nc_core_depth",
+    "alphaq_right_nc_core_width",
+    "alphaq_right_nc_core_area",
+    "alphaq_right_crossing_closure_count",
+    "alphaq_prefix_clifford_depth",
+    "alphaq_suffix_clifford_depth",
+    "alphaq_clifford_shaved_depth_fraction",
     "primary_nc_depth_ratio",
     "zx_total_depth_ratio",
     "qasm_depth_ratio",
@@ -42,9 +111,47 @@ STRUCTURAL_SUMMARY_COLUMNS = (
     "tdepth_after_selection",
     "combo_index",
 )
+TENSOR_V3_SUMMARY_COLUMNS = (
+    *STRUCTURAL_SUMMARY_COLUMNS,
+    "tensor_v3_status",
+    "tensor_v3_error",
+    "tensor_v3_partition_id",
+    "tensor_v3_partition_kind",
+    "tensor_v3_tcount_tolerance",
+    "tensor_v3_target_mixed_weight",
+    "tensor_v3_gadget_mixed_weight",
+    "tensor_v3_gadget_mixed_weight_norm",
+    "tensor_v3_mixed_excess_norm",
+    "tensor_v3_mixed_auc_original",
+    "tensor_v3_mixed_auc_original_norm",
+    "tensor_v3_mixed_auc_greedy",
+    "tensor_v3_mixed_auc_greedy_norm",
+    "tensor_v3_singleton_bridge_count",
+    "tensor_v3_singleton_bridge_count_norm",
+    "tensor_v3_mixed_group_count",
+    "tensor_v3_mixed_group_count_norm",
+    "tensor_v3_num_factor_groups",
+    "tensor_v3_factor_count",
+    "tensor_v3_score_lex",
+    "tensor_v3_stable_factor_hash",
+    "tensor_v3_partition_metrics_json",
+    "guarded_source_method",
+    "guarded_source_profile",
+    "guarded_uses_aggressive",
+    "guarded_qasm_depth_gain_threshold",
+    "guarded_mixed_drop_fraction_threshold",
+    "qasm_depth_gain_aggressive_vs_conservative",
+    "mixed_drop_aggressive_vs_conservative",
+    "mixed_drop_fraction_aggressive_vs_conservative",
+    "guarded_delta_tcount_vs_conservative",
+    "guarded_delta_primary_vs_conservative",
+    "guarded_global_oracle_regret",
+    "guarded_is_global_oracle",
+)
 RERANKER_SUMMARY_COLUMNS = (
     *STRUCTURAL_SUMMARY_COLUMNS,
     "source_candidate_id",
+    "predicted_structural_cost",
     "predicted_primary_nc_depth_ratio",
     "prediction_std",
     "prediction_tolerance",
@@ -207,6 +314,9 @@ def build_rows(
     compile_quizx_rows: list[dict[str, str]],
     public_resynth_rows: list[dict[str, str]],
     structural_resynth_rows: list[dict[str, str]],
+    tensor_v3_resynth_rows: list[dict[str, str]],
+    tensor_v3_phase_slack_resynth_rows: list[dict[str, str]],
+    tensor_v3_extra_resynth_rows: list[dict[str, str]],
     reranker_resynth_rows: list[dict[str, str]],
     demo_log_dir: Path,
 ) -> list[dict[str, Any]]:
@@ -219,6 +329,25 @@ def build_rows(
         (row["circuit_id"], row["method"]): row for row in structural_resynth_rows
     }
     structural_circuit_ids = {row["circuit_id"] for row in structural_resynth_rows}
+    tensor_v3_resynth_by_key = {
+        (row["circuit_id"], row["method"]): row for row in tensor_v3_resynth_rows
+    }
+    tensor_v3_circuit_ids = {row["circuit_id"] for row in tensor_v3_resynth_rows}
+    tensor_v3_phase_slack_resynth_by_key = {
+        (row["circuit_id"], row["method"]): row
+        for row in tensor_v3_phase_slack_resynth_rows
+    }
+    tensor_v3_phase_slack_circuit_ids = {
+        row["circuit_id"] for row in tensor_v3_phase_slack_resynth_rows
+    }
+    tensor_v3_extra_resynth_by_key = {
+        (row["circuit_id"], row["method"]): row for row in tensor_v3_extra_resynth_rows
+    }
+    tensor_v3_extra_methods_by_circuit: dict[str, set[str]] = {}
+    for row in tensor_v3_extra_resynth_rows:
+        tensor_v3_extra_methods_by_circuit.setdefault(row["circuit_id"], set()).add(
+            row["method"]
+        )
     reranker_resynth_by_key = {
         (row["circuit_id"], row["method"]): row for row in reranker_resynth_rows
     }
@@ -382,6 +511,105 @@ def build_rows(
                     )
                 )
 
+        if circuit_row["circuit_id"] in tensor_v3_circuit_ids:
+            for method in TENSOR_V3_PUBLIC_METHODS:
+                tensor_v3_row = tensor_v3_resynth_by_key.get(
+                    (circuit_row["circuit_id"], method)
+                )
+                tensor_v3_qasm = None
+                tensor_v3_status = "not-run"
+                if tensor_v3_row:
+                    tensor_v3_status = tensor_v3_row.get("status", "unknown")
+                    assembled_qasm = tensor_v3_row.get("assembled_qasm_path")
+                    if assembled_qasm:
+                        tensor_v3_qasm = project_path(assembled_qasm)
+                rows.append(
+                    row_from_metrics(
+                        circuit_row=circuit_row,
+                        method=method,
+                        method_status=tensor_v3_status,
+                        qasm_path=tensor_v3_qasm if tensor_v3_status == "ok" else None,
+                        runtime_sec=None,
+                        verify_status="not-run",
+                        tensor_size_no_quizx=tensor_size_no_quizx,
+                        tensor_size_quizx=tensor_size_quizx,
+                        tcount_before=original_tcount,
+                        tdepth_before=original_tdepth,
+                        extra=summary_extra(tensor_v3_row, TENSOR_V3_SUMMARY_COLUMNS),
+                    )
+                )
+
+        if circuit_row["circuit_id"] in tensor_v3_phase_slack_circuit_ids:
+            for method in TENSOR_V3_PHASE_SLACK_PUBLIC_METHODS:
+                tensor_v3_phase_slack_row = tensor_v3_phase_slack_resynth_by_key.get(
+                    (circuit_row["circuit_id"], method)
+                )
+                tensor_v3_phase_slack_qasm = None
+                tensor_v3_phase_slack_status = "not-run"
+                if tensor_v3_phase_slack_row:
+                    tensor_v3_phase_slack_status = tensor_v3_phase_slack_row.get(
+                        "status", "unknown"
+                    )
+                    assembled_qasm = tensor_v3_phase_slack_row.get("assembled_qasm_path")
+                    if assembled_qasm:
+                        tensor_v3_phase_slack_qasm = project_path(assembled_qasm)
+                rows.append(
+                    row_from_metrics(
+                        circuit_row=circuit_row,
+                        method=method,
+                        method_status=tensor_v3_phase_slack_status,
+                        qasm_path=(
+                            tensor_v3_phase_slack_qasm
+                            if tensor_v3_phase_slack_status == "ok"
+                            else None
+                        ),
+                        runtime_sec=None,
+                        verify_status="not-run",
+                        tensor_size_no_quizx=tensor_size_no_quizx,
+                        tensor_size_quizx=tensor_size_quizx,
+                        tcount_before=original_tcount,
+                        tdepth_before=original_tdepth,
+                        extra=summary_extra(
+                            tensor_v3_phase_slack_row,
+                            TENSOR_V3_SUMMARY_COLUMNS,
+                        ),
+                    )
+                )
+
+        extra_methods = sorted(
+            tensor_v3_extra_methods_by_circuit.get(circuit_row["circuit_id"], set())
+        )
+        for method in extra_methods:
+            tensor_v3_extra_row = tensor_v3_extra_resynth_by_key.get(
+                (circuit_row["circuit_id"], method)
+            )
+            tensor_v3_extra_qasm = None
+            tensor_v3_extra_status = "not-run"
+            if tensor_v3_extra_row:
+                tensor_v3_extra_status = tensor_v3_extra_row.get("status", "unknown")
+                assembled_qasm = tensor_v3_extra_row.get("assembled_qasm_path")
+                if assembled_qasm:
+                    tensor_v3_extra_qasm = project_path(assembled_qasm)
+            rows.append(
+                row_from_metrics(
+                    circuit_row=circuit_row,
+                    method=method,
+                    method_status=tensor_v3_extra_status,
+                    qasm_path=(
+                        tensor_v3_extra_qasm
+                        if tensor_v3_extra_status == "ok"
+                        else None
+                    ),
+                    runtime_sec=None,
+                    verify_status="not-run",
+                    tensor_size_no_quizx=tensor_size_no_quizx,
+                    tensor_size_quizx=tensor_size_quizx,
+                    tcount_before=original_tcount,
+                    tdepth_before=original_tdepth,
+                    extra=summary_extra(tensor_v3_extra_row, TENSOR_V3_SUMMARY_COLUMNS),
+                )
+            )
+
         if circuit_row["circuit_id"] in reranker_circuit_ids:
             for method in RERANKER_PUBLIC_METHODS:
                 reranker_row = reranker_resynth_by_key.get(
@@ -494,9 +722,32 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_STRUCTURAL_RESYNTH_ROOT / "public_resynth_summary.csv",
     )
     parser.add_argument(
+        "--tensor-v3-resynth-summary-csv",
+        type=Path,
+        default=DEFAULT_TENSOR_V3_RESYNTH_ROOT / "public_resynth_summary.csv",
+    )
+    parser.add_argument(
+        "--tensor-v3-phase-slack-resynth-summary-csv",
+        type=Path,
+        default=DEFAULT_TENSOR_V3_PHASE_SLACK_RESYNTH_ROOT
+        / "public_resynth_summary.csv",
+    )
+    parser.add_argument(
+        "--tensor-v3-extra-resynth-summary-csv",
+        type=Path,
+        action="append",
+        default=[],
+        help="Additional tensor-v3 profile summary CSVs to include as audit methods.",
+    )
+    parser.add_argument(
         "--reranker-resynth-summary-csv",
         type=Path,
         default=DEFAULT_RERANKER_RESYNTH_ROOT / "public_resynth_summary.csv",
+    )
+    parser.add_argument(
+        "--alphaq-final-resynth-summary-csv",
+        type=Path,
+        default=DEFAULT_ALPHAQ_FINAL_RESYNTH_ROOT / "public_resynth_summary.csv",
     )
     parser.add_argument(
         "--demo-log-dir",
@@ -516,7 +767,19 @@ def main() -> int:
     compile_quizx_rows = load_csv_rows(args.compile_quizx_summary_csv)
     public_resynth_rows = load_csv_rows(args.public_resynth_summary_csv)
     structural_resynth_rows = load_csv_rows(args.structural_resynth_summary_csv)
-    reranker_resynth_rows = load_csv_rows(args.reranker_resynth_summary_csv)
+    tensor_v3_resynth_rows = load_csv_rows(args.tensor_v3_resynth_summary_csv)
+    tensor_v3_phase_slack_resynth_rows = load_csv_rows(
+        args.tensor_v3_phase_slack_resynth_summary_csv
+    )
+    tensor_v3_extra_resynth_rows = [
+        row
+        for path in args.tensor_v3_extra_resynth_summary_csv
+        for row in load_csv_rows(path)
+    ]
+    reranker_resynth_rows = [
+        *load_csv_rows(args.reranker_resynth_summary_csv),
+        *load_csv_rows(args.alphaq_final_resynth_summary_csv),
+    ]
 
     rows = build_rows(
         inventory_rows=inventory_rows,
@@ -524,6 +787,9 @@ def main() -> int:
         compile_quizx_rows=compile_quizx_rows,
         public_resynth_rows=public_resynth_rows,
         structural_resynth_rows=structural_resynth_rows,
+        tensor_v3_resynth_rows=tensor_v3_resynth_rows,
+        tensor_v3_phase_slack_resynth_rows=tensor_v3_phase_slack_resynth_rows,
+        tensor_v3_extra_resynth_rows=tensor_v3_extra_resynth_rows,
         reranker_resynth_rows=reranker_resynth_rows,
         demo_log_dir=args.demo_log_dir,
     )
@@ -535,11 +801,23 @@ def main() -> int:
             "compile_quizx_summary_csv": str(args.compile_quizx_summary_csv),
             "public_resynth_summary_csv": str(args.public_resynth_summary_csv),
             "structural_resynth_summary_csv": str(args.structural_resynth_summary_csv),
+            "tensor_v3_resynth_summary_csv": str(args.tensor_v3_resynth_summary_csv),
+            "tensor_v3_phase_slack_resynth_summary_csv": str(
+                args.tensor_v3_phase_slack_resynth_summary_csv
+            ),
+            "tensor_v3_extra_resynth_summary_csv": [
+                str(path) for path in args.tensor_v3_extra_resynth_summary_csv
+            ],
             "reranker_resynth_summary_csv": str(args.reranker_resynth_summary_csv),
+            "alphaq_final_resynth_summary_csv": str(args.alphaq_final_resynth_summary_csv),
             "demo_log_dir": str(args.demo_log_dir),
             "num_rows": len(rows),
         },
         args.output_json,
+    )
+    extra_summary_args = "".join(
+        f"--tensor-v3-extra-resynth-summary-csv {path} "
+        for path in args.tensor_v3_extra_resynth_summary_csv
     )
     append_command(
         {
@@ -547,7 +825,12 @@ def main() -> int:
             "command": (
                 f"{sys.executable} scripts/compute_metrics.py --inventory-csv {args.inventory_csv} "
                 f"--structural-resynth-summary-csv {args.structural_resynth_summary_csv} "
+                f"--tensor-v3-resynth-summary-csv {args.tensor_v3_resynth_summary_csv} "
+                f"--tensor-v3-phase-slack-resynth-summary-csv "
+                f"{args.tensor_v3_phase_slack_resynth_summary_csv} "
+                f"{extra_summary_args}"
                 f"--reranker-resynth-summary-csv {args.reranker_resynth_summary_csv} "
+                f"--alphaq-final-resynth-summary-csv {args.alphaq_final_resynth_summary_csv} "
                 f"--output-csv {args.output_csv} --output-json {args.output_json}"
             ),
             "cwd": str(PROJECT_ROOT),

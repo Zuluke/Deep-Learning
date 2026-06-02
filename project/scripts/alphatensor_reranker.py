@@ -33,11 +33,17 @@ DEFAULT_COMPARISON_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_comparison.csv
 DEFAULT_BASELINES_CSV = DEFAULT_CSV_ROOT / "alphatensor_reranker_baselines.csv"
 DEFAULT_REPORT_PATH = DEFAULT_REPORTS_ROOT / "alphatensor_reranker_report.md"
 DEFAULT_SELECTION_ROOT = DEFAULT_RESULTS_ROOT / "public_resynth_reranker"
-LABEL_COLUMN = "primary_nc_depth_ratio"
+LABEL_COLUMN = "structural_cost"
+PREDICTION_COLUMN = "predicted_structural_cost"
 RERANKER_METHOD = "public_resynth_reranker"
+FINAL_RERANKER_METHOD = "public_resynth_alphaq_final"
 DEFAULT_PREDICTION_TOLERANCE = 0.10
 DEFAULT_ENSEMBLE_SIZE = 7
 DEFAULT_SEED_STRIDE = 9_973
+MODEL_KIND_MLP = "mlp_regressor"
+MODEL_KIND_PAIRWISE = "pairwise_ranker"
+MODEL_KIND_PAIRWISE_MLP = "pairwise_mlp_ranker"
+MODEL_KINDS = (MODEL_KIND_MLP, MODEL_KIND_PAIRWISE, MODEL_KIND_PAIRWISE_MLP)
 
 FEATURE_COLUMNS = (
     "tcount_after",
@@ -62,7 +68,28 @@ FEATURE_COLUMNS = (
     "uses_any_gadget_source",
     "block_tcount_sum",
     "block_tdepth_sum",
-    "combo_index",
+    "alphaq_nc_core_area_ratio",
+    "alphaq_nc_core_depth_ratio",
+    "alphaq_dependency_core_area_ratio",
+    "alphaq_dependency_core_depth_ratio",
+    "alphaq_dependency_core_width_ratio",
+    "alphaq_dependency_core_size",
+    "alphaq_dependency_core_tcount",
+    "alphaq_dependency_entangling_count",
+    "alphaq_dependency_closure_rounds",
+    "alphaq_dependency_internal_edge_count",
+    "alphaq_dependency_boundary_edge_count",
+    "alphaq_dependency_component_count",
+    "alphaq_dependency_largest_component_fraction",
+    "alphaq_dependency_chain_depth",
+    "alphaq_dependency_edge_density",
+)
+
+DEPENDENCY_FEATURE_COLUMNS = tuple(
+    column for column in FEATURE_COLUMNS if column.startswith("alphaq_dependency_")
+)
+NO_DEPENDENCY_FEATURE_COLUMNS = tuple(
+    column for column in FEATURE_COLUMNS if not column.startswith("alphaq_dependency_")
 )
 
 
@@ -84,8 +111,30 @@ class MLPModel:
 
 
 @dataclasses.dataclass(frozen=True)
+class PairwiseRankerModel:
+    feature_columns: tuple[str, ...]
+    stats: FeatureStats
+    weights: np.ndarray
+    bias: float
+    output_transform: str = "identity"
+
+
+@dataclasses.dataclass(frozen=True)
+class PairwiseMLPRankerModel:
+    feature_columns: tuple[str, ...]
+    stats: FeatureStats
+    w1: np.ndarray
+    b1: np.ndarray
+    w2: np.ndarray
+    b2: np.ndarray
+    output_scale: float = 1.0
+    output_bias: float = 0.0
+    output_transform: str = "expm1"
+
+
+@dataclasses.dataclass(frozen=True)
 class EnsembleModel:
-    models: tuple[MLPModel, ...]
+    models: tuple[MLPModel | PairwiseRankerModel | PairwiseMLPRankerModel, ...]
 
     @property
     def feature_columns(self) -> tuple[str, ...]:
@@ -123,6 +172,11 @@ def valid_candidate_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
         for row in rows
         if row.get("selection_status") == "ok"
         and coerce_float(row.get(LABEL_COLUMN)) is not None
+        and row.get("alphaq_target_status") == "ok"
+        and (
+            coerce_float(row.get("alphaq_dependency_core_area_ratio")) is not None
+            or coerce_float(row.get("alphaq_nc_core_area_ratio")) is not None
+        )
     ]
 
 
@@ -210,9 +264,210 @@ def train_mlp(
     )
 
 
+def train_pairwise_ranker(
+    rows: list[dict[str, Any]],
+    *,
+    feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
+    epochs: int = 10_000,
+    learning_rate: float = 0.02,
+    weight_decay: float = 1e-3,
+    seed: int = 2026,
+) -> PairwiseRankerModel:
+    raw_features = feature_matrix(rows, feature_columns)
+    stats = fit_feature_stats(raw_features)
+    x = transform_features(raw_features, stats)
+    pair_winners, pair_losers, pair_weights = pairwise_training_pairs(rows)
+    if len(pair_winners) == 0:
+        raise ValueError("Pairwise ranker needs at least one within-circuit ordered pair.")
+
+    rng = np.random.default_rng(seed)
+    weights = rng.normal(0.0, 0.05, size=(x.shape[1],))
+    bias = 0.0
+    total_pair_weight = max(float(np.sum(pair_weights)), 1.0)
+    diffs = x[pair_winners] - x[pair_losers]
+
+    for _ in range(epochs):
+        margins = diffs @ weights
+        probs = _sigmoid(margins)
+        weighted = pair_weights * probs / total_pair_weight
+        grad_weights = weighted @ diffs + weight_decay * weights
+        weights -= learning_rate * grad_weights
+
+    raw_scores = x @ weights
+    y = np.log1p(labels(rows))
+    raw_variance = float(np.var(raw_scores))
+    if raw_variance > 1e-12:
+        slope = float(np.mean((raw_scores - raw_scores.mean()) * (y - y.mean())) / raw_variance)
+        if slope > 0:
+            bias = float(y.mean() - slope * raw_scores.mean())
+            weights = weights * slope
+
+    return PairwiseRankerModel(
+        feature_columns=feature_columns,
+        stats=stats,
+        weights=weights,
+        bias=bias,
+        output_transform="expm1",
+    )
+
+
+def train_pairwise_mlp_ranker(
+    rows: list[dict[str, Any]],
+    *,
+    feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
+    hidden_size: int = 12,
+    epochs: int = 6_000,
+    learning_rate: float = 0.01,
+    weight_decay: float = 1e-3,
+    seed: int = 2026,
+) -> PairwiseMLPRankerModel:
+    raw_features = feature_matrix(rows, feature_columns)
+    stats = fit_feature_stats(raw_features)
+    x = transform_features(raw_features, stats)
+    pair_winners, pair_losers, pair_weights = pairwise_training_pairs(rows)
+    if len(pair_winners) == 0:
+        raise ValueError("Pairwise MLP ranker needs at least one ordered pair.")
+
+    rng = np.random.default_rng(seed)
+    w1 = rng.normal(0.0, 0.12, size=(x.shape[1], hidden_size))
+    b1 = np.zeros((hidden_size,), dtype=float)
+    w2 = rng.normal(0.0, 0.12, size=(hidden_size, 1))
+    b2 = np.zeros((1,), dtype=float)
+    total_pair_weight = max(float(np.sum(pair_weights)), 1.0)
+
+    for _ in range(epochs):
+        hidden = np.tanh(x @ w1 + b1)
+        scores = (hidden @ w2 + b2).reshape(-1)
+        margins = scores[pair_winners] - scores[pair_losers]
+        grad_margin = pair_weights * _sigmoid(margins) / total_pair_weight
+        grad_scores = np.zeros_like(scores)
+        np.add.at(grad_scores, pair_winners, grad_margin)
+        np.add.at(grad_scores, pair_losers, -grad_margin)
+
+        grad_w2 = hidden.T @ grad_scores.reshape(-1, 1) + weight_decay * w2
+        grad_b2 = np.array([grad_scores.sum()])
+        grad_hidden = grad_scores.reshape(-1, 1) @ w2.T
+        grad_z1 = grad_hidden * (1.0 - hidden**2)
+        grad_w1 = x.T @ grad_z1 + weight_decay * w1
+        grad_b1 = grad_z1.sum(axis=0)
+
+        w1 -= learning_rate * grad_w1
+        b1 -= learning_rate * grad_b1
+        w2 -= learning_rate * grad_w2
+        b2 -= learning_rate * grad_b2
+
+    raw_scores = (np.tanh(x @ w1 + b1) @ w2 + b2).reshape(-1)
+    y = np.log1p(labels(rows))
+    raw_variance = float(np.var(raw_scores))
+    output_scale = 1.0
+    output_bias = 0.0
+    if raw_variance > 1e-12:
+        slope = float(np.mean((raw_scores - raw_scores.mean()) * (y - y.mean())) / raw_variance)
+        if slope > 0:
+            output_scale = slope
+            output_bias = float(y.mean() - slope * raw_scores.mean())
+
+    return PairwiseMLPRankerModel(
+        feature_columns=feature_columns,
+        stats=stats,
+        w1=w1,
+        b1=b1,
+        w2=w2,
+        b2=b2,
+        output_scale=output_scale,
+        output_bias=output_bias,
+        output_transform="expm1",
+    )
+
+
+def pairwise_training_pairs(
+    rows: list[dict[str, Any]],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    winners: list[int] = []
+    losers: list[int] = []
+    weights: list[float] = []
+    labels_array = labels(rows)
+    positive_gaps: list[float] = []
+    grouped_indices = [
+        [index for index, row in enumerate(rows) if row["circuit_id"] == circuit_id]
+        for circuit_id in sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
+    ]
+    for indices in grouped_indices:
+        for left_position, left_index in enumerate(indices):
+            for right_index in indices[left_position + 1 :]:
+                left_value = float(labels_array[left_index])
+                right_value = float(labels_array[right_index])
+                if abs(left_value - right_value) < 1e-12:
+                    continue
+                winner, loser = (
+                    (left_index, right_index)
+                    if left_value < right_value
+                    else (right_index, left_index)
+                )
+                gap = abs(left_value - right_value)
+                winners.append(winner)
+                losers.append(loser)
+                positive_gaps.append(gap)
+
+    scale = float(np.median(positive_gaps)) if positive_gaps else 1.0
+    scale = max(scale, 1e-9)
+    for gap in positive_gaps:
+        weights.append(float(np.clip(gap / scale, 0.25, 4.0)))
+
+    return (
+        np.array(winners, dtype=int),
+        np.array(losers, dtype=int),
+        np.array(weights, dtype=float),
+    )
+
+
+def train_model(
+    rows: list[dict[str, Any]],
+    *,
+    model_kind: str,
+    feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
+    hidden_size: int = 8,
+    epochs: int = 2_000,
+    learning_rate: float = 0.03,
+    weight_decay: float = 1e-4,
+    seed: int = 2026,
+) -> MLPModel | PairwiseRankerModel | PairwiseMLPRankerModel:
+    if model_kind == MODEL_KIND_MLP:
+        return train_mlp(
+            rows,
+            feature_columns=feature_columns,
+            hidden_size=hidden_size,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            seed=seed,
+        )
+    if model_kind == MODEL_KIND_PAIRWISE:
+        return train_pairwise_ranker(
+            rows,
+            feature_columns=feature_columns,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            seed=seed,
+        )
+    if model_kind == MODEL_KIND_PAIRWISE_MLP:
+        return train_pairwise_mlp_ranker(
+            rows,
+            feature_columns=feature_columns,
+            hidden_size=hidden_size,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            seed=seed,
+        )
+    raise ValueError(f"Unknown model kind: {model_kind}")
+
+
 def train_ensemble(
     rows: list[dict[str, Any]],
     *,
+    model_kind: str = MODEL_KIND_MLP,
     feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
     hidden_size: int = 8,
     epochs: int = 2_000,
@@ -224,8 +479,9 @@ def train_ensemble(
     if ensemble_size < 1:
         raise ValueError("ensemble_size must be at least 1")
     models = tuple(
-        train_mlp(
+        train_model(
             rows,
+            model_kind=model_kind,
             feature_columns=feature_columns,
             hidden_size=hidden_size,
             epochs=epochs,
@@ -244,19 +500,56 @@ def predict(model: MLPModel, rows: list[dict[str, Any]]) -> np.ndarray:
     return (hidden @ model.w2 + model.b2).reshape(-1)
 
 
+def predict_pairwise(model: PairwiseRankerModel, rows: list[dict[str, Any]]) -> np.ndarray:
+    x = transform_features(feature_matrix(rows, model.feature_columns), model.stats)
+    raw = (x @ model.weights + model.bias).reshape(-1)
+    if model.output_transform == "expm1":
+        return np.expm1(np.clip(raw, 0.0, None))
+    return raw
+
+
+def predict_pairwise_mlp(
+    model: PairwiseMLPRankerModel,
+    rows: list[dict[str, Any]],
+) -> np.ndarray:
+    x = transform_features(feature_matrix(rows, model.feature_columns), model.stats)
+    hidden = np.tanh(x @ model.w1 + model.b1)
+    raw = (hidden @ model.w2 + model.b2).reshape(-1)
+    calibrated = model.output_scale * raw + model.output_bias
+    if model.output_transform == "expm1":
+        return np.expm1(np.clip(calibrated, 0.0, None))
+    return calibrated
+
+
 def predict_ensemble(model: EnsembleModel, rows: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray]:
-    stacked = np.vstack([predict(member, rows) for member in model.models])
+    stacked = np.vstack([predict_any(member, rows) for member in model.models])
     return stacked.mean(axis=0), stacked.std(axis=0)
 
 
+def predict_any(
+    model: MLPModel | PairwiseRankerModel | PairwiseMLPRankerModel,
+    rows: list[dict[str, Any]],
+) -> np.ndarray:
+    if isinstance(model, PairwiseMLPRankerModel):
+        return predict_pairwise_mlp(model, rows)
+    if isinstance(model, PairwiseRankerModel):
+        return predict_pairwise(model, rows)
+    return predict(model, rows)
+
+
 def predict_with_uncertainty(
-    model: MLPModel | EnsembleModel,
+    model: MLPModel | PairwiseRankerModel | PairwiseMLPRankerModel | EnsembleModel,
     rows: list[dict[str, Any]],
 ) -> tuple[np.ndarray, np.ndarray]:
     if isinstance(model, EnsembleModel):
         return predict_ensemble(model, rows)
-    predictions = predict(model, rows)
+    predictions = predict_any(model, rows)
     return predictions, np.zeros_like(predictions)
+
+
+def _sigmoid(values: np.ndarray) -> np.ndarray:
+    clipped = np.clip(values, -60.0, 60.0)
+    return 1.0 / (1.0 + np.exp(-clipped))
 
 
 def select_with_prediction_tolerance(
@@ -272,15 +565,17 @@ def select_with_prediction_tolerance(
         if float(prediction) <= best_prediction + prediction_tolerance
     ]
 
-    def tolerance_key(index: int) -> tuple[float, float, float, int]:
+    def tolerance_key(index: int) -> tuple[float, float, float, float, float, int]:
         row = rows[index]
         tcount = coerce_float(row.get("tcount_after"))
-        zx_total_depth = coerce_float(row.get("zx_total_depth_ratio"))
+        crossing_closure = coerce_float(row.get("alphaq_crossing_closure_count"))
+        alphaq_total_depth = coerce_float(row.get("alphaq_total_depth_ratio"))
         qasm_depth = coerce_float(row.get("qasm_depth_ratio"))
         combo_index = coerce_int(row.get("combo_index"))
         return (
             float("inf") if tcount is None else tcount,
-            float("inf") if zx_total_depth is None else zx_total_depth,
+            float("inf") if crossing_closure is None else crossing_closure,
+            float("inf") if alphaq_total_depth is None else alphaq_total_depth,
             float("inf") if qasm_depth is None else qasm_depth,
             float(predictions[index]),
             10**9 if combo_index is None else combo_index,
@@ -292,6 +587,8 @@ def select_with_prediction_tolerance(
 def leave_one_circuit_out_eval(
     rows: list[dict[str, str]],
     *,
+    model_kind: str = MODEL_KIND_MLP,
+    feature_columns: tuple[str, ...] = FEATURE_COLUMNS,
     hidden_size: int,
     epochs: int,
     learning_rate: float,
@@ -309,6 +606,8 @@ def leave_one_circuit_out_eval(
             continue
         model = train_ensemble(
             train_rows,
+            model_kind=model_kind,
+            feature_columns=feature_columns,
             hidden_size=hidden_size,
             epochs=epochs,
             learning_rate=learning_rate,
@@ -355,6 +654,7 @@ def leave_one_circuit_out_eval(
                 ),
                 "prediction_tolerance": prediction_tolerance,
                 "ensemble_size": ensemble_size,
+                "model_kind": model_kind,
                 "selected_true_primary": selected_true,
                 "selected_tcount": selected.get("tcount_after"),
                 "true_best_candidate_id": true_best["candidate_id"],
@@ -372,7 +672,7 @@ def leave_one_circuit_out_eval(
 
 def predictions_rows(
     rows: list[dict[str, str]],
-    model: MLPModel | EnsembleModel,
+    model: MLPModel | PairwiseRankerModel | EnsembleModel,
     *,
     prediction_tolerance: float = DEFAULT_PREDICTION_TOLERANCE,
 ) -> list[dict[str, Any]]:
@@ -391,7 +691,8 @@ def predictions_rows(
     return [
         {
             **row,
-            "predicted_primary_nc_depth_ratio": float(preds[index]),
+            PREDICTION_COLUMN: float(preds[index]),
+            "predicted_primary_nc_depth_ratio": None,
             "prediction_std": float(prediction_std[index]),
             "prediction_margin_from_best": float(
                 preds[index]
@@ -512,7 +813,7 @@ def comparison_rows(prediction_rows: list[dict[str, Any]]) -> list[dict[str, Any
                 "circuit_id": circuit_id,
                 "reranker_candidate_id": selected.get("candidate_id"),
                 "reranker_predicted_primary": selected.get(
-                    "predicted_primary_nc_depth_ratio"
+                    PREDICTION_COLUMN
                 ),
                 "reranker_primary": selected_primary,
                 "reranker_tcount": selected_tcount,
@@ -560,9 +861,11 @@ def materialize_reranker_selection(
     output_root: Path,
     model_path: Path,
     prediction_tolerance: float,
+    selection_objective: str = "mlp_reranker",
+    method_name: str = RERANKER_METHOD,
 ) -> tuple[list[dict[str, Any]], Path, Path]:
     summary_rows = []
-    method_root = ensure_dir(output_root / RERANKER_METHOD)
+    method_root = ensure_dir(output_root / method_name)
     for row in prediction_rows:
         if not row.get("reranker_selected"):
             continue
@@ -581,12 +884,13 @@ def materialize_reranker_selection(
             assembled_qasm_path = str(destination_qasm)
         summary_row = {
             "circuit_id": circuit_id,
-            "method": RERANKER_METHOD,
+            "method": method_name,
             "status": status,
-            "selection_objective": "mlp_reranker",
+            "selection_objective": selection_objective,
             "selection_status": row.get("selection_status"),
             "selection_error": error or row.get("selection_error"),
             "source_candidate_id": row.get("candidate_id"),
+            PREDICTION_COLUMN: row.get(PREDICTION_COLUMN),
             "predicted_primary_nc_depth_ratio": row.get(
                 "predicted_primary_nc_depth_ratio"
             ),
@@ -594,6 +898,85 @@ def materialize_reranker_selection(
             "prediction_tolerance": prediction_tolerance,
             "prediction_margin_from_best": row.get("prediction_margin_from_best"),
             "structural_cost": row.get("structural_cost"),
+            "alphaq_target_status": row.get("alphaq_target_status"),
+            "alphaq_target_error": row.get("alphaq_target_error"),
+            "alphaq_nc_core_area_ratio": row.get("alphaq_nc_core_area_ratio"),
+            "alphaq_dependency_core_area_ratio": row.get(
+                "alphaq_dependency_core_area_ratio"
+            ),
+            "alphaq_nc_core_area_delta_vs_original": row.get(
+                "alphaq_nc_core_area_delta_vs_original"
+            ),
+            "alphaq_dependency_core_area_delta_vs_original": row.get(
+                "alphaq_dependency_core_area_delta_vs_original"
+            ),
+            "alphaq_nc_core_depth_ratio": row.get("alphaq_nc_core_depth_ratio"),
+            "alphaq_nc_core_width_ratio": row.get("alphaq_nc_core_width_ratio"),
+            "alphaq_dependency_core_depth_ratio": row.get(
+                "alphaq_dependency_core_depth_ratio"
+            ),
+            "alphaq_dependency_core_width_ratio": row.get(
+                "alphaq_dependency_core_width_ratio"
+            ),
+            "alphaq_total_depth_ratio": row.get("alphaq_total_depth_ratio"),
+            "alphaq_total_area_ratio": row.get("alphaq_total_area_ratio"),
+            "alphaq_border_status": row.get("alphaq_border_status"),
+            "alphaq_border_error": row.get("alphaq_border_error"),
+            "alphaq_total_depth": row.get("alphaq_total_depth"),
+            "alphaq_total_width": row.get("alphaq_total_width"),
+            "alphaq_total_area": row.get("alphaq_total_area"),
+            "alphaq_nc_core_depth": row.get("alphaq_nc_core_depth"),
+            "alphaq_nc_core_width": row.get("alphaq_nc_core_width"),
+            "alphaq_nc_core_area": row.get("alphaq_nc_core_area"),
+            "alphaq_core_tcount": row.get("alphaq_core_tcount"),
+            "alphaq_crossing_closure_count": row.get(
+                "alphaq_crossing_closure_count"
+            ),
+            "alphaq_dependency_core_depth": row.get("alphaq_dependency_core_depth"),
+            "alphaq_dependency_core_width": row.get("alphaq_dependency_core_width"),
+            "alphaq_dependency_core_area": row.get("alphaq_dependency_core_area"),
+            "alphaq_dependency_core_size": row.get("alphaq_dependency_core_size"),
+            "alphaq_dependency_core_tcount": row.get("alphaq_dependency_core_tcount"),
+            "alphaq_dependency_entangling_count": row.get(
+                "alphaq_dependency_entangling_count"
+            ),
+            "alphaq_dependency_closure_rounds": row.get(
+                "alphaq_dependency_closure_rounds"
+            ),
+            "alphaq_dependency_internal_edge_count": row.get(
+                "alphaq_dependency_internal_edge_count"
+            ),
+            "alphaq_dependency_boundary_edge_count": row.get(
+                "alphaq_dependency_boundary_edge_count"
+            ),
+            "alphaq_dependency_component_count": row.get(
+                "alphaq_dependency_component_count"
+            ),
+            "alphaq_dependency_largest_component_size": row.get(
+                "alphaq_dependency_largest_component_size"
+            ),
+            "alphaq_dependency_largest_component_fraction": row.get(
+                "alphaq_dependency_largest_component_fraction"
+            ),
+            "alphaq_dependency_chain_depth": row.get("alphaq_dependency_chain_depth"),
+            "alphaq_dependency_edge_density": row.get("alphaq_dependency_edge_density"),
+            "alphaq_left_nc_core_depth": row.get("alphaq_left_nc_core_depth"),
+            "alphaq_left_nc_core_width": row.get("alphaq_left_nc_core_width"),
+            "alphaq_left_nc_core_area": row.get("alphaq_left_nc_core_area"),
+            "alphaq_left_crossing_closure_count": row.get(
+                "alphaq_left_crossing_closure_count"
+            ),
+            "alphaq_right_nc_core_depth": row.get("alphaq_right_nc_core_depth"),
+            "alphaq_right_nc_core_width": row.get("alphaq_right_nc_core_width"),
+            "alphaq_right_nc_core_area": row.get("alphaq_right_nc_core_area"),
+            "alphaq_right_crossing_closure_count": row.get(
+                "alphaq_right_crossing_closure_count"
+            ),
+            "alphaq_prefix_clifford_depth": row.get("alphaq_prefix_clifford_depth"),
+            "alphaq_suffix_clifford_depth": row.get("alphaq_suffix_clifford_depth"),
+            "alphaq_clifford_shaved_depth_fraction": row.get(
+                "alphaq_clifford_shaved_depth_fraction"
+            ),
             "primary_nc_depth_ratio": row.get("primary_nc_depth_ratio"),
             "zx_total_depth_ratio": row.get("zx_total_depth_ratio"),
             "qasm_depth_ratio": row.get("qasm_depth_ratio"),
@@ -613,8 +996,8 @@ def materialize_reranker_selection(
     write_csv_rows(summary_rows, summary_csv)
     write_json(
         {
-            "method": RERANKER_METHOD,
-            "selection_objective": "mlp_reranker",
+            "method": method_name,
+            "selection_objective": selection_objective,
             "model_json": str(model_path),
             "prediction_tolerance": prediction_tolerance,
             "num_rows": len(summary_rows),
@@ -637,14 +1020,63 @@ def mlp_payload(model: MLPModel) -> dict[str, Any]:
     }
 
 
-def model_payload(model: EnsembleModel, args: argparse.Namespace, rows: list[dict[str, str]]) -> dict[str, Any]:
+def pairwise_payload(model: PairwiseRankerModel) -> dict[str, Any]:
     return {
-        "model_type": "one_hidden_layer_tanh_mlp_ensemble",
+        "feature_means": model.stats.means.tolist(),
+        "feature_stds": model.stats.stds.tolist(),
+        "feature_impute_values": model.stats.impute_values.tolist(),
+        "weights": model.weights.tolist(),
+        "bias": model.bias,
+        "output_transform": model.output_transform,
+    }
+
+
+def pairwise_mlp_payload(model: PairwiseMLPRankerModel) -> dict[str, Any]:
+    return {
+        "feature_means": model.stats.means.tolist(),
+        "feature_stds": model.stats.stds.tolist(),
+        "feature_impute_values": model.stats.impute_values.tolist(),
+        "w1": model.w1.tolist(),
+        "b1": model.b1.tolist(),
+        "w2": model.w2.tolist(),
+        "b2": model.b2.tolist(),
+        "output_scale": model.output_scale,
+        "output_bias": model.output_bias,
+        "output_transform": model.output_transform,
+    }
+
+
+def member_payload(
+    model: MLPModel | PairwiseRankerModel | PairwiseMLPRankerModel,
+) -> dict[str, Any]:
+    if isinstance(model, PairwiseMLPRankerModel):
+        return pairwise_mlp_payload(model)
+    if isinstance(model, PairwiseRankerModel):
+        return pairwise_payload(model)
+    return mlp_payload(model)
+
+
+def model_payload(model: EnsembleModel, args: argparse.Namespace, rows: list[dict[str, str]]) -> dict[str, Any]:
+    first_model = model.models[0]
+    model_type = (
+        "pairwise_linear_ranker_ensemble"
+        if isinstance(first_model, PairwiseRankerModel)
+        else "pairwise_mlp_ranker_ensemble"
+        if isinstance(first_model, PairwiseMLPRankerModel)
+        else "one_hidden_layer_tanh_mlp_ensemble"
+    )
+    return {
+        "model_type": model_type,
+        "model_kind": args.model_kind,
         "feature_columns": list(model.feature_columns),
         "label_column": LABEL_COLUMN,
         "num_training_candidates": len(rows),
         "circuits": sorted({row["circuit_id"] for row in rows}, key=natural_sort_key),
-        "hidden_size": int(model.models[0].w1.shape[1]),
+        "hidden_size": (
+            int(first_model.w1.shape[1])
+            if isinstance(first_model, (MLPModel, PairwiseMLPRankerModel))
+            else None
+        ),
         "epochs": args.epochs,
         "learning_rate": args.learning_rate,
         "weight_decay": args.weight_decay,
@@ -652,7 +1084,7 @@ def model_payload(model: EnsembleModel, args: argparse.Namespace, rows: list[dic
         "seed_stride": DEFAULT_SEED_STRIDE,
         "ensemble_size": args.ensemble_size,
         "prediction_tolerance": args.prediction_tolerance,
-        "members": [mlp_payload(member) for member in model.models],
+        "members": [member_payload(member) for member in model.models],
     }
 
 
@@ -672,6 +1104,7 @@ def write_report(
     selection_summary_csv: Path,
     prediction_tolerance: float,
     ensemble_size: int,
+    model_kind: str,
 ) -> Path:
     circuits = sorted({row["circuit_id"] for row in rows}, key=natural_sort_key)
     hit_rate = (
@@ -695,7 +1128,7 @@ def write_report(
             selected_lines.append(
                 (
                     f"- `{row['circuit_id']}`: `{row['candidate_id']}` "
-                    f"pred={float(row['predicted_primary_nc_depth_ratio']):.3f}, "
+                    f"pred={float(row[PREDICTION_COLUMN]):.3f}, "
                     f"std={float(row['prediction_std']):.3f}, "
                     f"true={float(row[LABEL_COLUMN]):.3f}, T={row['tcount_after']}."
                 )
@@ -741,6 +1174,7 @@ def write_report(
         f"- Candidates: {len(rows)}.",
         f"- Circuits: {', '.join(f'`{item}`' for item in circuits)}.",
         f"- Label: `{LABEL_COLUMN}`.",
+        f"- Model kind: `{model_kind}`.",
         "- Features are cheap QASM/decomposition statistics; ZX-derived target columns are not used as features.",
         f"- Predictions CSV: `{predictions_csv}`.",
         f"- Evaluation CSV: `{eval_csv}`.",
@@ -796,6 +1230,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-json", type=Path, default=DEFAULT_MODEL_JSON)
     parser.add_argument("--report-path", type=Path, default=DEFAULT_REPORT_PATH)
     parser.add_argument("--selection-output-root", type=Path, default=DEFAULT_SELECTION_ROOT)
+    parser.add_argument(
+        "--model-kind",
+        choices=MODEL_KINDS,
+        default=MODEL_KIND_MLP,
+    )
     parser.add_argument("--hidden-size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=2_000)
     parser.add_argument("--learning-rate", type=float, default=0.03)
@@ -807,7 +1246,7 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=DEFAULT_PREDICTION_TOLERANCE,
         help=(
-            "Prefer lower T-count among candidates whose predicted primary target "
+            "Prefer lower T-count among candidates whose predicted structural cost "
             "is within this absolute margin of the best prediction."
         ),
     )
@@ -822,6 +1261,7 @@ def main() -> int:
 
     eval_rows = leave_one_circuit_out_eval(
         rows,
+        model_kind=args.model_kind,
         hidden_size=args.hidden_size,
         epochs=args.epochs,
         learning_rate=args.learning_rate,
@@ -832,6 +1272,7 @@ def main() -> int:
     )
     model = train_ensemble(
         rows,
+        model_kind=args.model_kind,
         hidden_size=args.hidden_size,
         epochs=args.epochs,
         learning_rate=args.learning_rate,
@@ -852,6 +1293,7 @@ def main() -> int:
             output_root=args.selection_output_root,
             model_path=args.model_json,
             prediction_tolerance=args.prediction_tolerance,
+            selection_objective=args.model_kind,
         )
     )
 
@@ -875,6 +1317,7 @@ def main() -> int:
         selection_summary_csv=selection_summary_csv,
         prediction_tolerance=args.prediction_tolerance,
         ensemble_size=args.ensemble_size,
+        model_kind=args.model_kind,
     )
     print(
         {
