@@ -6,11 +6,14 @@
 *.blg
 *.log
 *.out
+*.fdb_latexmk
+*.fls
 *.loc
 *.soc
 .venv
 *.pdf
 !paper/main.pdf
+!paper/imgs/*.pdf
 paper/IEEEexample.bib
 paper/IEEEfull.bib
 paper/IEEEtranS.bst
