@@ -281,6 +281,7 @@ def _configured_demo_config(
         ),
         gadget_closure_max_weight=args.gadget_closure_max_weight,
         mask_padded_actions=args.mask_padded_actions,
+        mask_repeated_actions=args.mask_repeated_actions,
         action_prior=args.action_prior,
         action_prior_beta=args.action_prior_beta,
         action_prior_residual_weight=args.action_prior_residual_weight,
@@ -589,6 +590,7 @@ def run_smoke(args: argparse.Namespace) -> int:
         ),
         "gadget_closure_max_weight": config.exp_config.gadget_closure_max_weight,
         "mask_padded_actions": config.exp_config.mask_padded_actions,
+        "mask_repeated_actions": config.exp_config.mask_repeated_actions,
         "action_prior": config.exp_config.action_prior,
         "action_prior_beta": config.exp_config.action_prior_beta,
         "action_prior_residual_weight": config.exp_config.action_prior_residual_weight,
@@ -849,6 +851,7 @@ def run_quick(args: argparse.Namespace) -> int:
         ),
         "gadget_closure_max_weight": config.exp_config.gadget_closure_max_weight,
         "mask_padded_actions": config.exp_config.mask_padded_actions,
+        "mask_repeated_actions": config.exp_config.mask_repeated_actions,
         "action_prior": config.exp_config.action_prior,
         "action_prior_beta": config.exp_config.action_prior_beta,
         "action_prior_residual_weight": config.exp_config.action_prior_residual_weight,
@@ -1059,6 +1062,15 @@ def parse_args() -> argparse.Namespace:
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Mask actions that touch padded coordinates beyond each target size.",
+    )
+    parser.add_argument(
+        "--mask-repeated-actions",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Mask rank-one factors already selected in the current episode, "
+            "avoiding GF(2) cancellation cycles."
+        ),
     )
     parser.add_argument(
         "--max-num-moves",

@@ -36,6 +36,7 @@ def _args(**overrides):
         "tensor_overlap_max_actions_per_target": 128,
         "gadget_closure_max_weight": 4,
         "mask_padded_actions": False,
+        "mask_repeated_actions": False,
         "max_num_moves": 0,
         "num_past_factors_to_observe": 0,
         "action_prior": "none",
@@ -117,6 +118,42 @@ def test_training_config_can_extend_environment_horizon():
 
     assert config.env_config.max_num_moves == 60
     assert config.env_config.num_past_factors_to_observe == 10
+
+
+def test_mask_repeated_actions_removes_previous_factor_from_valid_actions():
+    import jax.numpy as jnp
+    from alphatensor_quantum.src.demo import agent as agent_lib
+
+    config = run_demo_train._configured_demo_config(
+        _args(
+            target_preset="hamming_weight_n5",
+            action_dictionary="low-weight",
+            max_action_weight=2,
+            mask_repeated_actions=True,
+        ),
+        use_gadgets=True,
+    )
+    agent = agent_lib.Agent(config)
+    run_state = agent.init_run_state(jnp.array([0, 1], dtype=jnp.uint32))
+    repeated_full_action = 0  # factor [1, 0, ...]
+    repeated_restricted_action = int(
+        agent._restricted_action_from_full[repeated_full_action]
+    )
+    repeated_factor = agent._action_factors[repeated_restricted_action]
+
+    initial_valid = agent._action_valid_mask(run_state.env_states)
+    assert bool(initial_valid[0, repeated_restricted_action])
+
+    past_factors = run_state.env_states.past_factors.at[0, -1, :].set(
+        repeated_factor
+    )
+    repeated_state = run_state.env_states._replace(
+        past_factors=past_factors,
+        num_moves=run_state.env_states.num_moves.at[0].set(1),
+    )
+    repeated_valid = agent._action_valid_mask(repeated_state)
+
+    assert not bool(repeated_valid[0, repeated_restricted_action])
 
 
 def test_tensor_overlap_dictionary_adds_target_guided_actions():

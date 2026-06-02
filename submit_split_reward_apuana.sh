@@ -56,6 +56,7 @@ FRONTIER_REPLAY_MIN_MOVES="0"
 FRONTIER_REPLAY_MIN_RESIDUAL_DROP="0.0"
 PARTITION_PRESET="balanced"
 MASK_PADDED_ACTIONS="1"
+MASK_REPEATED_ACTIONS="0"
 FORCE_CANONICAL_BASIS="1"
 SEED="2024"
 TIMEOUT_SEC="10800"
@@ -105,6 +106,7 @@ Sweep options:
   --lambda-residual X     v3/v4 residual progress weight
   --lambda-frontier X     v4 frontier regret weight
   --partition-preset X    Split partition preset
+  --mask-repeated-actions Mask factors already used in the current episode
   --seed N                Random seed
   --timeout-sec N         Per-run timeout used by Python sweep wrapper
   --materialize-timeout-sec N
@@ -217,6 +219,8 @@ parse_args() {
       --lambda-residual) LAMBDA_RESIDUAL="${2:-}"; shift 2 ;;
       --lambda-frontier) LAMBDA_FRONTIER="${2:-}"; shift 2 ;;
       --partition-preset) PARTITION_PRESET="${2:-}"; shift 2 ;;
+      --mask-repeated-actions) MASK_REPEATED_ACTIONS="1"; shift ;;
+      --no-mask-repeated-actions) MASK_REPEATED_ACTIONS="0"; shift ;;
       --seed) SEED="${2:-}"; shift 2 ;;
       --timeout-sec) TIMEOUT_SEC="${2:-}"; shift 2 ;;
       --materialize-timeout-sec) MATERIALIZE_TIMEOUT_SEC="${2:-}"; shift 2 ;;
@@ -295,6 +299,7 @@ build_exports() {
   append_export FRONTIER_REPLAY_MIN_RESIDUAL_DROP "$FRONTIER_REPLAY_MIN_RESIDUAL_DROP"
   append_export PARTITION_PRESET "$PARTITION_PRESET"
   append_export MASK_PADDED_ACTIONS "$MASK_PADDED_ACTIONS"
+  append_export MASK_REPEATED_ACTIONS "$MASK_REPEATED_ACTIONS"
   append_export FORCE_CANONICAL_BASIS "$FORCE_CANONICAL_BASIS"
   append_export SEED "$SEED"
   append_export TIMEOUT_SEC "$TIMEOUT_SEC"

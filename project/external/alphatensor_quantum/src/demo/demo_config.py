@@ -66,6 +66,9 @@ class ExperimentParams:
       gadget-closure mode before dynamic gadget-prefix masking.
     mask_padded_actions: Whether to mask actions that touch padded coordinates
       beyond the active target tensor size in multi-target runs.
+    mask_repeated_actions: Whether to mask factors already used in the current
+      episode. In GF(2), replaying the same rank-one factor only cancels an
+      earlier contribution, so this avoids zero-net factor cycles.
     action_prior: Optional state-aware logit prior added before MCTS. "none"
       preserves the learned policy logits. "residual" scores actions by their
       immediate residual-weight drop. "split" additionally uses the configured
@@ -110,6 +113,7 @@ class ExperimentParams:
   tensor_overlap_max_actions_per_target: int = 128
   gadget_closure_max_weight: int = 4
   mask_padded_actions: bool = False
+  mask_repeated_actions: bool = False
   action_prior: str = "none"
   action_prior_beta: float = 1.0
   action_prior_residual_weight: float = 1.0

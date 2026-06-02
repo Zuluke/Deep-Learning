@@ -481,6 +481,16 @@ class Agent:
           valid_actions,
           self._gadget_closure_valid_actions(env_states),
       )
+    if self._config.exp_config.mask_repeated_actions:
+      selected_before = jnp.any(
+          jnp.all(
+              env_states.past_factors[:, None, :, :]
+              == self._action_factors[None, :, None, :],
+              axis=-1,
+          ),
+          axis=-1,
+      )
+      valid_actions = jnp.logical_and(valid_actions, jnp.logical_not(selected_before))
     return valid_actions
 
   def _mask_padded_action_logits(

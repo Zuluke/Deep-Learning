@@ -37,6 +37,7 @@ FRONTIER_REPLAY_MIN_MOVES="${FRONTIER_REPLAY_MIN_MOVES:-0}"
 FRONTIER_REPLAY_MIN_RESIDUAL_DROP="${FRONTIER_REPLAY_MIN_RESIDUAL_DROP:-0.0}"
 PARTITION_PRESET="${PARTITION_PRESET:-balanced}"
 MASK_PADDED_ACTIONS="${MASK_PADDED_ACTIONS:-1}"
+MASK_REPEATED_ACTIONS="${MASK_REPEATED_ACTIONS:-0}"
 FORCE_CANONICAL_BASIS="${FORCE_CANONICAL_BASIS:-1}"
 SEED="${SEED:-2024}"
 TIMEOUT_SEC="${TIMEOUT_SEC:-7200}"
@@ -94,6 +95,12 @@ if [[ "$MASK_PADDED_ACTIONS" == "1" || "$MASK_PADDED_ACTIONS" == "true" ]]; then
   cmd+=(--mask-padded-actions)
 else
   cmd+=(--no-mask-padded-actions)
+fi
+
+if [[ "$MASK_REPEATED_ACTIONS" == "1" || "$MASK_REPEATED_ACTIONS" == "true" ]]; then
+  cmd+=(--mask-repeated-actions)
+else
+  cmd+=(--no-mask-repeated-actions)
 fi
 
 if [[ "$FORCE_CANONICAL_BASIS" == "1" || "$FORCE_CANONICAL_BASIS" == "true" ]]; then

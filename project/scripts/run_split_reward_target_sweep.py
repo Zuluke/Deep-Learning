@@ -279,6 +279,10 @@ def _run_training(
         cmd.append("--mask-padded-actions")
     else:
         cmd.append("--no-mask-padded-actions")
+    if args.mask_repeated_actions:
+        cmd.append("--mask-repeated-actions")
+    else:
+        cmd.append("--no-mask-repeated-actions")
     if not args.canonical_only:
         cmd.append("--no-canonical-only")
     if args.force_canonical_basis:
@@ -383,6 +387,7 @@ def _run_training(
         ),
         "partition_preset": args.partition_preset,
         "mask_padded_actions": args.mask_padded_actions,
+        "mask_repeated_actions": args.mask_repeated_actions,
         "canonical_only": args.canonical_only,
         "force_canonical_basis": args.force_canonical_basis,
         "seed": args.seed,
@@ -521,6 +526,7 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "frontier_replay_min_residual_drop",
         "partition_preset",
         "mask_padded_actions",
+        "mask_repeated_actions",
         "canonical_only",
         "force_canonical_basis",
         "seed",
@@ -633,6 +639,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mask-padded-actions",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+    )
+    parser.add_argument(
+        "--mask-repeated-actions",
         action=argparse.BooleanOptionalAction,
         default=False,
     )
