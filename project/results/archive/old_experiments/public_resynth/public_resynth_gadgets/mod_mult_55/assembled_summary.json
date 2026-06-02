@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_mult_55/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_mult_55",
+  "depth": 275,
+  "num_qubits": 12,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_mult_55/mod_mult_55.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_mult_55/mod_mult_55.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_mult_55/mod_mult_55.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_mult_55",
+  "size": 411
+}

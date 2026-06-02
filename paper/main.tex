@@ -13,12 +13,7 @@
 \usepackage{changes}[draft]
 
 \graphicspath{
-  {../project/results/reproducibility/paper/figures/}
-  {../project/results/figures/}
-  {../project/results/figures/entrega1_tensor_v3_phase_slack_formal/}
-  {../project/results/figures/entrega1_tensor_v3_phase_slack/}
-  {../project/results/figures/entrega1/}
-  {../project/results/figures/entrega1_formal/}
+  {imgs/}
 }
 
 \newcommand{\atq}{AlphaTensor-Quantum}
@@ -286,7 +281,7 @@ Figure~\ref{fig:formal-tcount} shows the \tcount{} comparison for the same examp
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.82\textwidth]{entrega1_tensor_v3_phase_slack_formal/tcount_comparison.pdf}
+\includegraphics[width=0.82\textwidth]{imgs/tcount_comparison.pdf}
 \caption{\tcount{} comparison for the five working examples. Tensor-v3 preserves the public \tcount{} while changing the structural profile of the selected candidate.}
 \label{fig:formal-tcount}
 \end{figure*}
@@ -295,7 +290,7 @@ Figure~\ref{fig:formal-zx} shows the external splitting audit on the same candid
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.88\textwidth]{entrega1_tensor_v3_phase_slack_formal/zx_splitting_comparison.pdf}
+\includegraphics[width=0.88\textwidth]{imgs/zx_splitting_comparison.pdf}
 \caption{ZX-based splitting for the five examples. Lower $\primarync$ is better. The tensor-v3 choice improves the audited non-Clifford-depth ratio in three cases and ties in the two hamming-weight cases.}
 
 \label{fig:formal-zx}

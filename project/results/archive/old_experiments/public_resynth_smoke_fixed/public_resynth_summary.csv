@@ -1,0 +1,11 @@
+circuit_id,method,status,assembled_qasm_path,error
+cuccaro_adder_n3,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n3
+barenco_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+gf_2pow2_mult,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_no_gadgets/gf_2pow2_mult/assembled.qasm,
+mod_5_4,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_no_gadgets/mod_5_4/assembled.qasm,
+nc_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_3
+cuccaro_adder_n3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/cuccaro_adder_n3/assembled.qasm,
+barenco_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+gf_2pow2_mult,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/gf_2pow2_mult/assembled.qasm,
+mod_5_4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/assembled.qasm,
+nc_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_3

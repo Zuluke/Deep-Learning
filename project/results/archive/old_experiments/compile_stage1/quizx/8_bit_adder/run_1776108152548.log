@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/8_bit_adder",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/8_bit_adder/8_bit_adder.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/8_bit_adder/8_bit_adder.qasm",
+      "qubits": 24,
+      "tcount": {
+        "initial": 399,
+        "zx_preopt": 173,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 236,
+        "optimized": 37
+      },
+      "blocks": [
+        {
+          "qubits": 61,
+          "initial": 173
+        }
+      ]
+    }
+  ]
+}

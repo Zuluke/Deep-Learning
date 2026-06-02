@@ -1,0 +1,141 @@
+circuit_id,method,status,assembled_qasm_path,error
+basis_change_p4_o3,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p4_o3
+basis_change_p4_o4,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p4_o4
+basis_change_p4_o5,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p4_o5
+basis_change_p5_o3,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p5_o3
+basis_change_p5_o4,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p5_o4
+basis_change_p6_o3,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p6_o3
+basis_change_p7_o3,public_resynth_no_gadgets,not-available,,Missing public decomposition for basis_change_p7_o3
+cuccaro_adder_n3,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n3
+cuccaro_adder_n4,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n4
+cuccaro_adder_n5,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n5
+cuccaro_adder_n6,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n6
+cuccaro_adder_n7,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n7
+cuccaro_adder_n8,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n8
+cuccaro_adder_n9,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n9
+cuccaro_adder_n10,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n10
+hamming_weight_n4,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n4
+hamming_weight_n5,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n5
+hamming_weight_n6,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n6
+hamming_weight_n7,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n7
+hamming_weight_n8,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n8
+hamming_weight_n9,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n9
+hamming_weight_n10,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n10
+hamming_weight_n11,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n11
+hamming_weight_n12,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n12
+hamming_weight_n13,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n13
+hamming_weight_n14,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n14
+hamming_weight_n15,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n15
+hamming_weight_n16,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n16
+hamming_weight_n17,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n17
+hamming_weight_n18,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n18
+hamming_weight_n19,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n19
+hamming_weight_n20,public_resynth_no_gadgets,not-available,,Missing public decomposition for hamming_weight_n20
+unary_iteration_n3,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/unary_iteration_n3/assembled.qasm,
+unary_iteration_n4,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/unary_iteration_n4/assembled.qasm,
+unary_iteration_n5,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/unary_iteration_n5/assembled.qasm,
+8_bit_adder,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/8_bit_adder/assembled.qasm,
+barenco_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+barenco_tof_4,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_4
+barenco_tof_5,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_5
+barenco_tof_10,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_10
+csla_mux_3,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/csla_mux_3/assembled.qasm,
+csum_mux_9,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/csum_mux_9/assembled.qasm,
+gf_2pow2_mult,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/gf_2pow2_mult/assembled.qasm,
+gf_2pow3_mult,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/gf_2pow3_mult/assembled.qasm,
+gf_2pow4_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow4_mult
+gf_2pow5_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow5_mult
+gf_2pow6_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow6_mult
+gf_2pow7_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow7_mult
+gf_2pow8_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow8_mult
+gf_2pow9_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow9_mult
+gf_2pow10_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow10_mult
+grover_5,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/grover_5/assembled.qasm,
+hamming_15_high,public_resynth_no_gadgets,failed,,Qubit mismatch during assembly: 302 != 342
+hamming_15_low,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hamming_15_low/assembled.qasm,
+hamming_15_med,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hamming_15_med/assembled.qasm,
+hwb_6,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hwb_6/assembled.qasm,
+mod_5_4,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/mod_5_4/assembled.qasm,
+mod_adder_1024,public_resynth_no_gadgets,not-available,,Missing public decomposition for mod_adder_10240
+mod_mult_55,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/mod_mult_55/assembled.qasm,
+mod_red_21,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/mod_red_21/assembled.qasm,
+nc_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_3
+nc_tof_4,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_4
+nc_tof_5,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_5
+nc_tof_10,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_10
+qcla_adder_10,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qcla_adder_10/assembled.qasm,
+qcla_com_7,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qcla_com_7/assembled.qasm,
+qcla_mod_7,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qcla_mod_7/assembled.qasm,
+qft_4,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qft_4/assembled.qasm,
+rc_adder_6,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/rc_adder_6/assembled.qasm,
+vbe_adder_3,public_resynth_no_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/vbe_adder_3/assembled.qasm,
+basis_change_p4_o3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p4_o3/assembled.qasm,
+basis_change_p4_o4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p4_o4/assembled.qasm,
+basis_change_p4_o5,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p4_o5/assembled.qasm,
+basis_change_p5_o3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p5_o3/assembled.qasm,
+basis_change_p5_o4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p5_o4/assembled.qasm,
+basis_change_p6_o3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p6_o3/assembled.qasm,
+basis_change_p7_o3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p7_o3/assembled.qasm,
+cuccaro_adder_n3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n3/assembled.qasm,
+cuccaro_adder_n4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n4/assembled.qasm,
+cuccaro_adder_n5,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n5/assembled.qasm,
+cuccaro_adder_n6,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n6/assembled.qasm,
+cuccaro_adder_n7,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n7/assembled.qasm,
+cuccaro_adder_n8,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n8/assembled.qasm,
+cuccaro_adder_n9,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n9/assembled.qasm,
+cuccaro_adder_n10,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n10/assembled.qasm,
+hamming_weight_n4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n4/assembled.qasm,
+hamming_weight_n5,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n5/assembled.qasm,
+hamming_weight_n6,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n6/assembled.qasm,
+hamming_weight_n7,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n7/assembled.qasm,
+hamming_weight_n8,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n8/assembled.qasm,
+hamming_weight_n9,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n9/assembled.qasm,
+hamming_weight_n10,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n10/assembled.qasm,
+hamming_weight_n11,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n11/assembled.qasm,
+hamming_weight_n12,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n12/assembled.qasm,
+hamming_weight_n13,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n13/assembled.qasm,
+hamming_weight_n14,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n14/assembled.qasm,
+hamming_weight_n15,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n15/assembled.qasm,
+hamming_weight_n16,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n16/assembled.qasm,
+hamming_weight_n17,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n17/assembled.qasm,
+hamming_weight_n18,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n18/assembled.qasm,
+hamming_weight_n19,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n19/assembled.qasm,
+hamming_weight_n20,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n20/assembled.qasm,
+unary_iteration_n3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n3/assembled.qasm,
+unary_iteration_n4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n4/assembled.qasm,
+unary_iteration_n5,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n5/assembled.qasm,
+8_bit_adder,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/8_bit_adder/assembled.qasm,
+barenco_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+barenco_tof_4,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_4
+barenco_tof_5,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_5
+barenco_tof_10,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_10
+csla_mux_3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/csla_mux_3/assembled.qasm,
+csum_mux_9,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/csum_mux_9/assembled.qasm,
+gf_2pow2_mult,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow2_mult/assembled.qasm,
+gf_2pow3_mult,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow3_mult/assembled.qasm,
+gf_2pow4_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow4_mult_comp1
+gf_2pow5_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow5_mult_comp1
+gf_2pow6_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow6_mult_comp1
+gf_2pow7_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow7_mult_comp1
+gf_2pow8_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow8_mult_comp1
+gf_2pow9_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow9_mult_comp1
+gf_2pow10_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow10_mult_comp1
+grover_5,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/grover_5/assembled.qasm,
+hamming_15_high,public_resynth_gadgets,failed,,Qubit mismatch during assembly: 302 != 342
+hamming_15_low,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_15_low/assembled.qasm,
+hamming_15_med,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_15_med/assembled.qasm,
+hwb_6,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hwb_6/assembled.qasm,
+mod_5_4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_5_4/assembled.qasm,
+mod_adder_1024,public_resynth_gadgets,not-available,,Missing public decomposition for mod_adder_10240
+mod_mult_55,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_mult_55/assembled.qasm,
+mod_red_21,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/mod_red_21/assembled.qasm,
+nc_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_3
+nc_tof_4,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_4
+nc_tof_5,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_5
+nc_tof_10,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_10
+qcla_adder_10,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/qcla_adder_10/assembled.qasm,
+qcla_com_7,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/qcla_com_7/assembled.qasm,
+qcla_mod_7,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/qcla_mod_7/assembled.qasm,
+qft_4,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/qft_4/assembled.qasm,
+rc_adder_6,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/rc_adder_6/assembled.qasm,
+vbe_adder_3,public_resynth_gadgets,ok,/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/vbe_adder_3/assembled.qasm,

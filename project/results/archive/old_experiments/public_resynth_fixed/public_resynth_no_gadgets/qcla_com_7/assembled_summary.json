@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_com_7/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_com_7",
+  "depth": 3589,
+  "num_qubits": 42,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_com_7/qcla_com_7.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_com_7/qcla_com_7.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_com_7/qcla_com_7.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_com_7",
+  "size": 4738
+}

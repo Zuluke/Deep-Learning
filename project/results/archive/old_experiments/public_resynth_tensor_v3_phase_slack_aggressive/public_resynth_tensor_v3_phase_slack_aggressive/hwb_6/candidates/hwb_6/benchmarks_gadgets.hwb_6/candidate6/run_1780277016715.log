@@ -1,0 +1,56 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.mapping.txt"
+    ],
+    "output": "results/public_resynth_tensor_v3_phase_slack_aggressive/public_resynth_tensor_v3_phase_slack_aggressive/hwb_6/candidates/hwb_6/benchmarks_gadgets.hwb_6/candidate6",
+    "files": [
+      "results/public_resynth_tensor_v3_phase_slack_aggressive/public_resynth_tensor_v3_phase_slack_aggressive/hwb_6/candidates/hwb_6/hwb_6.benchmarks_gadgets.hwb_6.candidate6.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_aggressive/public_resynth_tensor_v3_phase_slack_aggressive/hwb_6/candidates/hwb_6/hwb_6.benchmarks_gadgets.hwb_6.candidate6.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ],
+      "nccz": 10,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

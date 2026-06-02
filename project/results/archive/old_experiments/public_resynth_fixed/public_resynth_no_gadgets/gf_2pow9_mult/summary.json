@@ -1,0 +1,14 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [
+    {
+      "artifact_stem": "gf_2pow9_mult",
+      "error": "No successful resynth candidate for gf_2pow9_mult",
+      "status": "no-successful-candidate"
+    }
+  ],
+  "circuit_id": "gf_2pow9_mult",
+  "error": "No successful resynth candidate for gf_2pow9_mult",
+  "method": "public_resynth_no_gadgets",
+  "status": "failed"
+}

@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/cuccaro_adder_n5/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n5",
+  "depth": 429,
+  "num_qubits": 16,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n5/cuccaro_adder_n5.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/cuccaro_adder_n5/cuccaro_adder_n5.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n5/cuccaro_adder_n5.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/cuccaro_adder_n5",
+  "size": 581
+}

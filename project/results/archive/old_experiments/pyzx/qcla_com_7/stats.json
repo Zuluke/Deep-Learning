@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.45797109603881836,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/qcla_com_7/optimized.qasm",
+  "read_runtime_sec": 0.0022439956665039062,
+  "runtime_sec": 1.0680980682373047,
+  "simplify_runtime_sec": 0.6078829765319824,
+  "status": "ok",
+  "tcount_after_pyzx": 95,
+  "tcount_before_pyzx": 203
+}

@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "mod_5_4",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/candidates/mod_5_4/mod_5_4.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/candidates/mod_5_4/candidate0/mod_5_4.candidate0.qasm",
+      "decomposition_key": "mod_5_4",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/mod_5_4.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_gadgets.npz",
+      "status": "ok",
+      "tcount": 7,
+      "tdepth": 4
+    }
+  ],
+  "circuit_id": "mod_5_4",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

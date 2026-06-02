@@ -1,0 +1,33 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "grover_5_block1",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/candidates/grover_5_block1/grover_5_block1.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/candidates/grover_5_block1/candidate0/grover_5_block1.candidate0.qasm",
+      "decomposition_key": "grover_5_block1",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/grover_5_block1.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_gadgets.npz",
+      "status": "ok",
+      "tcount": 139,
+      "tdepth": 25
+    },
+    {
+      "artifact_stem": "grover_5_block2",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/candidates/grover_5_block2/grover_5_block2.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/candidates/grover_5_block2/candidate0/grover_5_block2.candidate0.qasm",
+      "decomposition_key": "grover_5_block2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/grover_5/grover_5_block2.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_gadgets.npz",
+      "status": "ok",
+      "tcount": 62,
+      "tdepth": 15
+    }
+  ],
+  "circuit_id": "grover_5",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

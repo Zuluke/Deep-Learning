@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/unary_iteration_n5",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n5/unary_iteration_n5.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n5/unary_iteration_n5.qasm",
+      "qubits": 42,
+      "tcount": {
+        "initial": 434,
+        "zx_preopt": 204,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 52,
+        "optimized": 30
+      },
+      "blocks": [
+        {
+          "qubits": 72,
+          "initial": 204
+        }
+      ]
+    }
+  ]
+}

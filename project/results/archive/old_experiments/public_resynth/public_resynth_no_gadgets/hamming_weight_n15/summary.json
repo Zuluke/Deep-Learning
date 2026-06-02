@@ -1,0 +1,8 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [],
+  "circuit_id": "hamming_weight_n15",
+  "error": "Missing public decomposition for hamming_weight_n15",
+  "method": "public_resynth_no_gadgets",
+  "status": "not-available"
+}

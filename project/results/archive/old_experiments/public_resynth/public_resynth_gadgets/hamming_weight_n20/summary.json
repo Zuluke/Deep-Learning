@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n20/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "hamming_weight_n20",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n20/candidates/hamming_weight_n20/hamming_weight_n20.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n20/candidates/hamming_weight_n20/candidate0/hamming_weight_n20.candidate0.qasm",
+      "decomposition_key": "hamming_weight_n20",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_weight_n20/hamming_weight_n20.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/hamming_weight_phase_gradient.npz",
+      "status": "ok",
+      "tcount": 126,
+      "tdepth": 24
+    }
+  ],
+  "circuit_id": "hamming_weight_n20",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

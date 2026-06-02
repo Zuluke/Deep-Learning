@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p4_o3/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o3",
+  "depth": 1055,
+  "num_qubits": 35,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o3/basis_change_p4_o3.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p4_o3/basis_change_p4_o3.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o3/basis_change_p4_o3.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p4_o3",
+  "size": 1616
+}

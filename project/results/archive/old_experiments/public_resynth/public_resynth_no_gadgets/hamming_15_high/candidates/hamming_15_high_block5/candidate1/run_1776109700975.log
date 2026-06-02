@@ -1,0 +1,75 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_high/hamming_15_high_block5.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_high/hamming_15_high_block5.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block5/candidate1",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block5/hamming_15_high_block5.candidate1.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block5/hamming_15_high_block5.candidate1.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193
+      ],
+      "nccz": 0,
+      "ncs": 0,
+      "nt": 66
+    }
+  ]
+}

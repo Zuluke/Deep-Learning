@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n5/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "unary_iteration_n5",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n5/candidates/unary_iteration_n5/unary_iteration_n5.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n5/candidates/unary_iteration_n5/candidate1/unary_iteration_n5.candidate1.qasm",
+      "decomposition_key": "unary_iteration_n5",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n5/unary_iteration_n5.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/unary_iteration_gadgets.npz",
+      "status": "ok",
+      "tcount": 217,
+      "tdepth": 34
+    }
+  ],
+  "circuit_id": "unary_iteration_n5",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

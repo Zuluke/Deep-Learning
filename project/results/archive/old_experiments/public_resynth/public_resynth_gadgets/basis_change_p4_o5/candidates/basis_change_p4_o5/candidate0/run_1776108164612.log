@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o5/basis_change_p4_o5.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o5/basis_change_p4_o5.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p4_o5/candidates/basis_change_p4_o5/candidate0",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p4_o5/candidates/basis_change_p4_o5/basis_change_p4_o5.candidate0.npy"
+    ]
+  },
+  "files": []
+}

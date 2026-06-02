@@ -1,0 +1,21 @@
+{
+  "candidate_frontier_csv": "results/public_resynth_tensor_v3/candidate_frontier.csv",
+  "circuit_ids": [
+    "hamming_weight_n4",
+    "hamming_weight_n5",
+    "gf_2pow2_mult",
+    "mod_5_4",
+    "qft_4"
+  ],
+  "inventory_csv": "results/csv/circuit_inventory.csv",
+  "max_candidates_per_key": 10,
+  "max_combinations_per_circuit": 250,
+  "num_candidate_frontier_rows": 38,
+  "num_rows": 5,
+  "output_root": "results/public_resynth_tensor_v3",
+  "selection_objective": "tensor-v3",
+  "tensor_v3_candidate_manifest_csv": "results/public_resynth_tensor_v3/tensor_v3_candidate_manifest.csv",
+  "tensor_v3_ranking": "lex-v1",
+  "tensor_v3_selection_manifest_csv": "results/public_resynth_tensor_v3/tensor_v3_selection_manifest.csv",
+  "tensor_v3_tcount_tolerance": 0.1
+}

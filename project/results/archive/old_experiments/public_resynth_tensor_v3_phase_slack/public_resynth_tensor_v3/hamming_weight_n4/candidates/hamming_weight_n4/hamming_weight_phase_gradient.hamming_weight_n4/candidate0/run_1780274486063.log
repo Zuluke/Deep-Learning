@@ -1,0 +1,38 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n4/hamming_weight_n4.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n4/hamming_weight_n4.mapping.txt"
+    ],
+    "output": "results/public_resynth_tensor_v3_phase_slack/public_resynth_tensor_v3/hamming_weight_n4/candidates/hamming_weight_n4/hamming_weight_phase_gradient.hamming_weight_n4/candidate0",
+    "files": [
+      "results/public_resynth_tensor_v3_phase_slack/public_resynth_tensor_v3/hamming_weight_n4/candidates/hamming_weight_n4/hamming_weight_n4.hamming_weight_phase_gradient.hamming_weight_n4.candidate0.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack/public_resynth_tensor_v3/hamming_weight_n4/candidates/hamming_weight_n4/hamming_weight_n4.hamming_weight_phase_gradient.hamming_weight_n4.candidate0.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "nccz": 3,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

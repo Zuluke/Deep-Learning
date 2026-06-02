@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/mod_red_21",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_red_21/mod_red_21.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_red_21/mod_red_21.qasm",
+      "qubits": 11,
+      "tcount": {
+        "initial": 119,
+        "zx_preopt": 73,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 59,
+        "optimized": 17
+      },
+      "blocks": [
+        {
+          "qubits": 28,
+          "initial": 73
+        }
+      ]
+    }
+  ]
+}

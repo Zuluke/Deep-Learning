@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "results/public_resynth_structural/public_resynth_structural/vbe_adder_3/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3",
+  "depth": 281,
+  "num_qubits": 14,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.initial.cliffords.qasm",
+    "results/public_resynth_structural/public_resynth_structural/vbe_adder_3/vbe_adder_3.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.cliffords.qasm"
+  ],
+  "resynth_root": "results/public_resynth_structural/public_resynth_structural/vbe_adder_3",
+  "size": 411
+}

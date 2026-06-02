@@ -1,0 +1,43 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.mapping.txt"
+    ],
+    "output": "results/public_resynth_structural/public_resynth_structural/vbe_adder_3/candidates/vbe_adder_3/benchmarks_no_gadgets.vbe_adder_3/candidate1",
+    "files": [
+      "results/public_resynth_structural/public_resynth_structural/vbe_adder_3/candidates/vbe_adder_3/vbe_adder_3.benchmarks_no_gadgets.vbe_adder_3.candidate1.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_structural/public_resynth_structural/vbe_adder_3/candidates/vbe_adder_3/vbe_adder_3.benchmarks_no_gadgets.vbe_adder_3.candidate1.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "nccz": 0,
+      "ncs": 0,
+      "nt": 19
+    }
+  ]
+}

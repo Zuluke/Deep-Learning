@@ -1,0 +1,16 @@
+{
+  "candidate_frontier_csv": "results/tmp_alphaq_border_full/candidate_frontier.csv",
+  "circuit_ids": [
+    "cuccaro_adder_n3",
+    "gf_2pow2_mult",
+    "mod_5_4",
+    "qft_4",
+    "vbe_adder_3"
+  ],
+  "inventory_csv": "results/csv/circuit_inventory.csv",
+  "max_candidates_per_key": 10,
+  "num_candidate_frontier_rows": 47,
+  "num_rows": 5,
+  "output_root": "results/tmp_alphaq_border_full",
+  "selection_objective": "structural"
+}

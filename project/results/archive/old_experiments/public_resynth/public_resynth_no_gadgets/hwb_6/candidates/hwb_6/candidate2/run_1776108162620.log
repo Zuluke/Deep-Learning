@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hwb_6/candidates/hwb_6/candidate2",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/hwb_6/candidates/hwb_6/hwb_6.candidate2.npy"
+    ]
+  },
+  "files": []
+}

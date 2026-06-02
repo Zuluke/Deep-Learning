@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.0104217529296875,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/nc_tof_5/optimized.qasm",
+  "read_runtime_sec": 0.0008640289306640625,
+  "runtime_sec": 0.05553388595581055,
+  "simplify_runtime_sec": 0.044248104095458984,
+  "status": "ok",
+  "tcount_after_pyzx": 31,
+  "tcount_before_pyzx": 49
+}

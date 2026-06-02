@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n10/cuccaro_adder_n10.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n10/cuccaro_adder_n10.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n10/candidates/cuccaro_adder_n10/candidate0",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n10/candidates/cuccaro_adder_n10/cuccaro_adder_n10.candidate0.npy"
+    ]
+  },
+  "files": []
+}

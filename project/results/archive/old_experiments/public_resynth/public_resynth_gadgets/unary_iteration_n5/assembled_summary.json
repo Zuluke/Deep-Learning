@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n5/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n5",
+  "depth": 3427,
+  "num_qubits": 72,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n5/unary_iteration_n5.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n5/unary_iteration_n5.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n5/unary_iteration_n5.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/unary_iteration_n5",
+  "size": 4642
+}

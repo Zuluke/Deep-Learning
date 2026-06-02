@@ -12,13 +12,15 @@ Nao ha retreinamento completo do AlphaTensor-Quantum nesta entrega. A reproducao
 ## Layout
 
 - `src/atq_repro/`: APIs reutilizaveis para carregar decomposicoes, mapear tensores, validar igualdade tensorial, detectar gadgets e gerar resultados do paper.
-- `scripts/`: wrappers CLI e pipelines de reproducao/auditoria.
+- `scripts/`: wrappers CLI e pipelines ativos de reproducao, auditoria e treino split-reward.
+- `archive/`: scripts, testes e notas de experimentos antigos preservados fora do fluxo ativo.
 - `notebooks/`: notebook executavel da Entrega 1.
 - `external/`: snapshots vendorizados de `alphatensor_quantum`, `circuit-to-tensor` e ferramentas auxiliares.
 - `results/csv/`: tabelas consolidadas.
 - `results/figures/`: figuras para relatorio.
 - `results/reproducibility/paper/`: CSVs/figuras da reproducao fiel do artigo.
 - `results/reports/`: sumarios em Markdown para escrever a Entrega 1.
+- `results/archive/`: resultados historicos e temporarios que nao devem poluir o topo.
 
 ## Setup
 
@@ -128,12 +130,8 @@ uv run python scripts/reproduce_paper_results.py
 uv run jupyter nbconvert --to notebook --execute notebooks/entrega1_reproducao_alphatensor_quantum.ipynb --inplace --ExecutePreprocessor.timeout=1200
 ```
 
-## Scripts legados ainda uteis
+## Scripts legados
 
-```bash
-uv run python scripts/reproduce_fig4.py
-uv run python scripts/reproduce_fig4b_binary_addition.py
-uv run python scripts/replay_public_decompositions.py
-```
-
-Eles continuam funcionando como wrappers praticos, mas a logica reutilizavel da reproducao do artigo esta centralizada em `src/atq_repro/`.
+Wrappers de reproducoes antigas e analises exploratorias foram movidos para
+`archive/scripts/`. A logica reutilizavel da reproducao do artigo permanece
+centralizada em `src/atq_repro/`, enquanto o fluxo atual fica em `scripts/`.

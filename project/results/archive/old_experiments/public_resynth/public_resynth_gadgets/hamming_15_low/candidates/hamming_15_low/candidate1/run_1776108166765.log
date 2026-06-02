@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_low/hamming_15_low.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_low/hamming_15_low.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_15_low/candidates/hamming_15_low/candidate1",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/hamming_15_low/candidates/hamming_15_low/hamming_15_low.candidate1.npy"
+    ]
+  },
+  "files": []
+}

@@ -1,0 +1,24 @@
+{
+  "candidate_frontier_csv": "results/public_resynth_structural/candidate_frontier.csv",
+  "circuit_ids": [
+    "cuccaro_adder_n3",
+    "hamming_weight_n4",
+    "hamming_weight_n5",
+    "barenco_tof_3",
+    "barenco_tof_4",
+    "gf_2pow2_mult",
+    "hwb_6",
+    "mod_5_4",
+    "nc_tof_3",
+    "nc_tof_4",
+    "qft_4",
+    "vbe_adder_3"
+  ],
+  "inventory_csv": "results/csv/circuit_inventory.csv",
+  "max_candidates_per_key": 12,
+  "max_combinations_per_circuit": 250,
+  "num_candidate_frontier_rows": 69,
+  "num_rows": 12,
+  "output_root": "results/public_resynth_structural",
+  "selection_objective": "structural"
+}

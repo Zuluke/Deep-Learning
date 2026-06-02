@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_5_4",
+  "depth": 44,
+  "num_qubits": 5,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_5_4/mod_5_4.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4/mod_5_4.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_5_4/mod_5_4.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/mod_5_4",
+  "size": 61
+}

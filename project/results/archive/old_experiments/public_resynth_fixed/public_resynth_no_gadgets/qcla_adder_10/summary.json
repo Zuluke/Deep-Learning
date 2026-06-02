@@ -1,0 +1,33 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "qcla_adder_10_block1",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block1/qcla_adder_10_block1.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block1/candidate0/qcla_adder_10_block1.candidate0.qasm",
+      "decomposition_key": "qcla_adder_10_block1",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/qcla_adder_10_block1.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 53,
+      "tdepth": 11
+    },
+    {
+      "artifact_stem": "qcla_adder_10_block2",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block2/qcla_adder_10_block2.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block2/candidate1/qcla_adder_10_block2.candidate1.qasm",
+      "decomposition_key": "qcla_adder_10_block2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/qcla_adder_10/qcla_adder_10_block2.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 82,
+      "tdepth": 33
+    }
+  ],
+  "circuit_id": "qcla_adder_10",
+  "error": null,
+  "method": "public_resynth_no_gadgets",
+  "status": "ok"
+}

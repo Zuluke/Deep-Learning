@@ -1,0 +1,10 @@
+{
+  "compile_quizx_summary_csv": "/Users/caio/Deep-Learning/project/results/compile_stage1/compile_on_summary.csv",
+  "demo_log_dir": "/Users/caio/Deep-Learning/project/results/logs/demo",
+  "inventory_csv": "results/csv/circuit_inventory.csv",
+  "num_rows": 570,
+  "public_resynth_summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_summary.csv",
+  "pyzx_summary_csv": "/Users/caio/Deep-Learning/project/results/pyzx/pyzx_summary.csv",
+  "reranker_resynth_summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_reranker/public_resynth_summary.csv",
+  "structural_resynth_summary_csv": "results/tmp_alphaq_border_full/public_resynth_summary.csv"
+}

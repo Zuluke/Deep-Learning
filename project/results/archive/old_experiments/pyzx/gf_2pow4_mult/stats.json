@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.047846078872680664,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/gf_2pow4_mult/optimized.qasm",
+  "read_runtime_sec": 0.0008931159973144531,
+  "runtime_sec": 0.49545931816101074,
+  "simplify_runtime_sec": 0.4467201232910156,
+  "status": "ok",
+  "tcount_after_pyzx": 68,
+  "tcount_before_pyzx": 112
+}

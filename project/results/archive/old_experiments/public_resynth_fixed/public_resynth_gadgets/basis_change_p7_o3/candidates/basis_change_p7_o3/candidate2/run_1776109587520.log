@@ -1,0 +1,92 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p7_o3/basis_change_p7_o3.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p7_o3/basis_change_p7_o3.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p7_o3/candidates/basis_change_p7_o3/candidate2",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p7_o3/candidates/basis_change_p7_o3/basis_change_p7_o3.candidate2.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/basis_change_p7_o3/candidates/basis_change_p7_o3/basis_change_p7_o3.candidate2.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73
+      ],
+      "nccz": 20,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

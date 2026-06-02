@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/basis_change_p4_o4",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o4/basis_change_p4_o4.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/basis_change_p4_o4/basis_change_p4_o4.qasm",
+      "qubits": 26,
+      "tcount": {
+        "initial": 168,
+        "zx_preopt": 70,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 68,
+        "optimized": 22
+      },
+      "blocks": [
+        {
+          "qubits": 39,
+          "initial": 70
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p7_o3/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "basis_change_p7_o3",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p7_o3/candidates/basis_change_p7_o3/basis_change_p7_o3.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p7_o3/candidates/basis_change_p7_o3/candidate0/basis_change_p7_o3.candidate0.qasm",
+      "decomposition_key": "basis_change_p7_o3",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/basis_change_p7_o3/basis_change_p7_o3.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/quantum_chemistry.npz",
+      "status": "ok",
+      "tcount": 140,
+      "tdepth": 29
+    }
+  ],
+  "circuit_id": "basis_change_p7_o3",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

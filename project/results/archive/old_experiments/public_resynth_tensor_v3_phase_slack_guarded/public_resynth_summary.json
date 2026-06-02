@@ -1,0 +1,15 @@
+{
+  "aggressive_selection_manifest_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_aggressive/tensor_v3_selection_manifest.csv",
+  "aggressive_summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_aggressive/public_resynth_summary.csv",
+  "candidate_frontier_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_aggressive/candidate_frontier.csv",
+  "conservative_selection_manifest_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_expanded/tensor_v3_selection_manifest.csv",
+  "conservative_summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_summary.csv",
+  "guarded_mixed_drop_fraction": 0.0,
+  "guarded_qasm_depth_gain": 0.1,
+  "num_aggressive_choices": 2,
+  "num_rows": 12,
+  "num_selection_manifest_rows": 12,
+  "output_root": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_guarded",
+  "selection_manifest_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_guarded/tensor_v3_selection_manifest.csv",
+  "summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_guarded/public_resynth_summary.csv"
+}

@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/hamming_15_low/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "hamming_15_low",
+      "candidate_index": 2,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/hamming_15_low/candidates/hamming_15_low/hamming_15_low.candidate2.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/hamming_15_low/candidates/hamming_15_low/candidate2/hamming_15_low.candidate2.qasm",
+      "decomposition_key": "hamming_15_low",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/hamming_15_low/hamming_15_low.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_gadgets.npz",
+      "status": "ok",
+      "tcount": 119,
+      "tdepth": 25
+    }
+  ],
+  "circuit_id": "hamming_15_low",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

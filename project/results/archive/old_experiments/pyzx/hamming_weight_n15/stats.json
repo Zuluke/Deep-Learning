@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.20915579795837402,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/hamming_weight_n15/optimized.qasm",
+  "read_runtime_sec": 0.0010628700256347656,
+  "runtime_sec": 0.496518611907959,
+  "simplify_runtime_sec": 0.2862999439239502,
+  "status": "ok",
+  "tcount_after_pyzx": 77,
+  "tcount_before_pyzx": 77
+}

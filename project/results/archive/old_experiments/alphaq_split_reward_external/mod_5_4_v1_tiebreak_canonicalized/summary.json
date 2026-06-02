@@ -1,0 +1,9 @@
+{
+  "canonical_factors": "results/alphaq_split_reward_external/mod_5_4_v1_tiebreak_canonicalized/mod_5_4.v1_tiebreak.best_solved.canonical.npy",
+  "error": null,
+  "qasm_candidates": [],
+  "resynth_input": "results/alphaq_split_reward_external/mod_5_4_v1_tiebreak_canonicalized/mod_5_4.v1_tiebreak.best_solved.canonical.transposed.npy",
+  "source_change_of_basis": "results/alphaq_split_reward/mod_5_4_v1_tiebreak_budget2_lam0005_basis_mix_1000_b32_m16_with_cob/mod_5_4.best_solved.change_of_basis.npy",
+  "source_factors": "results/alphaq_split_reward/mod_5_4_v1_tiebreak_budget2_lam0005_basis_mix_1000_b32_m16_with_cob/mod_5_4.best_solved.npy",
+  "status": "ok"
+}

@@ -1,0 +1,5 @@
+{
+  "inventory_csv": "/Users/caio/Deep-Learning/project/results/csv/circuit_inventory.csv",
+  "num_rows": 140,
+  "output_root": "/Users/caio/Deep-Learning/project/results/public_resynth"
+}

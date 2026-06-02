@@ -1,0 +1,12 @@
+{
+  "candidate_frontier_csv": "results/tmp_alphaq_border_smoke/candidate_frontier.csv",
+  "circuit_ids": [
+    "mod_5_4"
+  ],
+  "inventory_csv": "results/csv/circuit_inventory.csv",
+  "max_candidates_per_key": 2,
+  "num_candidate_frontier_rows": 2,
+  "num_rows": 1,
+  "output_root": "results/tmp_alphaq_border_smoke",
+  "selection_objective": "structural"
+}

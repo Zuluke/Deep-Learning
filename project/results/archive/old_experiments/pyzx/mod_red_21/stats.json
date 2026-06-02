@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.032846689224243164,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/mod_red_21/optimized.qasm",
+  "read_runtime_sec": 0.0015869140625,
+  "runtime_sec": 0.23482584953308105,
+  "simplify_runtime_sec": 0.2003922462463379,
+  "status": "ok",
+  "tcount_after_pyzx": 73,
+  "tcount_before_pyzx": 119
+}

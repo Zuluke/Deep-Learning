@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow5_mult/gf_2pow5_mult_comp1.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow5_mult/gf_2pow5_mult_comp1.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow5_mult/candidates/gf_2pow5_mult_comp1/candidate0",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow5_mult/candidates/gf_2pow5_mult_comp1/gf_2pow5_mult_comp1.candidate0.npy"
+    ]
+  },
+  "files": []
+}

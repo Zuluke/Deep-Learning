@@ -1,0 +1,49 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n3/unary_iteration_n3.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n3/unary_iteration_n3.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n3/candidates/unary_iteration_n3/candidate1",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n3/candidates/unary_iteration_n3/unary_iteration_n3.candidate1.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/unary_iteration_n3/candidates/unary_iteration_n3/unary_iteration_n3.candidate1.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "nccz": 7,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

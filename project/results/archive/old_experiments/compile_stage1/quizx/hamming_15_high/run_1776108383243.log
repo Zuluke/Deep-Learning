@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/hamming_15_high",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_high/hamming_15_high.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hamming_15_high/hamming_15_high.qasm",
+      "qubits": 20,
+      "tcount": {
+        "initial": 2457,
+        "zx_preopt": 1019,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 2031,
+        "optimized": 331
+      },
+      "blocks": [
+        {
+          "qubits": 351,
+          "initial": 1019
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [],
+  "circuit_id": "basis_change_p4_o4",
+  "error": "Missing public decomposition for basis_change_p4_o4",
+  "method": "public_resynth_no_gadgets",
+  "status": "not-available"
+}

@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/grover_5",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/grover_5/grover_5.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/grover_5/grover_5.qasm",
+      "qubits": 9,
+      "tcount": {
+        "initial": 336,
+        "zx_preopt": 166,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 296,
+        "optimized": 68
+      },
+      "blocks": [
+        {
+          "qubits": 77,
+          "initial": 166
+        }
+      ]
+    }
+  ]
+}

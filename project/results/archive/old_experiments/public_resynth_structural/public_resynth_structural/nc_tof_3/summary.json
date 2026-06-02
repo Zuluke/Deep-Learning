@@ -1,0 +1,7 @@
+{
+  "circuit_id": "nc_tof_3",
+  "error": "Missing public decomposition for nc_tof_3",
+  "method": "public_resynth_structural",
+  "selection_objective": "structural",
+  "status": "not-available"
+}

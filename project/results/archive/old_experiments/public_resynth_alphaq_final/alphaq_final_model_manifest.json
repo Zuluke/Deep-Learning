@@ -1,0 +1,18 @@
+{
+  "ablation_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_ablations.csv",
+  "baselines_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_baselines.csv",
+  "comparison_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_comparison.csv",
+  "eval_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_loco_eval.csv",
+  "frontier_csv": "results/public_resynth_structural/candidate_frontier.csv",
+  "frontier_verification_csv": "results/verification/frontier/alphaq_candidate_frontier_verification.csv",
+  "model_json": "/Users/caio/Deep-Learning/project/results/models/alphaq_final_pairwise_ranker.json",
+  "num_candidates": 33,
+  "num_selected": 5,
+  "predictions_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_predictions.csv",
+  "report_path": "/Users/caio/Deep-Learning/project/results/reports/alphaq_final_model_report.md",
+  "require_formal_equal": true,
+  "seed_robustness_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_seed_robustness.csv",
+  "selection_summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_alphaq_final/public_resynth_summary.csv",
+  "selection_summary_json": "/Users/caio/Deep-Learning/project/results/public_resynth_alphaq_final/public_resynth_summary.json",
+  "tolerance_sweep_csv": "/Users/caio/Deep-Learning/project/results/csv/alphaq_final_model_tolerance_sweep.csv"
+}

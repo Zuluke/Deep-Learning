@@ -1,0 +1,37 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/barenco_tof_3/barenco_tof_3.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/barenco_tof_3/barenco_tof_3.mapping.txt"
+    ],
+    "output": "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/barenco_tof_3/candidates/barenco_tof_3/benchmarks_no_gadgets.barenco_toff_3/candidate3",
+    "files": [
+      "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/barenco_tof_3/candidates/barenco_tof_3/barenco_tof_3.benchmarks_no_gadgets.barenco_toff_3.candidate3.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/barenco_tof_3/candidates/barenco_tof_3/barenco_tof_3.benchmarks_no_gadgets.barenco_toff_3.candidate3.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "nccz": 0,
+      "ncs": 0,
+      "nt": 13
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "method": "public_resynth_reranker",
+  "model_json": "results/tmp_alphaq_border_smoke/reranker_model.json",
+  "num_rows": 1,
+  "prediction_tolerance": 0.1,
+  "selection_objective": "mlp_reranker",
+  "summary_csv": "results/tmp_alphaq_border_smoke/reranker_selection/public_resynth_summary.csv"
+}

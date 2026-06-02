@@ -1,0 +1,7 @@
+{
+  "circuit_id": "barenco_tof_3",
+  "error": "Missing public decomposition for barenco_tof_3",
+  "method": "public_resynth_structural",
+  "selection_objective": "structural",
+  "status": "not-available"
+}

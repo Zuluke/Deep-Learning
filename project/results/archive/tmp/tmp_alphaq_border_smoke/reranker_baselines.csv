@@ -1,0 +1,6 @@
+circuit_id,objective,selected_candidate_id,selected_primary,selected_tcount,structural_best_candidate_id,structural_best_primary,structural_best_tcount,tcount_best_candidate_id,tcount_best_primary,tcount_best_tcount,primary_regret_vs_structural_best,primary_gain_vs_tcount_best,tcount_delta_vs_structural_best,tcount_delta_vs_tcount_best
+mod_5_4,structural_oracle,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.0,0.0,0.0,0.0
+mod_5_4,tcount,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.0,0.0,0.0,0.0
+mod_5_4,tdepth,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.0,0.0,0.0,0.0
+mod_5_4,qasm_depth,mod_5_4:combo0,0.4576271186440678,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.376271186440678,-0.376271186440678,0.0,0.0
+mod_5_4,zx_total_depth,mod_5_4:combo0,0.4576271186440678,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.376271186440678,-0.376271186440678,0.0,0.0

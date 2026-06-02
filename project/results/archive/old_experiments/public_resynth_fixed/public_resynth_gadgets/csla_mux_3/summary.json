@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/csla_mux_3/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "csla_mux_3",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/csla_mux_3/candidates/csla_mux_3/csla_mux_3.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/csla_mux_3/candidates/csla_mux_3/candidate0/csla_mux_3.candidate0.qasm",
+      "decomposition_key": "csla_mux_3",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/csla_mux_3/csla_mux_3.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_gadgets.npz",
+      "status": "ok",
+      "tcount": 56,
+      "tdepth": 14
+    }
+  ],
+  "circuit_id": "csla_mux_3",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

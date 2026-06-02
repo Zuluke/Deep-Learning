@@ -55,14 +55,22 @@ cd /Users/caio/Deep-Learning/paper
 latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 ```
 
+The manuscript now reads its committed figures from `paper/imgs/` and its
+generated guard table from `paper/tables/`. It should not depend on ignored
+experiment figure directories.
+
+Current build caveat: the draft still has unresolved bibliography warnings for
+some background citations. The PDF is generated successfully, but the references
+need a final bibliography pass before a polished submission.
+
 The generated manifest is `paper/tables/tensor_v3_guard_table.json`; it records
 the source CSV hash, generated table hash, guard thresholds, B/T/W counts, and
 the selected table rows.
 
-The guarded selector manifest is written to
-`project/results/public_resynth_tensor_v3_phase_slack_guarded/tensor_v3_selection_manifest.csv`.
-It contains only AlphaQuantum/QASM/tensor-v3 selection fields; external
-primary/Zx/feynver audit labels remain downstream.
+Older guarded selector manifests were archived under
+`project/results/archive/old_experiments/`. Regenerating the guarded profile may
+create a fresh top-level result directory; promote only the final report/table
+artifacts back into the active result surface.
 
 The readiness audit is written to
 `project/results/reports/submission_readiness_audit.md` and summarizes which

@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/gf_2pow2_mult/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow2_mult",
+  "depth": 109,
+  "num_qubits": 6,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow2_mult/gf_2pow2_mult.initial.cliffords.qasm",
+    "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/gf_2pow2_mult/gf_2pow2_mult.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow2_mult/gf_2pow2_mult.cliffords.qasm"
+  ],
+  "resynth_root": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed/public_resynth_gadgets/gf_2pow2_mult",
+  "size": 158
+}

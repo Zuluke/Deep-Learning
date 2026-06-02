@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": false,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "results/compile/mod_5_4",
+    "files": [
+      "external/circuit-to-tensor/examples/mod_5_4.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/examples/mod_5_4.qasm",
+      "qubits": 5,
+      "tcount": {
+        "initial": 28,
+        "zx_preopt": null,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 16,
+        "optimized": 0
+      },
+      "blocks": [
+        {
+          "qubits": 5,
+          "initial": 28
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "results/public_resynth_structural/public_resynth_structural/hamming_weight_n5/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n5",
+  "depth": 182,
+  "num_qubits": 10,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n5/hamming_weight_n5.initial.cliffords.qasm",
+    "results/public_resynth_structural/public_resynth_structural/hamming_weight_n5/hamming_weight_n5.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n5/hamming_weight_n5.cliffords.qasm"
+  ],
+  "resynth_root": "results/public_resynth_structural/public_resynth_structural/hamming_weight_n5",
+  "size": 261
+}

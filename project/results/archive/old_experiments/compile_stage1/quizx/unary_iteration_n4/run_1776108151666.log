@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/unary_iteration_n4",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n4/unary_iteration_n4.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/unary_iteration_n4/unary_iteration_n4.qasm",
+      "qubits": 24,
+      "tcount": {
+        "initial": 210,
+        "zx_preopt": 104,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 22,
+        "optimized": 14
+      },
+      "blocks": [
+        {
+          "qubits": 38,
+          "initial": 104
+        }
+      ]
+    }
+  ]
+}

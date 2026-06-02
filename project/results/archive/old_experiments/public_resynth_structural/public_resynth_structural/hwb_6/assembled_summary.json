@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "results/public_resynth_structural/public_resynth_structural/hwb_6/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6",
+  "depth": 772,
+  "num_qubits": 27,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.initial.cliffords.qasm",
+    "results/public_resynth_structural/public_resynth_structural/hwb_6/hwb_6.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/hwb_6/hwb_6.cliffords.qasm"
+  ],
+  "resynth_root": "results/public_resynth_structural/public_resynth_structural/hwb_6",
+  "size": 1172
+}

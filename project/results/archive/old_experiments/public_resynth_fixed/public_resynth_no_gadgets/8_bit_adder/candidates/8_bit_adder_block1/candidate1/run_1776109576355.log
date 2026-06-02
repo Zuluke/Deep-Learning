@@ -1,0 +1,60 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/8_bit_adder/8_bit_adder_block1.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/8_bit_adder/8_bit_adder_block1.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block1/candidate1",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block1/8_bit_adder_block1.candidate1.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block1/8_bit_adder_block1.candidate1.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58
+      ],
+      "nccz": 0,
+      "ncs": 0,
+      "nt": 48
+    }
+  ]
+}

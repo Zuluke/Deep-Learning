@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/hamming_weight_n6",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n6/hamming_weight_n6.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/hamming_weight_n6/hamming_weight_n6.qasm",
+      "qubits": 10,
+      "tcount": {
+        "initial": 28,
+        "zx_preopt": 28,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 3,
+        "optimized": 2
+      },
+      "blocks": [
+        {
+          "qubits": 12,
+          "initial": 28
+        }
+      ]
+    }
+  ]
+}

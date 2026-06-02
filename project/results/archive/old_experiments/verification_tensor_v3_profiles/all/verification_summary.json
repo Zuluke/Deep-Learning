@@ -1,0 +1,26 @@
+{
+  "circuit_ids": [
+    "mod_5_4",
+    "gf_2pow2_mult",
+    "qft_4",
+    "hamming_weight_n4",
+    "hamming_weight_n5",
+    "cuccaro_adder_n3",
+    "vbe_adder_3",
+    "barenco_tof_3",
+    "barenco_tof_4",
+    "hwb_6",
+    "nc_tof_3",
+    "nc_tof_4"
+  ],
+  "circuit_to_tensor_binary": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/target/release/circuit-to-tensor",
+  "feynver_path": "/Users/caio/.local/bin/feynver",
+  "methods": [
+    "public_resynth_tensor_v3_phase_slack_aggressive",
+    "public_resynth_tensor_v3_phase_slack_guarded"
+  ],
+  "num_rows": 24,
+  "scope": "all",
+  "summary_csv": "results/verification_tensor_v3_profiles/all/verification_summary.csv",
+  "timeout_sec": 30
+}

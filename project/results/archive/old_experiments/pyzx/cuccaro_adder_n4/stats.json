@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.011352062225341797,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/cuccaro_adder_n4/optimized.qasm",
+  "read_runtime_sec": 0.0015039443969726562,
+  "runtime_sec": 0.15736103057861328,
+  "simplify_runtime_sec": 0.14450502395629883,
+  "status": "ok",
+  "tcount_after_pyzx": 24,
+  "tcount_before_pyzx": 56
+}

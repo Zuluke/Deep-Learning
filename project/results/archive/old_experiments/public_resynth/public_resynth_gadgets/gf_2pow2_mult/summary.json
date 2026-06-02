@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow2_mult/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "gf_2pow2_mult",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow2_mult/candidates/gf_2pow2_mult/gf_2pow2_mult.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow2_mult/candidates/gf_2pow2_mult/candidate1/gf_2pow2_mult.candidate1.qasm",
+      "decomposition_key": "gf_2pow2_mult_comp2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/gf_2pow2_mult/gf_2pow2_mult.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/multiplication_finite_fields_gadgets.npz",
+      "status": "ok",
+      "tcount": 21,
+      "tdepth": 5
+    }
+  ],
+  "circuit_id": "gf_2pow2_mult",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

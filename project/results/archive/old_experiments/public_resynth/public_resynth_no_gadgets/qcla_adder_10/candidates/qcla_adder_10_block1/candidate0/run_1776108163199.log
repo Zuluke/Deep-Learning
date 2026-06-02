@@ -1,0 +1,20 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": false,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_adder_10/qcla_adder_10_block1.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_adder_10/qcla_adder_10_block1.mapping.txt"
+    ],
+    "output": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block1/candidate0",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/qcla_adder_10/candidates/qcla_adder_10_block1/qcla_adder_10_block1.candidate0.npy"
+    ]
+  },
+  "files": []
+}

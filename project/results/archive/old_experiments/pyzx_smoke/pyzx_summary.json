@@ -1,0 +1,6 @@
+{
+  "inventory_csv": "/Users/caio/Deep-Learning/project/results/csv/stage1_smoke_inventory.csv",
+  "num_rows": 5,
+  "output_root": "/Users/caio/Deep-Learning/project/results/pyzx_smoke",
+  "timeout_sec": 180
+}

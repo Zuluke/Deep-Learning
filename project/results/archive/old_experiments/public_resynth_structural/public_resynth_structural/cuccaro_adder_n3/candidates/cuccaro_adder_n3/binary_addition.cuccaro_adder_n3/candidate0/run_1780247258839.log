@@ -1,0 +1,37 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n3/cuccaro_adder_n3.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n3/cuccaro_adder_n3.mapping.txt"
+    ],
+    "output": "results/public_resynth_structural/public_resynth_structural/cuccaro_adder_n3/candidates/cuccaro_adder_n3/binary_addition.cuccaro_adder_n3/candidate0",
+    "files": [
+      "results/public_resynth_structural/public_resynth_structural/cuccaro_adder_n3/candidates/cuccaro_adder_n3/cuccaro_adder_n3.binary_addition.cuccaro_adder_n3.candidate0.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_structural/public_resynth_structural/cuccaro_adder_n3/candidates/cuccaro_adder_n3/cuccaro_adder_n3.binary_addition.cuccaro_adder_n3.candidate0.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "nccz": 2,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

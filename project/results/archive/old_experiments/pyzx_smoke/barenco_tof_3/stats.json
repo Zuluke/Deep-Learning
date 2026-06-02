@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.0016641616821289062,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx_smoke/barenco_tof_3/optimized.qasm",
+  "read_runtime_sec": 0.0007259845733642578,
+  "runtime_sec": 0.01362919807434082,
+  "simplify_runtime_sec": 0.011239051818847656,
+  "status": "ok",
+  "tcount_after_pyzx": 16,
+  "tcount_before_pyzx": 28
+}

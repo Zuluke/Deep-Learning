@@ -1,0 +1,33 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "8_bit_adder_block1",
+      "candidate_index": 2,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block1/8_bit_adder_block1.candidate2.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block1/candidate2/8_bit_adder_block1.candidate2.qasm",
+      "decomposition_key": "8_bit_adder_block1",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/8_bit_adder_block1.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 48,
+      "tdepth": 11
+    },
+    {
+      "artifact_stem": "8_bit_adder_block2",
+      "candidate_index": 2,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block2/8_bit_adder_block2.candidate2.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/candidates/8_bit_adder_block2/candidate2/8_bit_adder_block2.candidate2.qasm",
+      "decomposition_key": "8_bit_adder_block2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/8_bit_adder/8_bit_adder_block2.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 91,
+      "tdepth": 35
+    }
+  ],
+  "circuit_id": "8_bit_adder",
+  "error": null,
+  "method": "public_resynth_no_gadgets",
+  "status": "ok"
+}

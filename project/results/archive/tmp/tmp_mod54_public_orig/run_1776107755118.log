@@ -1,0 +1,18 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_5_4/mod_5_4.matrix.npy"
+    ],
+    "mapping": [],
+    "output": "/Users/caio/Deep-Learning/project/results/tmp_mod54_public_orig",
+    "files": [
+      "/Users/caio/Deep-Learning/project/results/tmp_mod54_public.npy"
+    ]
+  },
+  "files": []
+}

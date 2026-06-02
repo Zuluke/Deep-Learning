@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/vbe_adder_3",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/vbe_adder_3/vbe_adder_3.qasm",
+      "qubits": 10,
+      "tcount": {
+        "initial": 70,
+        "zx_preopt": 24,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 32,
+        "optimized": 4
+      },
+      "blocks": [
+        {
+          "qubits": 14,
+          "initial": 24
+        }
+      ]
+    }
+  ]
+}

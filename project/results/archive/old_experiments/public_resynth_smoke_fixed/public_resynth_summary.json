@@ -1,0 +1,5 @@
+{
+  "inventory_csv": "/Users/caio/Deep-Learning/project/results/csv/stage1_smoke_inventory.csv",
+  "num_rows": 10,
+  "output_root": "/Users/caio/Deep-Learning/project/results/public_resynth_smoke_fixed"
+}

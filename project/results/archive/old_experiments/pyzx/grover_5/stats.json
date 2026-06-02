@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.13341403007507324,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/grover_5/optimized.qasm",
+  "read_runtime_sec": 0.00225830078125,
+  "runtime_sec": 1.5221552848815918,
+  "simplify_runtime_sec": 1.3864829540252686,
+  "status": "ok",
+  "tcount_after_pyzx": 166,
+  "tcount_before_pyzx": 336
+}

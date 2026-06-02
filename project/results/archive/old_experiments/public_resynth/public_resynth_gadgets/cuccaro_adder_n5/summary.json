@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n5/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "cuccaro_adder_n5",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n5/candidates/cuccaro_adder_n5/cuccaro_adder_n5.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n5/candidates/cuccaro_adder_n5/candidate0/cuccaro_adder_n5.candidate0.qasm",
+      "decomposition_key": "cuccaro_adder_n5",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_gadgets/cuccaro_adder_n5/cuccaro_adder_n5.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/binary_addition.npz",
+      "status": "ok",
+      "tcount": 28,
+      "tdepth": 7
+    }
+  ],
+  "circuit_id": "cuccaro_adder_n5",
+  "error": null,
+  "method": "public_resynth_gadgets",
+  "status": "ok"
+}

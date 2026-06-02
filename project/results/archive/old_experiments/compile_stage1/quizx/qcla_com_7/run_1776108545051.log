@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/qcla_com_7",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_com_7/qcla_com_7.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qcla_com_7/qcla_com_7.qasm",
+      "qubits": 24,
+      "tcount": {
+        "initial": 203,
+        "zx_preopt": 95,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 94,
+        "optimized": 18
+      },
+      "blocks": [
+        {
+          "qubits": 42,
+          "initial": 95
+        }
+      ]
+    }
+  ]
+}

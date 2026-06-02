@@ -1,0 +1,6 @@
+circuit_id,reranker_candidate_id,reranker_predicted_primary,reranker_primary,reranker_tcount,structural_best_candidate_id,structural_best_primary,structural_best_tcount,tcount_best_candidate_id,tcount_best_primary,tcount_best_tcount,primary_regret_vs_structural_best,primary_gain_vs_tcount_best,tcount_delta_vs_structural_best,tcount_delta_vs_tcount_best
+cuccaro_adder_n3,cuccaro_adder_n3:combo0,0.5063688534612929,0.5205479452054794,14.0,cuccaro_adder_n3:combo0,0.5205479452054794,14.0,cuccaro_adder_n3:combo0,0.5205479452054794,14.0,0.0,0.0,0.0,0.0
+gf_2pow2_mult,gf_2pow2_mult:combo11,1.2065495121840988,1.2619047619047619,21.0,gf_2pow2_mult:combo11,1.2619047619047619,21.0,gf_2pow2_mult:combo7,1.4523809523809523,17.0,0.0,0.19047619047619047,0.0,4.0
+mod_5_4,mod_5_4:combo1,0.07920394644629274,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.0,0.0,0.0,0.0
+qft_4,qft_4:combo6,7.21292105881892,7.067105263157894,67.0,qft_4:combo14,6.419736842105263,67.0,qft_4:combo5,7.4605263157894735,53.0,0.6473684210526311,0.3934210526315791,0.0,14.0
+vbe_adder_3,vbe_adder_3:combo9,1.1475348540302936,1.1835051546391753,21.0,vbe_adder_3:combo9,1.1835051546391753,21.0,vbe_adder_3:combo2,2.063917525773196,19.0,0.0,0.8804123711340208,0.0,2.0

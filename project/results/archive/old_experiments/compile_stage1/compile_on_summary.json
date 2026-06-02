@@ -1,0 +1,7 @@
+{
+  "inventory_csv": "/Users/caio/Deep-Learning/project/results/csv/circuit_inventory.csv",
+  "num_rows": 70,
+  "output_root": "/Users/caio/Deep-Learning/project/results/compile_stage1",
+  "timeout_sec": 300,
+  "zx_preopt": "on"
+}

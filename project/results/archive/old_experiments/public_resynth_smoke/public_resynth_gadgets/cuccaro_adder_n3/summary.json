@@ -1,0 +1,14 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [
+    {
+      "artifact_stem": "cuccaro_adder_n3",
+      "error": "No successful resynth candidate for cuccaro_adder_n3",
+      "status": "no-successful-candidate"
+    }
+  ],
+  "circuit_id": "cuccaro_adder_n3",
+  "error": "No successful resynth candidate for cuccaro_adder_n3",
+  "method": "public_resynth_gadgets",
+  "status": "failed"
+}

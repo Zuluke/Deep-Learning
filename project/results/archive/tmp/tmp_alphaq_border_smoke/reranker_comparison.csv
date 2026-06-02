@@ -1,0 +1,2 @@
+circuit_id,reranker_candidate_id,reranker_predicted_primary,reranker_primary,reranker_tcount,structural_best_candidate_id,structural_best_primary,structural_best_tcount,tcount_best_candidate_id,tcount_best_primary,tcount_best_tcount,primary_regret_vs_structural_best,primary_gain_vs_tcount_best,tcount_delta_vs_structural_best,tcount_delta_vs_tcount_best
+mod_5_4,mod_5_4:combo1,0.05141254748782646,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,mod_5_4:combo1,0.08135593220338982,7.0,0.0,0.0,0.0,0.0

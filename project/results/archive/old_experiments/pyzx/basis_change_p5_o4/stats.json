@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 9.272072076797485,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/basis_change_p5_o4/optimized.qasm",
+  "read_runtime_sec": 0.005658149719238281,
+  "runtime_sec": 14.927216053009033,
+  "simplify_runtime_sec": 5.64948582649231,
+  "status": "ok",
+  "tcount_after_pyzx": 108,
+  "tcount_before_pyzx": 252
+}

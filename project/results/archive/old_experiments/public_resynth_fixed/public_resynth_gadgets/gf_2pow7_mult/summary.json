@@ -1,0 +1,26 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [
+    {
+      "artifact_stem": "gf_2pow7_mult",
+      "candidate_index": 2,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/gf_2pow7_mult/candidates/gf_2pow7_mult/gf_2pow7_mult.candidate2.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/gf_2pow7_mult/candidates/gf_2pow7_mult/candidate2/gf_2pow7_mult.candidate2.qasm",
+      "decomposition_key": "gf_2pow7_mult_comp2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_gadgets/gf_2pow7_mult/gf_2pow7_mult.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/multiplication_finite_fields_gadgets.npz",
+      "status": "ok",
+      "tcount": 154,
+      "tdepth": 25
+    },
+    {
+      "artifact_stem": "gf_2pow7_mult_comp1",
+      "error": "No successful resynth candidate for gf_2pow7_mult_comp1",
+      "status": "no-successful-candidate"
+    }
+  ],
+  "circuit_id": "gf_2pow7_mult",
+  "error": "No successful resynth candidate for gf_2pow7_mult_comp1",
+  "method": "public_resynth_gadgets",
+  "status": "failed"
+}

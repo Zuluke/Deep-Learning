@@ -1,0 +1,13 @@
+{
+  "assembled_qasm_path": "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/qft_4/assembled.qasm",
+  "compile_dir": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qft_4",
+  "depth": 517,
+  "num_qubits": 43,
+  "piece_paths": [
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qft_4/qft_4.initial.cliffords.qasm",
+    "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/qft_4/qft_4.qasm",
+    "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/qft_4/qft_4.cliffords.qasm"
+  ],
+  "resynth_root": "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/qft_4",
+  "size": 873
+}

@@ -1,0 +1,35 @@
+{
+  "invocation": {
+    "emit": [
+      "CircuitQASM",
+      "Log"
+    ],
+    "gadgets": true,
+    "original": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow2_mult/gf_2pow2_mult.matrix.npy"
+    ],
+    "mapping": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow2_mult/gf_2pow2_mult.mapping.txt"
+    ],
+    "output": "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/gf_2pow2_mult/candidates/gf_2pow2_mult/multiplication_finite_fields_gadgets.gf_2pow2_mult_comp2/candidate1",
+    "files": [
+      "results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/gf_2pow2_mult/candidates/gf_2pow2_mult/gf_2pow2_mult.multiplication_finite_fields_gadgets.gf_2pow2_mult_comp2.candidate1.npy"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/results/public_resynth_tensor_v3_phase_slack_expanded/public_resynth_tensor_v3_phase_slack/gf_2pow2_mult/candidates/gf_2pow2_mult/gf_2pow2_mult.multiplication_finite_fields_gadgets.gf_2pow2_mult_comp2.candidate1.npy",
+      "mapping": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "nccz": 3,
+      "ncs": 0,
+      "nt": 0
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+circuit_id,method,status,assembled_qasm_path,error
+cuccaro_adder_n3,public_resynth_no_gadgets,not-available,,Missing public decomposition for cuccaro_adder_n3
+barenco_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+gf_2pow2_mult,public_resynth_no_gadgets,failed,,No successful resynth candidate for gf_2pow2_mult
+mod_5_4,public_resynth_no_gadgets,failed,,No successful resynth candidate for mod_5_4
+nc_tof_3,public_resynth_no_gadgets,not-available,,Missing public decomposition for nc_tof_3
+cuccaro_adder_n3,public_resynth_gadgets,failed,,No successful resynth candidate for cuccaro_adder_n3
+barenco_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for barenco_tof_3
+gf_2pow2_mult,public_resynth_gadgets,failed,,No successful resynth candidate for gf_2pow2_mult
+mod_5_4,public_resynth_gadgets,failed,,No successful resynth candidate for mod_5_4
+nc_tof_3,public_resynth_gadgets,not-available,,Missing public decomposition for nc_tof_3

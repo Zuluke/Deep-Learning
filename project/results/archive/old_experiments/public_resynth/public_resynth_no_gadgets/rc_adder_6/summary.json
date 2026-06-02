@@ -1,0 +1,21 @@
+{
+  "assembled_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/rc_adder_6/assembled.qasm",
+  "block_results": [
+    {
+      "artifact_stem": "rc_adder_6",
+      "candidate_index": 2,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/rc_adder_6/candidates/rc_adder_6/rc_adder_6.candidate2.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/rc_adder_6/candidates/rc_adder_6/candidate2/rc_adder_6.candidate2.qasm",
+      "decomposition_key": "rc_adder_6",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth/public_resynth_no_gadgets/rc_adder_6/rc_adder_6.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 37,
+      "tdepth": 9
+    }
+  ],
+  "circuit_id": "rc_adder_6",
+  "error": null,
+  "method": "public_resynth_no_gadgets",
+  "status": "ok"
+}

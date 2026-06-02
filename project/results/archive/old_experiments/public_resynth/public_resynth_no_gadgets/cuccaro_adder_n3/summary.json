@@ -1,0 +1,8 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [],
+  "circuit_id": "cuccaro_adder_n3",
+  "error": "Missing public decomposition for cuccaro_adder_n3",
+  "method": "public_resynth_no_gadgets",
+  "status": "not-available"
+}

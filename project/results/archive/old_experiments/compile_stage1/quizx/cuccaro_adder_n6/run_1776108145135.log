@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/cuccaro_adder_n6",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n6/cuccaro_adder_n6.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/applications/cuccaro_adder_n6/cuccaro_adder_n6.qasm",
+      "qubits": 13,
+      "tcount": {
+        "initial": 84,
+        "zx_preopt": 40,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 22,
+        "optimized": 8
+      },
+      "blocks": [
+        {
+          "qubits": 20,
+          "initial": 40
+        }
+      ]
+    }
+  ]
+}

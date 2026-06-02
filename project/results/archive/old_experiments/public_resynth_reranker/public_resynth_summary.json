@@ -1,0 +1,8 @@
+{
+  "method": "public_resynth_reranker",
+  "model_json": "/Users/caio/Deep-Learning/project/results/models/alphatensor_structural_reranker.json",
+  "num_rows": 5,
+  "prediction_tolerance": 0.1,
+  "selection_objective": "mlp_reranker",
+  "summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_reranker/public_resynth_summary.csv"
+}

@@ -1,0 +1,8 @@
+{
+  "method": "public_resynth_alphaq_final",
+  "model_json": "/Users/caio/Deep-Learning/project/results/models/alphaq_final_pairwise_ranker.json",
+  "num_rows": 5,
+  "prediction_tolerance": 0.05,
+  "selection_objective": "alphaq_final_pairwise_mlp_ranker",
+  "summary_csv": "/Users/caio/Deep-Learning/project/results/public_resynth_alphaq_final/public_resynth_summary.csv"
+}

@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/mod_mult_55",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_mult_55/mod_mult_55.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/mod_mult_55/mod_mult_55.qasm",
+      "qubits": 9,
+      "tcount": {
+        "initial": 49,
+        "zx_preopt": 35,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 21,
+        "optimized": 3
+      },
+      "blocks": [
+        {
+          "qubits": 11,
+          "initial": 35
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [
+    {
+      "artifact_stem": "mod_5_4",
+      "error": "No successful resynth candidate for mod_5_4",
+      "status": "no-successful-candidate"
+    }
+  ],
+  "circuit_id": "mod_5_4",
+  "error": "No successful resynth candidate for mod_5_4",
+  "method": "public_resynth_no_gadgets",
+  "status": "failed"
+}

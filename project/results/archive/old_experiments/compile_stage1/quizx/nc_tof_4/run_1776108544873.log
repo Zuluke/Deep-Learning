@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/nc_tof_4",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/nc_tof_4/nc_tof_4.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/nc_tof_4/nc_tof_4.qasm",
+      "qubits": 7,
+      "tcount": {
+        "initial": 35,
+        "zx_preopt": 23,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 12,
+        "optimized": 4
+      },
+      "blocks": [
+        {
+          "qubits": 11,
+          "initial": 23
+        }
+      ]
+    }
+  ]
+}

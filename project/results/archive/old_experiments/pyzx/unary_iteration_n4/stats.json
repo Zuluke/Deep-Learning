@@ -1,0 +1,10 @@
+{
+  "extract_runtime_sec": 0.43712592124938965,
+  "output_qasm_path": "/Users/caio/Deep-Learning/project/results/pyzx/unary_iteration_n4/optimized.qasm",
+  "read_runtime_sec": 0.0010311603546142578,
+  "runtime_sec": 1.5316312313079834,
+  "simplify_runtime_sec": 1.0934741497039795,
+  "status": "ok",
+  "tcount_after_pyzx": 104,
+  "tcount_before_pyzx": 210
+}

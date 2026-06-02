@@ -1,0 +1,40 @@
+{
+  "invocation": {
+    "qubits": null,
+    "ancilla": null,
+    "emit": [
+      "Tensor",
+      "Matrix",
+      "CircuitQASM",
+      "Log"
+    ],
+    "zx_preopt": true,
+    "split_iters": 10000,
+    "verify": false,
+    "output": "/Users/caio/Deep-Learning/project/results/compile_stage1/quizx/gf_2pow6_mult",
+    "files": [
+      "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow6_mult/gf_2pow6_mult.qasm"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/caio/Deep-Learning/project/external/circuit-to-tensor/benchmarks/arithmetic/gf_2pow6_mult/gf_2pow6_mult.qasm",
+      "qubits": 18,
+      "tcount": {
+        "initial": 252,
+        "zx_preopt": 150,
+        "basic_opt": null
+      },
+      "hcount": {
+        "initial": 133,
+        "optimized": 0
+      },
+      "blocks": [
+        {
+          "qubits": 18,
+          "initial": 150
+        }
+      ]
+    }
+  ]
+}

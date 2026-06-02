@@ -1,0 +1,117 @@
+{
+  "assembled_qasm_path": null,
+  "block_results": [
+    {
+      "artifact_stem": "hamming_15_high_block1",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block1/hamming_15_high_block1.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block1/candidate1/hamming_15_high_block1.candidate1.qasm",
+      "decomposition_key": "hamming_15_high_block1",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block1.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 92,
+      "tdepth": 36
+    },
+    {
+      "artifact_stem": "hamming_15_high_block2",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block2/hamming_15_high_block2.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block2/candidate1/hamming_15_high_block2.candidate1.qasm",
+      "decomposition_key": "hamming_15_high_block2",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block2.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 78,
+      "tdepth": 42
+    },
+    {
+      "artifact_stem": "hamming_15_high_block3",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block3/hamming_15_high_block3.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block3/candidate0/hamming_15_high_block3.candidate0.qasm",
+      "decomposition_key": "hamming_15_high_block3",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block3.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 81,
+      "tdepth": 38
+    },
+    {
+      "artifact_stem": "hamming_15_high_block4",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block4/hamming_15_high_block4.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block4/candidate1/hamming_15_high_block4.candidate1.qasm",
+      "decomposition_key": "hamming_15_high_block4",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block4.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 94,
+      "tdepth": 37
+    },
+    {
+      "artifact_stem": "hamming_15_high_block5",
+      "candidate_index": 1,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block5/hamming_15_high_block5.candidate1.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block5/candidate1/hamming_15_high_block5.candidate1.qasm",
+      "decomposition_key": "hamming_15_high_block5",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block5.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 66,
+      "tdepth": 19
+    },
+    {
+      "artifact_stem": "hamming_15_high_block6",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block6/hamming_15_high_block6.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block6/candidate0/hamming_15_high_block6.candidate0.qasm",
+      "decomposition_key": "hamming_15_high_block6",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block6.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 77,
+      "tdepth": 41
+    },
+    {
+      "artifact_stem": "hamming_15_high_block7",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block7/hamming_15_high_block7.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block7/candidate0/hamming_15_high_block7.candidate0.qasm",
+      "decomposition_key": "hamming_15_high_block7",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block7.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 86,
+      "tdepth": 26
+    },
+    {
+      "artifact_stem": "hamming_15_high_block8",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block8/hamming_15_high_block8.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block8/candidate0/hamming_15_high_block8.candidate0.qasm",
+      "decomposition_key": "hamming_15_high_block8",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block8.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 100,
+      "tdepth": 46
+    },
+    {
+      "artifact_stem": "hamming_15_high_block9",
+      "candidate_index": 0,
+      "candidate_npy": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block9/hamming_15_high_block9.candidate0.npy",
+      "candidate_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/candidates/hamming_15_high_block9/candidate0/hamming_15_high_block9.candidate0.qasm",
+      "decomposition_key": "hamming_15_high_block9",
+      "final_qasm_path": "/Users/caio/Deep-Learning/project/results/public_resynth_fixed/public_resynth_no_gadgets/hamming_15_high/hamming_15_high_block9.qasm",
+      "npz_path": "external/alphatensor_quantum/decompositions/benchmarks_no_gadgets.npz",
+      "status": "ok",
+      "tcount": 99,
+      "tdepth": 38
+    }
+  ],
+  "circuit_id": "hamming_15_high",
+  "error": "Qubit mismatch during assembly: 302 != 342",
+  "method": "public_resynth_no_gadgets",
+  "status": "failed"
+}

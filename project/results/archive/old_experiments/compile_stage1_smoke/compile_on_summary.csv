@@ -1,0 +1,6 @@
+circuit_id,zx_preopt,status,runtime_sec,exit_code,output_dir,tensor_size,error
+cuccaro_adder_n3,on,ok,0.025537967681884766,0,/Users/caio/Deep-Learning/project/results/compile_stage1_smoke/quizx/cuccaro_adder_n3,8,
+barenco_tof_3,on,ok,0.007420063018798828,0,/Users/caio/Deep-Learning/project/results/compile_stage1_smoke/quizx/barenco_tof_3,8,
+gf_2pow2_mult,on,ok,0.01065206527709961,0,/Users/caio/Deep-Learning/project/results/compile_stage1_smoke/quizx/gf_2pow2_mult,6,
+mod_5_4,on,ok,0.007503032684326172,0,/Users/caio/Deep-Learning/project/results/compile_stage1_smoke/quizx/mod_5_4,5,
+nc_tof_3,on,ok,0.008877992630004883,0,/Users/caio/Deep-Learning/project/results/compile_stage1_smoke/quizx/nc_tof_3,7,
