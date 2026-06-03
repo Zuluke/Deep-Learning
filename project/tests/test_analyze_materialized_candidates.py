@@ -16,7 +16,7 @@ def test_analyze_materialized_candidates_writes_csv_and_report(tmp_path):
                 "status": "ok",
                 "reconstruction_ok": True,
                 "assembled_metrics": {
-                    "tcount": 3,
+                    "t_count": 3,
                     "tdepth": 2,
                     "normalized_qasm_depth": 7,
                 },

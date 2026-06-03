@@ -371,8 +371,9 @@ def run(args: argparse.Namespace) -> int:
         objective=args.objective,
         mixed_weight_scale=args.mixed_weight_scale,
         support_weight_scale=args.support_weight_scale,
-        pair_weight_scale=args.pair_weight_scale,
+        pair_weight_scale=getattr(args, "pair_weight_scale", 0.0),
     )
+    max_pair_overlap = getattr(args, "max_pair_overlap", None)
     solution = solve_mod2_milp(
         columns,
         tensor.reshape(-1),
@@ -380,10 +381,10 @@ def run(args: argparse.Namespace) -> int:
         max_factors=args.max_factors,
         pair_incidence=(
             pair_incidence_for_actions(tensor.shape[0], actions)
-            if args.max_pair_overlap is not None
+            if max_pair_overlap is not None
             else None
         ),
-        max_pair_overlap=args.max_pair_overlap,
+        max_pair_overlap=max_pair_overlap,
         time_limit_sec=args.time_limit_sec,
         mip_rel_gap=args.mip_rel_gap,
     )
@@ -433,9 +434,9 @@ def run(args: argparse.Namespace) -> int:
         "objective": args.objective,
         "mixed_weight_scale": args.mixed_weight_scale,
         "support_weight_scale": args.support_weight_scale,
-        "pair_weight_scale": args.pair_weight_scale,
+        "pair_weight_scale": getattr(args, "pair_weight_scale", 0.0),
         "max_factors": args.max_factors,
-        "max_pair_overlap": args.max_pair_overlap,
+        "max_pair_overlap": max_pair_overlap,
         "num_actions": len(actions),
         "num_factors": int(factors.shape[0]),
         "span_objective_value": solution.objective_value,

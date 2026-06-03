@@ -31,9 +31,10 @@ def read_summary(path: Path) -> dict[str, Any]:
         "candidate_dir": str(path.parent),
         "target": data.get("target"),
         "candidate_kind": data.get("candidate_kind"),
+        "synthesis": data.get("synthesis", "circuit_to_tensor_resynth"),
         "status": data.get("status"),
         "reconstruction_ok": data.get("reconstruction_ok"),
-        "tcount": parse_float(assembled.get("tcount")),
+        "tcount": parse_float(assembled.get("tcount", assembled.get("t_count"))),
         "tdepth": parse_float(assembled.get("tdepth")),
         "qasm_depth": parse_float(assembled.get("normalized_qasm_depth")),
         "primary_nc_depth_ratio": parse_float(structural.get("primary_nc_depth_ratio")),
@@ -56,6 +57,7 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fieldnames = [
         "target",
         "candidate_kind",
+        "synthesis",
         "status",
         "reconstruction_ok",
         "tcount",
@@ -124,13 +126,13 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
             "",
             "## Candidate table",
             "",
-        "| target | kind | T-count | T-ratio | primary NC depth ratio | QASM depth ratio | structural cost |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| target | kind | synthesis | T-count | T-ratio | primary NC depth ratio | QASM depth ratio | structural cost |",
+        "|---|---|---|---:|---:|---:|---:|---:|",
         ]
     )
     for row in sorted(rows, key=lambda item: (str(item["target"]), item["tcount"] or 1e9)):
         lines.append(
-            "| {target} | {candidate_kind} | {tcount} | {tcount_ratio} | {primary_nc_depth_ratio} | {qasm_depth_ratio} | {structural_cost} |".format(
+            "| {target} | {candidate_kind} | {synthesis} | {tcount} | {tcount_ratio} | {primary_nc_depth_ratio} | {qasm_depth_ratio} | {structural_cost} |".format(
                 **{
                     key: format_value(value)
                     for key, value in row.items()
@@ -143,6 +145,7 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
 def short_candidate_label(row: dict[str, Any]) -> str:
     return (
         f"{format_value(row.get('candidate_kind'))} "
+        f"[{format_value(row.get('synthesis'))}] "
         f"(T={format_value(row.get('tcount'))}, "
         f"primary={format_value(row.get('primary_nc_depth_ratio'))})"
     )
