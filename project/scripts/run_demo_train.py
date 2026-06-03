@@ -643,7 +643,7 @@ def run_quick(args: argparse.Namespace) -> int:
     text_log_path = log_dir / f"quick_{args.profile}_{run_id}.log"
     json_log_path = log_dir / f"quick_{args.profile}_{run_id}.json"
 
-    jax, jnp, _, agent_lib, _ = _load_demo_modules()
+    jax, jnp, tensors_module, agent_lib, _ = _load_demo_modules()
     use_gadgets = args.use_gadgets == "on"
 
     base_config = _configured_demo_config(args, use_gadgets=use_gadgets)
@@ -825,7 +825,7 @@ def run_quick(args: argparse.Namespace) -> int:
     target_tensor_weights = [
         int(
             np.asarray(
-                tensors.get_signature_tensor(target),
+                tensors_module.get_signature_tensor(target),
                 dtype=np.int32,
             ).sum()
         )
