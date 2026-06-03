@@ -295,10 +295,23 @@ def write_solution_manifest(
         "span_solver_message": solver_message,
         "span_is_optimal": is_optimal,
     }
+    rows: list[dict[str, Any]] = []
+    if path.exists():
+        with path.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        rows = [
+            existing
+            for existing in rows
+            if not (
+                existing.get("target") == target
+                and existing.get("candidate_kind") == candidate_kind
+            )
+        ]
+    rows.append(row)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerow(row)
+        writer.writerows(rows)
 
 
 def parse_args() -> argparse.Namespace:

@@ -7,6 +7,7 @@ import numpy as np
 from scripts.materialize_split_reward_candidate import rank_one_tensor_sum
 from scripts.optimize_linear_span_candidate import pair_incidence_for_actions
 from scripts.optimize_linear_span_candidate import solve_mod2_milp
+from scripts.optimize_linear_span_candidate import write_solution_manifest
 
 
 def test_solve_mod2_milp_minimizes_exact_toy_solution():
@@ -54,6 +55,45 @@ def test_pair_incidence_for_actions_marks_shared_support_pairs():
     assert incidence[:, 0].tolist() == [0, 0, 0]
     assert incidence[:, 1].tolist() == [1, 0, 0]
     assert incidence[:, 2].tolist() == [0, 1, 0]
+
+
+def test_write_solution_manifest_preserves_existing_candidate_rows(tmp_path):
+    manifest = tmp_path / "candidate_factors_manifest.csv"
+    factor_a = tmp_path / "a.npy"
+    factor_b = tmp_path / "b.npy"
+    cob = tmp_path / "basis.npy"
+
+    write_solution_manifest(
+        manifest,
+        target="toy",
+        candidate_kind="a",
+        factor_path=factor_a,
+        change_of_basis_path=cob,
+        num_moves=1,
+        effective_t_cost=1,
+        objective_value=1.0,
+        solver_status=0,
+        solver_message="ok",
+        is_optimal=True,
+    )
+    write_solution_manifest(
+        manifest,
+        target="toy",
+        candidate_kind="b",
+        factor_path=factor_b,
+        change_of_basis_path=cob,
+        num_moves=2,
+        effective_t_cost=2,
+        objective_value=2.0,
+        solver_status=0,
+        solver_message="ok",
+        is_optimal=True,
+    )
+
+    with manifest.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert [row["candidate_kind"] for row in rows] == ["a", "b"]
 
 
 def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):
