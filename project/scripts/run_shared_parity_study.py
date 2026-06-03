@@ -74,7 +74,89 @@ STUDY_CASES: dict[str, StudyCase] = {
         factor_order="given",
         target_strategy="min-change",
     ),
+    "barenco_tof_3": StudyCase(
+        target="barenco_tof_3",
+        max_action_weight=8,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "nc_tof_3": StudyCase(
+        target="nc_tof_3",
+        max_action_weight=7,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "cuccaro_adder_n3": StudyCase(
+        target="cuccaro_adder_n3",
+        max_action_weight=8,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "gf_2pow3_mult": StudyCase(
+        target="gf_2pow3_mult",
+        max_action_weight=9,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "mod_mult_55": StudyCase(
+        target="mod_mult_55",
+        max_action_weight=11,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "nc_tof_4": StudyCase(
+        target="nc_tof_4",
+        max_action_weight=11,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "hamming_weight_n6": StudyCase(
+        target="hamming_weight_n6",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="given",
+        target_strategy="min-change",
+    ),
+    "vbe_adder_3": StudyCase(
+        target="vbe_adder_3",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
 }
+
+CORE_TARGETS = (
+    "mod_5_4",
+    "gf_2pow2_mult",
+    "hamming_weight_n4",
+    "hamming_weight_n5",
+)
+EXPANDED_TARGETS = (
+    *CORE_TARGETS,
+    "barenco_tof_3",
+    "nc_tof_3",
+    "cuccaro_adder_n3",
+    "gf_2pow3_mult",
+    "mod_mult_55",
+    "nc_tof_4",
+    "hamming_weight_n6",
+    "vbe_adder_3",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -82,9 +164,15 @@ def parse_args() -> argparse.Namespace:
         description="Reproduce the AlphaQ MILP + shared-parity candidate study."
     )
     parser.add_argument(
+        "--preset",
+        choices=("core", "expanded"),
+        default="core",
+        help="Target preset used when --targets is omitted.",
+    )
+    parser.add_argument(
         "--targets",
-        default=",".join(STUDY_CASES),
-        help="Comma-separated targets to run.",
+        default=None,
+        help="Comma-separated targets to run. Overrides --preset.",
     )
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--csv-path", type=Path, default=DEFAULT_CSV)
@@ -190,7 +278,12 @@ def run_verification(case: StudyCase, summary_path: Path, proof_root: Path) -> d
     )
     output = completed.stdout + completed.stderr
     proof_path.write_text(output, encoding="utf-8")
-    status = "equal" if completed.stdout.startswith("Equal") else "failed"
+    if completed.stdout.startswith("Equal"):
+        status = "equal"
+    elif completed.stdout.startswith("Inconclusive"):
+        status = "inconclusive"
+    else:
+        status = "failed"
     return {
         "target": case.target,
         "candidate_kind": case.candidate_kind,
@@ -215,7 +308,9 @@ def run_analysis(summary_paths: list[Path], csv_path: Path, report_path: Path, f
     run_cmd(cmd)
 
 
-def selected_cases(targets: str) -> list[StudyCase]:
+def selected_cases(targets: str | None, *, preset: str = "core") -> list[StudyCase]:
+    if targets is None:
+        targets = ",".join(EXPANDED_TARGETS if preset == "expanded" else CORE_TARGETS)
     result = []
     for target in [item.strip() for item in targets.split(",") if item.strip()]:
         if target not in STUDY_CASES:
@@ -230,7 +325,7 @@ def main() -> int:
     ensure_dir(output_root)
     summary_paths: list[Path] = []
     verification_rows: list[dict[str, Any]] = []
-    for case in selected_cases(args.targets):
+    for case in selected_cases(args.targets, preset=args.preset):
         manifest = optimization_output_dir(output_root, case) / "candidate_factors_manifest.csv"
         if not args.skip_optimization:
             manifest = run_optimization(case, output_root, args.time_limit_sec)

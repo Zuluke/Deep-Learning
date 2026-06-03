@@ -6,6 +6,7 @@ import numpy as np
 
 from scripts.materialize_split_reward_candidate import rank_one_tensor_sum
 from scripts.optimize_linear_span_candidate import pair_incidence_for_actions
+from scripts.optimize_linear_span_candidate import load_target_tensor
 from scripts.optimize_linear_span_candidate import solve_mod2_milp
 from scripts.optimize_linear_span_candidate import write_solution_manifest
 
@@ -94,6 +95,13 @@ def test_write_solution_manifest_preserves_existing_candidate_rows(tmp_path):
         rows = list(csv.DictReader(handle))
 
     assert [row["candidate_kind"] for row in rows] == ["a", "b"]
+
+
+def test_load_target_tensor_accepts_benchmark_outside_registry() -> None:
+    tensor = load_target_tensor("cuccaro_adder_n3")
+
+    assert tensor.shape == (8, 8, 8)
+    assert int(tensor.sum()) == 36
 
 
 def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):

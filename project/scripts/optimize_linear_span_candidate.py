@@ -24,6 +24,7 @@ from scripts.analyze_action_dictionary_span import action_vector
 from scripts.export_linear_span_candidate import factor_from_action
 from scripts.export_linear_span_candidate import selected_actions
 from scripts.export_linear_span_candidate import write_manifest
+from scripts.materialize_split_reward_candidate import find_benchmark_dir
 from scripts.materialize_split_reward_candidate import rank_one_tensor_sum
 from scripts.tensor_split_core import balanced_contiguous_partition
 from scripts.tensor_split_core import is_bridge_factor
@@ -321,7 +322,17 @@ def parse_args() -> argparse.Namespace:
             "minimum-cost GF(2) span MILP."
         )
     )
-    parser.add_argument("--target", choices=tuple(TARGETS), required=True)
+    parser.add_argument("--target", required=True)
+    parser.add_argument(
+        "--benchmark-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Optional circuit-to-tensor benchmark directory. If omitted, known "
+            "AlphaTensor targets use the local registry and other targets are "
+            "resolved by name under external/circuit-to-tensor/benchmarks."
+        ),
+    )
     parser.add_argument(
         "--action-dictionary",
         choices=("low-weight", "tensor-overlap"),
@@ -368,8 +379,21 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_target_tensor(target: str, benchmark_dir: Path | None = None) -> np.ndarray:
+    if target in TARGETS and benchmark_dir is None:
+        return np.asarray(tensors.get_signature_tensor(TARGETS[target]), dtype=np.uint8)
+    resolved_dir = benchmark_dir if benchmark_dir is not None else find_benchmark_dir(target)
+    tensor_path = resolved_dir / f"{target}.tensor.npy"
+    if not tensor_path.exists():
+        raise FileNotFoundError(f"Missing target tensor: {tensor_path}")
+    return np.load(tensor_path).astype(np.uint8)
+
+
 def run(args: argparse.Namespace) -> int:
-    tensor = np.asarray(tensors.get_signature_tensor(TARGETS[args.target]), dtype=np.uint8)
+    tensor = load_target_tensor(
+        args.target,
+        getattr(args, "benchmark_dir", None),
+    )
     actions = selected_actions(
         tensor,
         action_dictionary=args.action_dictionary,
@@ -440,6 +464,7 @@ def run(args: argparse.Namespace) -> int:
         "status": "ok",
         "target": args.target,
         "candidate_kind": args.candidate_kind,
+        "benchmark_dir": str(getattr(args, "benchmark_dir", "") or ""),
         "action_dictionary": args.action_dictionary,
         "max_action_weight": args.max_action_weight,
         "tensor_overlap_max_weight": args.tensor_overlap_max_weight,

@@ -44,5 +44,35 @@ def test_analyze_materialized_candidates_writes_csv_and_report(tmp_path):
         row = next(csv.DictReader(handle))
     assert row["target"] == "toy"
     assert row["tcount"] == "3.0"
+    assert "verification_status" in row
     assert "toy" in report_path.read_text(encoding="utf-8")
     assert not plotted
+
+
+def test_analyze_materialized_candidates_normalizes_inconclusive_verification(tmp_path):
+    from scripts import analyze_materialized_candidates
+
+    proof = tmp_path / "proof.txt"
+    proof.write_text("Inconclusive (took 0.010s)\n", encoding="utf-8")
+    verification_summary = tmp_path / "verification_summary.json"
+    verification_summary.write_text(
+        json.dumps(
+            [
+                {
+                    "target": "toy",
+                    "candidate_kind": "unit",
+                    "verification_status": "failed",
+                    "proof_path": str(proof),
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    rows = [{"target": "toy", "candidate_kind": "unit"}]
+
+    verification = analyze_materialized_candidates.read_verification_summaries(
+        [verification_summary]
+    )
+    analyze_materialized_candidates.attach_verification(rows, verification)
+
+    assert rows[0]["verification_status"] == "inconclusive"

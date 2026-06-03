@@ -1,0 +1,30 @@
+[
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study_expansion_pilot/barenco_tof_3/milp_span_mixed_pair_pairo6_wfull.verify.txt",
+    "returncode": 0,
+    "target": "barenco_tof_3",
+    "verification_status": "equal"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study_expansion_pilot/nc_tof_3/milp_span_mixed_pair_pairo6_wfull.verify.txt",
+    "returncode": 0,
+    "target": "nc_tof_3",
+    "verification_status": "equal"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study_expansion_pilot/cuccaro_adder_n3/milp_span_mixed_pair_pairo6_wfull.verify.txt",
+    "returncode": 0,
+    "target": "cuccaro_adder_n3",
+    "verification_status": "failed"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study_expansion_pilot/gf_2pow3_mult/milp_span_mixed_pair_pairo6_wfull.verify.txt",
+    "returncode": 0,
+    "target": "gf_2pow3_mult",
+    "verification_status": "equal"
+  }
+]

@@ -11,6 +11,17 @@ def test_shared_parity_study_selects_named_cases() -> None:
     assert cases[1].target_strategy == "min-change"
 
 
+def test_shared_parity_study_presets_keep_core_default_small() -> None:
+    from scripts import run_shared_parity_study
+
+    core = run_shared_parity_study.selected_cases(None, preset="core")
+    expanded = run_shared_parity_study.selected_cases(None, preset="expanded")
+
+    assert [case.target for case in core] == list(run_shared_parity_study.CORE_TARGETS)
+    assert len(expanded) > len(core)
+    assert "cuccaro_adder_n3" in [case.target for case in expanded]
+
+
 def test_shared_parity_study_output_paths_are_stable(tmp_path) -> None:
     from scripts import run_shared_parity_study
 

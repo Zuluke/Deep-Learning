@@ -1,0 +1,30 @@
+[
+  {
+    "candidate_kind": "milp_span_factor_count_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study/mod_5_4/milp_span_factor_count_wfull.verify.txt",
+    "returncode": 0,
+    "target": "mod_5_4",
+    "verification_status": "equal"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",
+    "proof_path": "results/verification/alphaq_shared_parity_study/gf_2pow2_mult/milp_span_mixed_pair_pairo6_wfull.verify.txt",
+    "returncode": 0,
+    "target": "gf_2pow2_mult",
+    "verification_status": "equal"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6",
+    "proof_path": "results/verification/alphaq_shared_parity_study/hamming_weight_n4/milp_span_mixed_pair_pairo6.verify.txt",
+    "returncode": 0,
+    "target": "hamming_weight_n4",
+    "verification_status": "equal"
+  },
+  {
+    "candidate_kind": "milp_span_mixed_pair_pairo6",
+    "proof_path": "results/verification/alphaq_shared_parity_study/hamming_weight_n5/milp_span_mixed_pair_pairo6.verify.txt",
+    "returncode": 0,
+    "target": "hamming_weight_n5",
+    "verification_status": "equal"
+  }
+]
