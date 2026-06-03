@@ -37,6 +37,7 @@ _SPLIT_REWARD_MODES = frozenset(
         'v2_progress',
         'v3_frontier',
         'v4_sticky_frontier',
+        'v5_barrier_frontier',
     )
 )
 
@@ -70,7 +71,10 @@ class SplitRewardParams:
       progress so good partial frontiers produce training signal before the
       terminal step. The "v4_sticky_frontier" mode also rewards new
       intra-episode residual frontiers and penalizes drifting away from the
-      best frontier already observed in the episode.
+      best frontier already observed in the episode. The "v5_barrier_frontier"
+      mode rewards only genuine new residual frontiers, without dense residual
+      progress or regret penalties, so tasks that require temporary residual
+      increases are not shaped back toward a greedy descent.
     lambda_drop: Weight of the clipped mixed residual drop term.
     lambda_auc: Weight of the mixed residual level after each action.
     lambda_mass: Weight of the mixed rank-one/gadget mass term.

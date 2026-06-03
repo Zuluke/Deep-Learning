@@ -606,6 +606,42 @@ class EnvironmentTest(parameterized.TestCase):
         rtol=1e-6,
     )
 
+  def test_split_reward_v5_barrier_frontier_ignores_temporary_worsening(self):
+    split_reward = config_lib.SplitRewardParams(
+        mode='v5_barrier_frontier',
+        lambda_drop=0.0,
+        lambda_mass=0.0,
+        lambda_frontier=1.0,
+        drop_clip=10.0,
+        partition_blocks_by_target=[[[0, 1, 1]]],
+        partition_weights_by_target=[[1.0]],
+    )
+    config = _small_env_config(split_reward=split_reward)
+    env = environment.Environment(jax.random.PRNGKey(0), config)
+    env_state = env.init_state(jax.random.PRNGKey(1)[None])
+
+    improving_factor = jnp.array([1, 1, 0], dtype=jnp.int32)
+    worsening_factor = jnp.array([1, 0, 1], dtype=jnp.int32)
+    improving_state = env.step(
+        factors_utils.action_factor_to_index(improving_factor)[None],
+        env_state,
+    )
+    worsening_state = env.step(
+        factors_utils.action_factor_to_index(worsening_factor)[None],
+        env_state,
+    )
+
+    np.testing.assert_allclose(
+        improving_state.split_last_reward[0],
+        4.0 / 13.0,
+        rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        worsening_state.split_last_reward[0],
+        0.0,
+        rtol=1e-6,
+    )
+
   def test_split_reward_zero_for_synthetic_demonstrations(self):
     config = _small_env_config(
         split_reward=config_lib.SplitRewardParams(

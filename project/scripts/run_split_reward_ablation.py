@@ -25,6 +25,7 @@ MODES = (
     "v2_progress",
     "v3_frontier",
     "v4_sticky_frontier",
+    "v5_barrier_frontier",
     "v1_guarded",
     "v1_tiebreak",
 )

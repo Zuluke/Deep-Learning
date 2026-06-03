@@ -446,6 +446,12 @@ class Environment:
           + jnp.maximum(drop_reward, 0.0)
           + jnp.maximum(refund_reward, 0.0)
       )
+    elif self._split_config.mode == 'v5_barrier_frontier':
+      split_reward = (
+          self._split_config.lambda_frontier * frontier_bonus
+          + jnp.maximum(drop_reward, 0.0)
+          + jnp.maximum(refund_reward, 0.0)
+      )
     elif self._split_config.mode == 'v1_guarded':
       target_budget = (
           self._split_baseline_t_costs[jnp.maximum(init_tensor_index, 0)]
