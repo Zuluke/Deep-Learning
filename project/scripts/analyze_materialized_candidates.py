@@ -85,9 +85,49 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
         "",
         f"CSV: `{output_csv}`.",
         "",
+        "## Best candidates by target",
+        "",
+        "| target | best T-count row | best structural row | interpretation |",
+        "|---|---:|---:|---|",
+    ]
+    for target in sorted({str(row["target"]) for row in rows}):
+        target_rows = [row for row in rows if str(row["target"]) == target]
+        best_t = min(
+            target_rows,
+            key=lambda row: (
+                row["tcount"] if row["tcount"] is not None else float("inf"),
+                row["primary_nc_depth_ratio"]
+                if row["primary_nc_depth_ratio"] is not None
+                else float("inf"),
+            ),
+        )
+        best_structural = min(
+            target_rows,
+            key=lambda row: (
+                row["primary_nc_depth_ratio"]
+                if row["primary_nc_depth_ratio"] is not None
+                else float("inf"),
+                row["tcount"] if row["tcount"] is not None else float("inf"),
+            ),
+        )
+        interpretation = interpret_target_rows(target_rows)
+        lines.append(
+            "| {target} | {best_t} | {best_structural} | {interpretation} |".format(
+                target=target,
+                best_t=short_candidate_label(best_t),
+                best_structural=short_candidate_label(best_structural),
+                interpretation=interpretation,
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Candidate table",
+            "",
         "| target | kind | T-count | T-ratio | primary NC depth ratio | QASM depth ratio | structural cost |",
         "|---|---:|---:|---:|---:|---:|---:|",
-    ]
+        ]
+    )
     for row in sorted(rows, key=lambda item: (str(item["target"]), item["tcount"] or 1e9)):
         lines.append(
             "| {target} | {candidate_kind} | {tcount} | {tcount_ratio} | {primary_nc_depth_ratio} | {qasm_depth_ratio} | {structural_cost} |".format(
@@ -98,6 +138,34 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
             )
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def short_candidate_label(row: dict[str, Any]) -> str:
+    return (
+        f"{format_value(row.get('candidate_kind'))} "
+        f"(T={format_value(row.get('tcount'))}, "
+        f"primary={format_value(row.get('primary_nc_depth_ratio'))})"
+    )
+
+
+def interpret_target_rows(rows: list[dict[str, Any]]) -> str:
+    improving_t = [
+        row for row in rows
+        if row.get("tcount_ratio") is not None and float(row["tcount_ratio"]) < 1.0
+    ]
+    improving_structural = [
+        row
+        for row in rows
+        if row.get("primary_nc_depth_ratio") is not None
+        and float(row["primary_nc_depth_ratio"]) < 1.0
+    ]
+    if improving_t and improving_structural:
+        return "improves T-count and structural target"
+    if improving_t:
+        return "improves T-count, but structural target still worsens"
+    if improving_structural:
+        return "improves structural target without T-count gain"
+    return "no candidate beats either normalized target"
 
 
 def format_value(value: Any) -> str:
