@@ -3,10 +3,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import sys
 from pathlib import Path
 
 import numpy as np
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:

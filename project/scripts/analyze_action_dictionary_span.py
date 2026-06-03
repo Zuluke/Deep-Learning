@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 from pathlib import Path
 from typing import Iterable
 
 import numpy as np
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXTERNAL_ROOT = PROJECT_ROOT / "external"
