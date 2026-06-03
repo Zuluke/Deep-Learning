@@ -79,11 +79,125 @@ def factor_coefficients(rows: np.ndarray, parity: np.ndarray) -> np.ndarray:
     return (inverse @ (np.asarray(parity, dtype=np.uint8) % 2)) % 2
 
 
+def ordered_factors(factors: np.ndarray, strategy: str) -> np.ndarray:
+    factors = np.asarray(factors, dtype=np.uint8) % 2
+    if strategy == "given":
+        return factors.copy()
+    if strategy == "support-ascending":
+        keys = [(int(np.count_nonzero(factor)), tuple(int(v) for v in factor)) for factor in factors]
+        return factors[sorted(range(len(factors)), key=lambda index: keys[index])]
+    if strategy == "support-descending":
+        keys = [(-int(np.count_nonzero(factor)), tuple(int(v) for v in factor)) for factor in factors]
+        return factors[sorted(range(len(factors)), key=lambda index: keys[index])]
+    if strategy == "lex":
+        keys = [tuple(int(v) for v in factor) for factor in factors]
+        return factors[sorted(range(len(factors)), key=lambda index: keys[index])]
+    if strategy == "reverse":
+        return factors[::-1].copy()
+    raise ValueError(f"Unknown factor order strategy: {strategy}.")
+
+
+def choose_target_index(
+    active: list[int],
+    *,
+    rows: np.ndarray,
+    parity: np.ndarray,
+    mapping: list[int],
+    strategy: str,
+) -> int:
+    if strategy == "min-index":
+        return min(active)
+    if strategy == "max-index":
+        return max(active)
+    if strategy == "min-mapping":
+        return min(active, key=lambda index: (mapping[index], index))
+    if strategy == "max-mapping":
+        return max(active, key=lambda index: (mapping[index], -index))
+    if strategy == "min-row-weight":
+        return min(active, key=lambda index: (int(np.count_nonzero(rows[index])), index))
+    if strategy == "max-row-weight":
+        return max(active, key=lambda index: (-int(np.count_nonzero(rows[index])), index))
+    if strategy == "min-change":
+        return min(
+            active,
+            key=lambda index: (
+                abs(int(np.count_nonzero(rows[index])) - int(np.count_nonzero(parity))),
+                int(np.count_nonzero(rows[index] ^ parity)),
+                index,
+            ),
+        )
+    if strategy == "max-change":
+        return max(
+            active,
+            key=lambda index: (
+                abs(int(np.count_nonzero(rows[index])) - int(np.count_nonzero(parity))),
+                int(np.count_nonzero(rows[index] ^ parity)),
+                -index,
+            ),
+        )
+    raise ValueError(f"Unknown target strategy: {strategy}.")
+
+
+def greedy_cnot_order(factors: np.ndarray, *, target_strategy: str, mapping: list[int]) -> np.ndarray:
+    remaining = [np.asarray(factor, dtype=np.uint8) % 2 for factor in factors]
+    rows = np.eye(factors.shape[1], dtype=np.uint8)
+    ordered: list[np.ndarray] = []
+    while remaining:
+        best_index = 0
+        best_key: tuple[int, int, tuple[int, ...]] | None = None
+        for index, factor in enumerate(remaining):
+            if not np.any(factor):
+                key = (0, 0, tuple(int(v) for v in factor))
+            else:
+                coeffs = factor_coefficients(rows, factor)
+                active = [int(item) for item in np.flatnonzero(coeffs)]
+                target = choose_target_index(
+                    active,
+                    rows=rows,
+                    parity=factor,
+                    mapping=mapping,
+                    strategy=target_strategy,
+                )
+                key = (len(active) - 1, int(np.count_nonzero(rows[target] ^ factor)), tuple(int(v) for v in factor))
+            if best_key is None or key < best_key:
+                best_index = index
+                best_key = key
+        factor = remaining.pop(best_index)
+        ordered.append(factor)
+        if np.any(factor):
+            coeffs = factor_coefficients(rows, factor)
+            active = [int(item) for item in np.flatnonzero(coeffs)]
+            target = choose_target_index(
+                active,
+                rows=rows,
+                parity=factor,
+                mapping=mapping,
+                strategy=target_strategy,
+            )
+            for control in active:
+                if control != target:
+                    rows[target] ^= rows[control]
+    return np.array(ordered, dtype=np.uint8)
+
+
+def prepare_factors_for_synthesis(
+    factors: np.ndarray,
+    *,
+    order_strategy: str,
+    target_strategy: str,
+    mapping: list[int],
+) -> np.ndarray:
+    if order_strategy == "greedy-cnot":
+        return greedy_cnot_order(factors, target_strategy=target_strategy, mapping=mapping)
+    return ordered_factors(factors, order_strategy)
+
+
 def synthesize_shared_parity_circuit(
     factors: np.ndarray,
     *,
     num_qubits: int,
     mapping: list[int],
+    target_strategy: str = "min-change",
 ) -> tuple[Any, list[tuple[int, int]]]:
     from qiskit import QuantumCircuit
 
@@ -99,13 +213,12 @@ def synthesize_shared_parity_circuit(
         active = [index for index in np.flatnonzero(coeffs)]
         if not active:
             raise ValueError("Could not express nonzero parity in current basis.")
-        target = min(
+        target = choose_target_index(
             active,
-            key=lambda index: (
-                abs(int(np.count_nonzero(rows[index])) - int(np.count_nonzero(parity))),
-                int(np.count_nonzero(rows[index] ^ parity)),
-                index,
-            ),
+            rows=rows,
+            parity=parity,
+            mapping=mapping,
+            strategy=target_strategy,
         )
         for control in active:
             if control == target:
@@ -207,6 +320,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target", required=True)
     parser.add_argument("--manifest-csv", type=Path, required=True)
     parser.add_argument("--candidate-kind", required=True)
+    parser.add_argument(
+        "--factor-order",
+        choices=[
+            "given",
+            "support-ascending",
+            "support-descending",
+            "lex",
+            "reverse",
+            "greedy-cnot",
+        ],
+        default="given",
+    )
+    parser.add_argument(
+        "--target-strategy",
+        choices=[
+            "min-change",
+            "max-change",
+            "min-index",
+            "max-index",
+            "min-mapping",
+            "max-mapping",
+            "min-row-weight",
+            "max-row-weight",
+        ],
+        default="min-change",
+    )
     parser.add_argument("--benchmark-dir", type=Path, default=None)
     parser.add_argument("--output-root", type=Path, required=True)
     return parser.parse_args()
@@ -242,12 +381,25 @@ def main() -> int:
         raise ValueError("Candidate factors do not reconstruct target tensor.")
 
     mapping = load_mapping(benchmark_dir / f"{args.target}.mapping.txt", factors.shape[1])
+    synthesis_factors = prepare_factors_for_synthesis(
+        factors,
+        order_strategy=args.factor_order,
+        target_strategy=args.target_strategy,
+        mapping=mapping,
+    )
+    ordered_reconstruction_ok = np.array_equal(
+        rank_one_tensor_sum(synthesis_factors),
+        target_tensor,
+    )
+    if not ordered_reconstruction_ok:
+        raise ValueError("Ordered candidate factors do not reconstruct target tensor.")
     original_qasm = benchmark_dir / f"{args.target}.qasm"
     num_qubits = max(load_qasm_circuit(original_qasm).num_qubits, max(mapping) + 1)
     block_circuit, shared_cnots = synthesize_shared_parity_circuit(
-        factors,
+        synthesis_factors,
         num_qubits=num_qubits,
         mapping=mapping,
+        target_strategy=args.target_strategy,
     )
     original_matrix = np.load(benchmark_dir / f"{args.target}.matrix.npy").astype(np.uint8)
     correction_gate_count = append_clifford_correction(
@@ -268,13 +420,16 @@ def main() -> int:
         "target": args.target,
         "candidate_kind": args.candidate_kind,
         "synthesis": "shared_parity_network",
+        "factor_order": args.factor_order,
+        "target_strategy": args.target_strategy,
         "manifest_csv": str(manifest_csv),
         "factor_path": str(resolve_project_path(row["factor_path"])),
-        "num_factors": int(factors.shape[0]),
+        "num_factors": int(synthesis_factors.shape[0]),
         "num_shared_forward_cnots": len(shared_cnots),
         "num_shared_total_cnots": 2 * len(shared_cnots),
         "num_correction_gates": correction_gate_count,
         "reconstruction_ok": bool(reconstruction_ok),
+        "ordered_reconstruction_ok": bool(ordered_reconstruction_ok),
         "benchmark_dir": str(benchmark_dir),
         "block_qasm": str(block_qasm),
         "assembled_qasm": str(assembled_qasm),
