@@ -822,6 +822,26 @@ def run_quick(args: argparse.Namespace) -> int:
         _reference_best_tcount(target_name, use_gadgets)
         for target_name in target_names
     ]
+    target_tensor_weights = [
+        int(
+            np.asarray(
+                tensors.get_signature_tensor(target),
+                dtype=np.int32,
+            ).sum()
+        )
+        for target in config.env_config.target_circuit_types
+    ]
+    best_frontier_residual_drop_final = [
+        (
+            None
+            if frontier is None
+            else float(weight) - float(frontier)
+        )
+        for weight, frontier in zip(
+            target_tensor_weights,
+            best_frontier_residual_weight_final,
+        )
+    ]
     summary = {
         "profile": args.profile,
         "mode": "quick",
@@ -873,6 +893,7 @@ def run_quick(args: argparse.Namespace) -> int:
         ),
         "num_actions": int(agent._num_actions),  # pylint: disable=protected-access
         "seed": args.seed,
+        "target_tensor_weight": target_tensor_weights,
         "reference_best_tcount": reference_best_tcounts,
         "best_return": best_returns_final,
         "best_tcount_from_return": (
@@ -886,6 +907,7 @@ def run_quick(args: argparse.Namespace) -> int:
         "best_return_residual_weight": best_return_residual_weight_final,
         "best_solved_num_moves": best_solved_num_moves_final,
         "best_frontier_residual_weight": best_frontier_residual_weight_final,
+        "best_frontier_residual_drop": best_frontier_residual_drop_final,
         "best_frontier_effective_t_cost": best_frontier_effective_t_cost_final,
         "best_frontier_num_moves": best_frontier_num_moves_final,
         "matched_reference": [

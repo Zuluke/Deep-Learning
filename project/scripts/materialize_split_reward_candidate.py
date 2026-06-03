@@ -30,10 +30,21 @@ DEFAULT_OUTPUT_ROOT = (
     / "alphaq_split_reward_external"
     / "mod_5_4_v1_tiebreak_materialized"
 )
+REMOTE_PROJECT_PREFIXES = (
+    "/home/CIN/cacl2/Deep-Learning/project",
+    "/home/CIN/cacl2/Deep-Learning",
+)
 
 
 def resolve_project_path(raw_path: str | Path) -> Path:
-    path = Path(raw_path)
+    text = str(raw_path).strip()
+    for prefix in REMOTE_PROJECT_PREFIXES:
+        if text.startswith(prefix):
+            suffix = text[len(prefix) :].lstrip("/")
+            if prefix.endswith("/project"):
+                return PROJECT_ROOT / suffix
+            return PROJECT_ROOT.parent / suffix
+    path = Path(text)
     if path.is_absolute():
         return path
     return PROJECT_ROOT / path

@@ -124,6 +124,22 @@ def _partition_tag(args: argparse.Namespace) -> str:
     return f"pi-{args.partition_preset.replace('_', '-').replace(' ', '-')}"
 
 
+def _horizon_tag(args: argparse.Namespace) -> str:
+    max_moves = getattr(args, "max_num_moves", 0)
+    observed = getattr(args, "num_past_factors_to_observe", 0)
+    return f"h{max_moves:g}_obs{observed:g}"
+
+
+def _mask_tag(args: argparse.Namespace) -> str:
+    padded = "padmask" if getattr(args, "mask_padded_actions", True) else "nopadmask"
+    repeated = (
+        "norepeat"
+        if getattr(args, "mask_repeated_actions", False)
+        else "repeatok"
+    )
+    return f"{padded}_{repeated}"
+
+
 def _summary_value(summary: dict[str, Any] | None, key: str, index: int = 0) -> Any:
     if summary is None:
         return None
@@ -190,7 +206,8 @@ def _run_training(
         f"{target}_{mode}_{args.training_steps}_eval{args.eval_frequency}_"
         f"b{args.batch_size}_m{args.num_mcts_simulations}_"
         f"{_action_tag(args)}_{_prior_tag(args)}_{_partition_tag(args)}_"
-        f"{_basis_tag(args)}_{_replay_tag(args)}_seed{args.seed}"
+        f"{_basis_tag(args)}_{_horizon_tag(args)}_{_mask_tag(args)}_"
+        f"{_replay_tag(args)}_seed{args.seed}"
     )
     summary_path = run_root / "summaries" / f"{run_name}.json"
     log_path = run_root / "logs" / f"{run_name}.log"
@@ -331,8 +348,12 @@ def _run_training(
         "best_return_residual_weight": _summary_value(
             summary, "best_return_residual_weight"
         ),
+        "target_tensor_weight": _summary_value(summary, "target_tensor_weight"),
         "best_frontier_residual_weight": _summary_value(
             summary, "best_frontier_residual_weight"
+        ),
+        "best_frontier_residual_drop": _summary_value(
+            summary, "best_frontier_residual_drop"
         ),
         "best_frontier_effective_t_cost": _summary_value(
             summary, "best_frontier_effective_t_cost"
@@ -481,7 +502,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "best_return_effective_t_cost",
         "best_return_num_moves",
         "best_return_residual_weight",
+        "target_tensor_weight",
         "best_frontier_residual_weight",
+        "best_frontier_residual_drop",
         "best_frontier_effective_t_cost",
         "best_frontier_num_moves",
         "avg_return_final",
@@ -553,12 +576,12 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
         "Budgeted modes are only run when an explicit budget is provided. "
         "Unsolved rows are not materialized.",
         "",
-        "| target | mode | basis | status | solved cost | terminal residual | frontier residual | primary ratio | materialization |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| target | mode | basis | status | solved cost | terminal residual | frontier residual | frontier drop | primary ratio | materialization |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
-            "| {target} | {mode} | {basis} | {status} | {cost} | {residual} | {frontier} | {primary} | {mat} |".format(
+            "| {target} | {mode} | {basis} | {status} | {cost} | {residual} | {frontier} | {drop} | {primary} | {mat} |".format(
                 target=row.get("target", ""),
                 mode=row.get("mode", ""),
                 basis="canonical" if row.get("force_canonical_basis") else "basis-mix",
@@ -566,6 +589,7 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path) -> No
                 cost=row.get("best_effective_t_cost") or "",
                 residual=row.get("best_return_residual_weight") or "",
                 frontier=row.get("best_frontier_residual_weight") or "",
+                drop=row.get("best_frontier_residual_drop") or "",
                 primary=row.get("primary_nc_depth_ratio") or "",
                 mat=row.get("materialization_status") or "",
             )

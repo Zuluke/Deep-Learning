@@ -1248,9 +1248,14 @@ class Agent:
     normalized_residual_drop = (
         target_weights - state_residual_weight
     ) / target_weights
+    frontier_drop_satisfied = jnp.where(
+        frontier_min_residual_drop > 0.0,
+        normalized_residual_drop >= frontier_min_residual_drop,
+        normalized_residual_drop > 0.0,
+    )
     frontier_candidate_is_eligible = jnp.logical_and(
         new_env_states.num_moves >= frontier_min_moves,
-        normalized_residual_drop >= frontier_min_residual_drop,
+        frontier_drop_satisfied,
     )
     frontier_score = (
         state_residual_weight * 1.0e6 + new_env_states.effective_t_cost

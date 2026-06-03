@@ -255,6 +255,10 @@ def _run_grid_config(
         cmd.append("--mask-padded-actions")
     else:
         cmd.append("--no-mask-padded-actions")
+    if args.mask_repeated_actions:
+        cmd.append("--mask-repeated-actions")
+    else:
+        cmd.append("--no-mask-repeated-actions")
     if not args.canonical_only:
         cmd.append("--no-canonical-only")
     if args.force_canonical_basis:
@@ -560,6 +564,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mask-padded-actions",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument(
+        "--mask-repeated-actions",
         action=argparse.BooleanOptionalAction,
         default=True,
     )

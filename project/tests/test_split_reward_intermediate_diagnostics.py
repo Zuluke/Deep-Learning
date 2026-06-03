@@ -11,6 +11,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from scripts.analyze_split_reward_intermediates import initial_action_audit
 from scripts.analyze_split_reward_intermediates import replay_candidate
+from scripts.analyze_split_reward_intermediates import replay_candidate_steps
+from scripts.tensor_split_core import balanced_contiguous_partition
 from scripts.tensor_split_core import outer3
 
 
@@ -36,3 +38,27 @@ def test_initial_action_audit_counts_improving_actions() -> None:
     weight_two = next(row for row in audit["rows"] if row["weight"] == 2)
     assert weight_two["best_delta"] == -8
     assert weight_two["improving_actions"] == 1
+
+
+def test_replay_candidate_steps_reconstructs_residual_trajectory() -> None:
+    first = np.asarray([1, 0, 0], dtype=np.uint8)
+    second = np.asarray([1, 1, 0], dtype=np.uint8)
+    target = outer3(first)
+    factors = np.stack([second, first], axis=0)
+
+    rows = replay_candidate_steps(
+        target="toy",
+        mode="none",
+        candidate_kind="best_return",
+        target_tensor=target,
+        factors=factors,
+        partition=balanced_contiguous_partition(3),
+    )
+
+    assert [row.step for row in rows] == [1, 2]
+    assert rows[0].residual_before == 1
+    assert rows[0].residual_after == 7
+    assert rows[0].residual_delta == 6
+    assert rows[1].residual_before == 7
+    assert rows[1].residual_after == 8
+    assert rows[1].residual_delta == 1

@@ -19,6 +19,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from scripts.tensor_split_core import (  # noqa: E402
     balanced_contiguous_partition,
     gadget_aware_mixed_stats,
+    mixed_weight,
     outer3,
     raw_bridge_count,
     tensor_from_factors,
@@ -32,6 +33,9 @@ DEFAULT_OUTPUT_CSV = (
 )
 DEFAULT_REPORT = (
     PROJECT_ROOT / "results" / "reports" / "split_reward_intermediate_diagnostics.md"
+)
+DEFAULT_STEPS_CSV = (
+    PROJECT_ROOT / "results" / "csv" / "split_reward_intermediate_steps.csv"
 )
 REMOTE_PROJECT_PREFIXES = (
     "/home/CIN/cacl2/Deep-Learning/project",
@@ -68,6 +72,19 @@ class CandidateDiagnostics:
     mixed_block_span: int
 
 
+@dataclass(frozen=True)
+class StepDiagnostics:
+    target: str
+    mode: str
+    candidate_kind: str
+    step: int
+    factor_weight: int
+    residual_before: int
+    residual_after: int
+    residual_delta: int
+    mixed_level: int
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -77,6 +94,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--sweep-csv", type=Path, default=DEFAULT_SWEEP_CSV)
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
+    parser.add_argument("--steps-csv", type=Path, default=DEFAULT_STEPS_CSV)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument(
         "--candidate-kinds",
@@ -187,6 +205,38 @@ def replay_candidate(
     }
 
 
+def replay_candidate_steps(
+    *,
+    target: str,
+    mode: str,
+    candidate_kind: str,
+    target_tensor: np.ndarray,
+    factors: np.ndarray,
+    partition: Any,
+) -> list[StepDiagnostics]:
+    factors = np.asarray(factors, dtype=np.uint8) % 2
+    residual = target_tensor.copy()
+    rows: list[StepDiagnostics] = []
+    for step, factor in enumerate(factors, start=1):
+        previous = int(np.count_nonzero(residual))
+        residual ^= outer3(factor)
+        current = int(np.count_nonzero(residual))
+        rows.append(
+            StepDiagnostics(
+                target=target,
+                mode=mode,
+                candidate_kind=candidate_kind,
+                step=step,
+                factor_weight=int(np.count_nonzero(factor)),
+                residual_before=previous,
+                residual_after=current,
+                residual_delta=current - previous,
+                mixed_level=mixed_weight(residual, partition),
+            )
+        )
+    return rows
+
+
 def initial_action_audit(
     target_tensor: np.ndarray,
     *,
@@ -219,9 +269,19 @@ def analyze_sweep(
     *,
     candidate_kinds: tuple[str, ...],
     single_action_max_weight: int,
-) -> tuple[list[CandidateDiagnostics], dict[str, dict[str, Any]]]:
+) -> tuple[list[CandidateDiagnostics], list[StepDiagnostics], dict[str, dict[str, Any]], dict[str, Any]]:
     with sweep_csv.open(encoding="utf-8", newline="") as handle:
         sweep_rows = list(csv.DictReader(handle))
+    sweep_context = {
+        "mask_repeated_actions": all(
+            str(row.get("mask_repeated_actions", "")).lower() == "true"
+            for row in sweep_rows
+            if row.get("mask_repeated_actions", "") != ""
+        ),
+        "max_num_moves": sorted({row.get("max_num_moves", "") for row in sweep_rows}),
+        "action_dictionary": sorted({row.get("action_dictionary", "") for row in sweep_rows}),
+        "max_action_weight": sorted({row.get("max_action_weight", "") for row in sweep_rows}),
+    }
     target_tensors = {
         target: load_target_tensor(target)
         for target in sorted({row["target"] for row in sweep_rows})
@@ -231,6 +291,7 @@ def analyze_sweep(
         for target, tensor in target_tensors.items()
     }
     diagnostics: list[CandidateDiagnostics] = []
+    step_rows: list[StepDiagnostics] = []
     for row in sweep_rows:
         target = row["target"]
         manifest_path = resolve_project_path(row.get("candidate_manifest_path"))
@@ -251,6 +312,16 @@ def analyze_sweep(
                 continue
             factors = np.load(factor_path).astype(np.uint8) % 2
             replay = replay_candidate(target_tensor=target_tensor, factors=factors)
+            step_rows.extend(
+                replay_candidate_steps(
+                    target=target,
+                    mode=row["mode"],
+                    candidate_kind=candidate_kind,
+                    target_tensor=target_tensor,
+                    factors=factors,
+                    partition=partition,
+                )
+            )
             mixed_stats = gadget_aware_mixed_stats(factors, partition)
             diagnostics.append(
                 CandidateDiagnostics(
@@ -266,12 +337,22 @@ def analyze_sweep(
                     **mixed_stats,
                 )
             )
-    return diagnostics, audits
+    return diagnostics, step_rows, audits, sweep_context
 
 
 def write_csv(path: Path, rows: list[CandidateDiagnostics]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = list(CandidateDiagnostics.__dataclass_fields__)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row.__dict__)
+
+
+def write_steps_csv(path: Path, rows: list[StepDiagnostics]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(StepDiagnostics.__dataclass_fields__)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -329,6 +410,8 @@ def write_report(
     rows: list[CandidateDiagnostics],
     audits: dict[str, dict[str, Any]],
     output_csv: Path,
+    steps_csv: Path,
+    sweep_context: dict[str, Any],
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     all_net_zero = all(row.net_tensor_weight == 0 for row in rows)
@@ -339,28 +422,46 @@ def write_report(
         for audit in audits.values()
         for item in audit["rows"]
     )
-    conclusion = (
-        "The intermediate sweep is dominated by cancellation cycles: every "
-        "exported candidate has zero net tensor contribution, no candidate "
-        "prefix improves the residual below the initial tensor, and all unique "
-        "factors appear with even parity."
-        if all_net_zero and not any_residual_drop and all_odd_zero
-        else "The intermediate sweep contains non-trivial partial tensor progress."
-    )
-    code_implication = (
-        "The next code change should not be circuit materialization for "
-        "not-solved rows. The useful change is to make cancellation/no-progress "
-        "diagnostics first-class and then add an anti-cycle or progress-aware "
-        "training variant so the loop cannot spend the horizon on zero-net "
-        "factor pairs."
-        if no_initial_improvers
-        else "Some immediate residual-improving actions exist; inspect whether "
-        "the policy/action prior is ranking them too low."
-    )
+    anti_cycle_active = bool(sweep_context.get("mask_repeated_actions"))
+    if all_net_zero and not any_residual_drop and all_odd_zero:
+        conclusion = (
+            "The intermediate sweep is dominated by cancellation cycles: every "
+            "exported candidate has zero net tensor contribution, no candidate "
+            "prefix improves the residual below the initial tensor, and all unique "
+            "factors appear with even parity."
+        )
+    elif anti_cycle_active:
+        conclusion = (
+            "The anti-cycle mask is working: exported candidates have non-zero "
+            "net tensor contribution, repeated-factor cancellation is absent in "
+            "the resolved rows, and the remaining failures are search/horizon "
+            "failures rather than zero-net cancellation artifacts."
+        )
+    else:
+        conclusion = "The intermediate sweep contains non-trivial partial tensor progress."
+
+    if all_net_zero and not anti_cycle_active:
+        code_implication = (
+            "The next code change should make cancellation/no-progress diagnostics "
+            "first-class and add an anti-cycle or progress-aware training variant."
+        )
+    elif no_initial_improvers:
+        code_implication = (
+            "No immediate residual-improving action exists in the audited low-weight "
+            "neighborhood. The next experiment should test horizon/action-space "
+            "capacity before changing circuit materialization or adding fallback "
+            "candidates."
+        )
+    else:
+        code_implication = (
+            "Some immediate residual-improving actions exist; inspect whether the "
+            "policy/action prior is ranking them too low."
+        )
     lines = [
         "# Split Reward Intermediate Diagnostics",
         "",
         f"CSV: `{output_csv}`.",
+        f"Per-step CSV: `{steps_csv}`.",
         "",
         "## Main Finding",
         "",
@@ -387,14 +488,23 @@ def main() -> int:
     candidate_kinds = tuple(
         item.strip() for item in args.candidate_kinds.split(",") if item.strip()
     )
-    rows, audits = analyze_sweep(
+    rows, step_rows, audits, sweep_context = analyze_sweep(
         args.sweep_csv,
         candidate_kinds=candidate_kinds,
         single_action_max_weight=args.single_action_max_weight,
     )
     write_csv(args.output_csv, rows)
-    write_report(args.report, rows=rows, audits=audits, output_csv=args.output_csv)
+    write_steps_csv(args.steps_csv, step_rows)
+    write_report(
+        args.report,
+        rows=rows,
+        audits=audits,
+        output_csv=args.output_csv,
+        steps_csv=args.steps_csv,
+        sweep_context=sweep_context,
+    )
     print(f"Wrote {args.output_csv}")
+    print(f"Wrote {args.steps_csv}")
     print(f"Wrote {args.report}")
     return 0
 

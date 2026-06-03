@@ -353,7 +353,20 @@ def test_frontier_replay_restarts_from_stored_frontier_state():
     shallow_stats = gated_agent._update_game_stats(gated_run_state, shallow_states)
     assert np.isinf(float(shallow_stats.best_frontier_residual_weight[0]))
 
-    deep_states = frontier_states._replace(
+    plateau_states = gated_run_state.env_states._replace(
+        num_moves=jnp.full((2,), 2, dtype=jnp.int32),
+    )
+    plateau_stats = gated_agent._update_game_stats(
+        gated_run_state,
+        plateau_states,
+    )
+    assert np.isinf(float(plateau_stats.best_frontier_residual_weight[0]))
+
+    deep_tensor = gated_run_state.env_states.tensor
+    deep_nonzero_index = tuple(np.argwhere(np.asarray(deep_tensor[0]) == 1)[0])
+    deep_tensor = deep_tensor.at[(slice(None),) + deep_nonzero_index].set(0)
+    deep_states = gated_run_state.env_states._replace(
+        tensor=deep_tensor,
         num_moves=jnp.full((2,), 2, dtype=jnp.int32),
     )
     deep_stats = gated_agent._update_game_stats(gated_run_state, deep_states)
@@ -666,7 +679,15 @@ def test_target_sweep_tags_action_dictionary_and_basis_regime():
     assert run_split_reward_target_sweep._prior_tag(args) == "noprior"
     assert run_split_reward_target_sweep._partition_tag(args) == "pi-balanced"
     assert run_split_reward_target_sweep._basis_tag(args) == "canonical"
+    assert run_split_reward_target_sweep._horizon_tag(args) == "h0_obs0"
+    assert run_split_reward_target_sweep._mask_tag(args) == "padmask_repeatok"
     assert run_split_reward_target_sweep._replay_tag(args) == "noreplay"
+
+    args.max_num_moves = 40
+    args.num_past_factors_to_observe = 3
+    args.mask_repeated_actions = True
+    assert run_split_reward_target_sweep._horizon_tag(args) == "h40_obs3"
+    assert run_split_reward_target_sweep._mask_tag(args) == "padmask_norepeat"
 
     args.action_dictionary = "tensor-overlap"
     assert (
