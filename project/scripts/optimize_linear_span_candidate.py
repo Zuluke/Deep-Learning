@@ -148,6 +148,7 @@ def objective_weights_for_actions(
     objective: str,
     mixed_weight_scale: float,
     support_weight_scale: float,
+    pair_weight_scale: float,
 ) -> np.ndarray:
     if objective == "factor-count":
         return np.ones((len(actions),), dtype=float)
@@ -155,12 +156,16 @@ def objective_weights_for_actions(
     weights = []
     for action in actions:
         factor = factor_from_action(int(tensor.shape[0]), action)
-        factor_support_cost = max(int(np.count_nonzero(factor)) - 1, 0)
+        factor_weight = int(np.count_nonzero(factor))
+        factor_support_cost = max(factor_weight - 1, 0)
+        factor_pair_cost = max(factor_weight * (factor_weight - 1) // 2, 0)
         support_penalty = support_weight_scale * factor_support_cost
+        pair_penalty = pair_weight_scale * factor_pair_cost
         if objective == "bridge-count":
             weights.append(
                 1.0
                 + support_penalty
+                + pair_penalty
                 + (mixed_weight_scale if is_bridge_factor(factor, partition) else 0.0)
             )
         elif objective == "mixed-weight":
@@ -169,19 +174,30 @@ def objective_weights_for_actions(
             weights.append(1.0 + mixed_weight_scale * factor_mixed_weight / denominator)
         elif objective == "support-weight":
             weights.append(1.0 + support_penalty)
+        elif objective == "pair-weight":
+            weights.append(1.0 + pair_penalty)
         elif objective == "mixed-support":
             factor_mixed_weight = mixed_weight(outer3(factor), partition)
             denominator = max(int(np.count_nonzero(tensor)), 1)
             weights.append(
                 1.0
                 + support_penalty
+                + pair_penalty
+                + mixed_weight_scale * factor_mixed_weight / denominator
+            )
+        elif objective == "mixed-pair":
+            factor_mixed_weight = mixed_weight(outer3(factor), partition)
+            denominator = max(int(np.count_nonzero(tensor)), 1)
+            weights.append(
+                1.0
+                + pair_penalty
                 + mixed_weight_scale * factor_mixed_weight / denominator
             )
         else:
             raise ValueError(
                 "Unknown objective "
                 f"{objective!r}; expected factor-count, bridge-count, mixed-weight, "
-                "support-weight, or mixed-support."
+                "support-weight, pair-weight, mixed-support, or mixed-pair."
             )
     return np.asarray(weights, dtype=float)
 
@@ -261,12 +277,15 @@ def parse_args() -> argparse.Namespace:
             "bridge-count",
             "mixed-weight",
             "support-weight",
+            "pair-weight",
             "mixed-support",
+            "mixed-pair",
         ),
         default="factor-count",
     )
     parser.add_argument("--mixed-weight-scale", type=float, default=1.0)
     parser.add_argument("--support-weight-scale", type=float, default=0.25)
+    parser.add_argument("--pair-weight-scale", type=float, default=0.0)
     parser.add_argument(
         "--max-factors",
         type=int,
@@ -296,6 +315,7 @@ def run(args: argparse.Namespace) -> int:
         objective=args.objective,
         mixed_weight_scale=args.mixed_weight_scale,
         support_weight_scale=args.support_weight_scale,
+        pair_weight_scale=args.pair_weight_scale,
     )
     solution = solve_mod2_milp(
         columns,
@@ -351,6 +371,7 @@ def run(args: argparse.Namespace) -> int:
         "objective": args.objective,
         "mixed_weight_scale": args.mixed_weight_scale,
         "support_weight_scale": args.support_weight_scale,
+        "pair_weight_scale": args.pair_weight_scale,
         "max_factors": args.max_factors,
         "num_actions": len(actions),
         "num_factors": int(factors.shape[0]),

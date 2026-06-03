@@ -36,6 +36,7 @@ def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):
         objective="factor-count",
         mixed_weight_scale=1.0,
         support_weight_scale=0.25,
+        pair_weight_scale=0.0,
         max_factors=None,
         time_limit_sec=20.0,
         mip_rel_gap=0.0,
