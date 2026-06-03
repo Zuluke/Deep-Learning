@@ -55,6 +55,8 @@ def solve_mod2_milp(
     *,
     objective_weights: np.ndarray | None = None,
     max_factors: int | None = None,
+    pair_incidence: np.ndarray | None = None,
+    max_pair_overlap: int | None = None,
     time_limit_sec: float = 300.0,
     mip_rel_gap: float = 0.0,
 ) -> MilpSpanResult:
@@ -81,6 +83,17 @@ def solve_mod2_milp(
         raise ValueError(
             f"Expected objective_weights shape {(num_cols,)}, got {weights.shape}."
         )
+    if max_pair_overlap is not None and max_pair_overlap < 0:
+        raise ValueError("max_pair_overlap must be non-negative.")
+    if max_pair_overlap is not None:
+        if pair_incidence is None:
+            raise ValueError("pair_incidence is required when max_pair_overlap is set.")
+        pair_incidence = np.asarray(pair_incidence, dtype=float)
+        if pair_incidence.ndim != 2 or pair_incidence.shape[1] != num_cols:
+            raise ValueError(
+                "Expected pair_incidence with shape "
+                f"(num_pairs, {num_cols}), got {pair_incidence.shape}."
+            )
 
     action_matrix = lil_matrix((num_rows, num_cols), dtype=float)
     for col_index, column in enumerate(columns):
@@ -115,6 +128,21 @@ def solve_mod2_milp(
                 factor_count_row.tocsr(),
                 np.array([0.0]),
                 np.array([float(max_factors)]),
+            )
+        )
+    if max_pair_overlap is not None and pair_incidence is not None and pair_incidence.size:
+        from scipy.sparse import csr_matrix
+
+        zeros = lil_matrix((pair_incidence.shape[0], num_rows), dtype=float)
+        pair_matrix = hstack(
+            [csr_matrix(pair_incidence), zeros.tocsr()],
+            format="csr",
+        )
+        constraints.append(
+            LinearConstraint(
+                pair_matrix,
+                np.zeros((pair_incidence.shape[0],), dtype=float),
+                np.full((pair_incidence.shape[0],), float(max_pair_overlap), dtype=float),
             )
         )
 
@@ -203,6 +231,22 @@ def objective_weights_for_actions(
                 "support-weight, pair-weight, mixed-support, or mixed-pair."
             )
     return np.asarray(weights, dtype=float)
+
+
+def pair_incidence_for_actions(tensor_size: int, actions: list[int]) -> np.ndarray:
+    pairs = [
+        (left, right)
+        for left in range(tensor_size)
+        for right in range(left + 1, tensor_size)
+    ]
+    incidence = np.zeros((len(pairs), len(actions)), dtype=np.uint8)
+    for action_index, action in enumerate(actions):
+        factor = factor_from_action(tensor_size, action)
+        active = set(int(index) for index in np.flatnonzero(factor))
+        for pair_index, (left, right) in enumerate(pairs):
+            if left in active and right in active:
+                incidence[pair_index, action_index] = 1
+    return incidence
 
 
 def write_solution_manifest(
@@ -295,6 +339,15 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional hard cap on the number of selected factors.",
     )
+    parser.add_argument(
+        "--max-pair-overlap",
+        type=int,
+        default=None,
+        help=(
+            "Optional hard cap on how many selected factors may contain the "
+            "same pair of tensor indices."
+        ),
+    )
     parser.add_argument("--time-limit-sec", type=float, default=300.0)
     parser.add_argument("--mip-rel-gap", type=float, default=0.0)
     parser.add_argument("--candidate-kind", default="milp_span")
@@ -325,6 +378,12 @@ def run(args: argparse.Namespace) -> int:
         tensor.reshape(-1),
         objective_weights=weights,
         max_factors=args.max_factors,
+        pair_incidence=(
+            pair_incidence_for_actions(tensor.shape[0], actions)
+            if args.max_pair_overlap is not None
+            else None
+        ),
+        max_pair_overlap=args.max_pair_overlap,
         time_limit_sec=args.time_limit_sec,
         mip_rel_gap=args.mip_rel_gap,
     )
@@ -376,6 +435,7 @@ def run(args: argparse.Namespace) -> int:
         "support_weight_scale": args.support_weight_scale,
         "pair_weight_scale": args.pair_weight_scale,
         "max_factors": args.max_factors,
+        "max_pair_overlap": args.max_pair_overlap,
         "num_actions": len(actions),
         "num_factors": int(factors.shape[0]),
         "span_objective_value": solution.objective_value,

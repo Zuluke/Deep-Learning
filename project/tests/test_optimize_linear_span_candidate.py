@@ -5,6 +5,7 @@ import csv
 import numpy as np
 
 from scripts.materialize_split_reward_candidate import rank_one_tensor_sum
+from scripts.optimize_linear_span_candidate import pair_incidence_for_actions
 from scripts.optimize_linear_span_candidate import solve_mod2_milp
 
 
@@ -23,6 +24,38 @@ def test_solve_mod2_milp_minimizes_exact_toy_solution():
     assert result.coefficients.tolist() == [0, 0, 1]
 
 
+def test_solve_mod2_milp_respects_pair_overlap_cap():
+    columns = [
+        np.array([1, 1, 0], dtype=np.uint8),
+        np.array([1, 0, 0], dtype=np.uint8),
+        np.array([0, 1, 0], dtype=np.uint8),
+    ]
+    target = np.array([1, 1, 0], dtype=np.uint8)
+    pair_incidence = np.array([[1, 0, 0]], dtype=np.uint8)
+
+    result = solve_mod2_milp(
+        columns,
+        target,
+        pair_incidence=pair_incidence,
+        max_pair_overlap=0,
+        time_limit_sec=5.0,
+    )
+
+    assert result.is_optimal
+    assert result.objective_value == 2.0
+    assert result.coefficients.tolist() == [0, 1, 1]
+
+
+def test_pair_incidence_for_actions_marks_shared_support_pairs():
+    # action + 1 bit patterns: 001, 011, 101.
+    incidence = pair_incidence_for_actions(3, [0, 2, 4])
+
+    assert incidence.shape == (3, 3)
+    assert incidence[:, 0].tolist() == [0, 0, 0]
+    assert incidence[:, 1].tolist() == [1, 0, 0]
+    assert incidence[:, 2].tolist() == [0, 1, 0]
+
+
 def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):
     from scripts import optimize_linear_span_candidate
 
@@ -38,6 +71,7 @@ def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):
         support_weight_scale=0.25,
         pair_weight_scale=0.0,
         max_factors=None,
+        max_pair_overlap=None,
         time_limit_sec=20.0,
         mip_rel_gap=0.0,
         candidate_kind="milp_span",
