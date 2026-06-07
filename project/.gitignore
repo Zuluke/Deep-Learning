@@ -1,6 +1,7 @@
 .venv/
 __pycache__/
 .pytest_cache/
+.DS_Store
 results/*
 !results/README.md
 !results/archive/
@@ -14,6 +15,18 @@ results/csv/*
 !results/csv/alphaq_shared_parity_study.csv
 !results/csv/alphaq_shared_parity_study_expansion_pilot.csv
 !results/csv/alphaq_shared_parity_expanded_candidates.csv
+!results/csv/alphaq_decomposition_objective_ablation.csv
+!results/csv/alphaq_decomposition_objective_holdout_ablation.csv
+!results/csv/alphaq_objective_beam_policy_grid.csv
+!results/csv/alphaq_external_validation_readiness.csv
+!results/csv/alphaq_decomposition_objective_external_validation*.csv
+!results/csv/alphaq_objective_beam_policy_external_validation*_grid.csv
+!results/csv/alphaq_external_runs_consolidated.csv
+!results/csv/alphaq_objective_selection_dataset.csv
+!results/csv/alphaq_split_select_summary.csv
+!results/csv/alphaq_split_select_details.csv
+!results/csv/alphaq_journal_evidence_gates.csv
+!results/csv/alphaq_journal_next_battery.csv
 !results/figures/
 results/figures/*
 !results/figures/entrega1/
@@ -23,6 +36,7 @@ results/figures/*
 !results/figures/alphaq_shared_parity_study.png
 !results/figures/alphaq_shared_parity_study_expansion_pilot.png
 !results/figures/alphaq_shared_parity_expanded_candidates.png
+!results/figures/alphaq_journal_current_state.png
 !results/reports/
 results/reports/*
 !results/reports/paper_reproduction_summary.md
@@ -33,6 +47,12 @@ results/reports/*
 !results/reports/alphaq_shared_parity_study.md
 !results/reports/alphaq_shared_parity_study_expansion_pilot.md
 !results/reports/alphaq_shared_parity_expanded_candidates.md
+!results/reports/alphaq_external_runs_consolidated.md
+!results/reports/alphaq_objective_selection_dataset.md
+!results/reports/alphaq_split_select.md
+!results/reports/alphaq_journal_evidence.md
+!results/reports/alphaq_journal_current_state.md
+!results/reports/alphaq_journal_battery_commands.md
 !results/reproducibility/
 results/reproducibility/*
 !results/reproducibility/paper/

@@ -1,0 +1,5 @@
+target,family,tensor_size,tcount_original,action_space_class,readiness_status,recommended_stage,priority_score,next_action
+gf_2pow5_mult,arithmetic,15,175,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,40,Run tensor-v3/profile screening before objective-grid expansion.
+nc_tof_5,arithmetic,15,49,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,40,Run tensor-v3/profile screening before objective-grid expansion.
+cuccaro_adder_n5,applications,16,70,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,39,Run tensor-v3/profile screening before objective-grid expansion.
+hwb_6,arithmetic,27,105,restricted-action-recommended,ready-restricted-action,restricted-action-pilot,78,"Run guarded selector with restricted/beam action policy, not full action enumeration."

@@ -1,0 +1,13 @@
+target,objective_variant,span_objective,pair_cap_enabled,candidate_kind,factor_count,factor_unique_parity_count,factor_parity_reuse_ratio,factor_parity_concentration_index,factor_qubit_concentration_index,factor_support_weight_mean,factor_pairwise_support_overlap_mean,factor_pairwise_jaccard_mean,tcount,tdepth,qasm_depth,primary_nc_depth_ratio,qasm_depth_ratio,structural_cost,structural_target_status,summary_path,execution_status,error_message
+hamming_weight_n7,factor_count,factor-count,False,milp_span_factor_count_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'hamming_weight_n7'
+hamming_weight_n7,factor_count_pair_cap,factor-count,True,milp_span_factor_count_pair_cap_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'hamming_weight_n7'
+hamming_weight_n7,mixed_pair,mixed-pair,True,milp_span_mixed_pair_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'hamming_weight_n7'
+gf_2pow5_mult,factor_count,factor-count,False,milp_span_factor_count_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'gf_2pow5_mult'
+gf_2pow5_mult,factor_count_pair_cap,factor-count,True,milp_span_factor_count_pair_cap_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'gf_2pow5_mult'
+gf_2pow5_mult,mixed_pair,mixed-pair,True,milp_span_mixed_pair_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'gf_2pow5_mult'
+nc_tof_5,factor_count,factor-count,False,milp_span_factor_count_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'nc_tof_5'
+nc_tof_5,factor_count_pair_cap,factor-count,True,milp_span_factor_count_pair_cap_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'nc_tof_5'
+nc_tof_5,mixed_pair,mixed-pair,True,milp_span_mixed_pair_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'nc_tof_5'
+cuccaro_adder_n5,factor_count,factor-count,False,milp_span_factor_count_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'cuccaro_adder_n5'
+cuccaro_adder_n5,factor_count_pair_cap,factor-count,True,milp_span_factor_count_pair_cap_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'cuccaro_adder_n5'
+cuccaro_adder_n5,mixed_pair,mixed-pair,True,milp_span_mixed_pair_decomp,,,,,,,,,,,,,,,not-materialized,,failed,'cuccaro_adder_n5'

@@ -5,6 +5,7 @@ import csv
 import json
 import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -83,6 +84,12 @@ def ordered_factors(factors: np.ndarray, strategy: str) -> np.ndarray:
     factors = np.asarray(factors, dtype=np.uint8) % 2
     if strategy == "given":
         return factors.copy()
+    if strategy.startswith("random-seed-"):
+        seed_text = strategy.removeprefix("random-seed-")
+        if not seed_text.isdigit():
+            raise ValueError(f"Invalid random factor order strategy: {strategy}.")
+        rng = np.random.default_rng(int(seed_text))
+        return factors[rng.permutation(len(factors))].copy()
     if strategy == "support-ascending":
         keys = [(int(np.count_nonzero(factor)), tuple(int(v) for v in factor)) for factor in factors]
         return factors[sorted(range(len(factors)), key=lambda index: keys[index])]
@@ -234,6 +241,246 @@ def synthesize_shared_parity_circuit(
     return circuit, cnots
 
 
+def simulate_depth_plan(
+    *,
+    controls: list[int],
+    target: int,
+    mapping: list[int],
+    qubit_depths: list[int],
+) -> tuple[int, list[int], list[int]]:
+    trial_depths = list(qubit_depths)
+    ordered_controls = sorted(controls, key=lambda index: (trial_depths[mapping[index]], mapping[index], index))
+    for control in ordered_controls:
+        control_qubit = mapping[control]
+        target_qubit = mapping[target]
+        layer = max(trial_depths[control_qubit], trial_depths[target_qubit]) + 1
+        trial_depths[control_qubit] = layer
+        trial_depths[target_qubit] = layer
+    target_qubit = mapping[target]
+    trial_depths[target_qubit] += 1
+    return max(trial_depths), ordered_controls, trial_depths
+
+
+def depth_aware_target_plan(
+    active: list[int],
+    *,
+    rows: np.ndarray,
+    parity: np.ndarray,
+    mapping: list[int],
+    qubit_depths: list[int],
+) -> tuple[int, list[int], list[int]]:
+    best: tuple[tuple[int, int, int, int, int], int, list[int], list[int]] | None = None
+    for target in active:
+        controls = [control for control in active if control != target]
+        final_depth, ordered_controls, trial_depths = simulate_depth_plan(
+            controls=controls,
+            target=target,
+            mapping=mapping,
+            qubit_depths=qubit_depths,
+        )
+        target_qubit = mapping[target]
+        key = (
+            final_depth,
+            trial_depths[target_qubit],
+            len(ordered_controls),
+            int(np.count_nonzero(rows[target] ^ parity)),
+            target,
+        )
+        if best is None or key < best[0]:
+            best = (key, target, ordered_controls, trial_depths)
+    if best is None:
+        raise ValueError("Cannot build depth-aware plan for an empty active set.")
+    return best[1], best[2], best[3]
+
+
+def synthesize_depth_aware_shared_parity_circuit(
+    factors: np.ndarray,
+    *,
+    num_qubits: int,
+    mapping: list[int],
+) -> tuple[Any, list[tuple[int, int]]]:
+    from qiskit import QuantumCircuit
+
+    tensor_size = factors.shape[1]
+    circuit = QuantumCircuit(num_qubits)
+    rows = np.eye(tensor_size, dtype=np.uint8)
+    qubit_depths = [0 for _ in range(num_qubits)]
+    cnots: list[tuple[int, int]] = []
+    for factor in factors:
+        parity = np.asarray(factor, dtype=np.uint8) % 2
+        if not np.any(parity):
+            continue
+        coeffs = factor_coefficients(rows, parity)
+        active = [int(index) for index in np.flatnonzero(coeffs)]
+        if not active:
+            raise ValueError("Could not express nonzero parity in current basis.")
+        target, controls, qubit_depths = depth_aware_target_plan(
+            active,
+            rows=rows,
+            parity=parity,
+            mapping=mapping,
+            qubit_depths=qubit_depths,
+        )
+        for control in controls:
+            circuit.cx(mapping[control], mapping[target])
+            cnots.append((control, target))
+            rows[target] ^= rows[control]
+        if not np.array_equal(rows[target], parity):
+            raise RuntimeError("Depth-aware shared parity synthesis failed to realize requested parity.")
+        circuit.t(mapping[target])
+    for control, target in reversed(cnots):
+        circuit.cx(mapping[control], mapping[target])
+    return circuit, cnots
+
+
+@dataclass
+class BeamPlanState:
+    rows: np.ndarray
+    remaining: tuple[int, ...]
+    qubit_depths: tuple[int, ...]
+    plan: tuple[tuple[int, int, tuple[int, ...]], ...]
+    cnot_count: int
+
+
+def beam_state_key(state: BeamPlanState) -> tuple[int, int, int, tuple[tuple[int, int, tuple[int, ...]], ...]]:
+    return (
+        max(state.qubit_depths) if state.qubit_depths else 0,
+        state.cnot_count,
+        sum(state.qubit_depths),
+        state.plan,
+    )
+
+
+def beam_plan_shared_parity(
+    factors: np.ndarray,
+    *,
+    mapping: list[int],
+    num_qubits: int,
+    beam_width: int,
+) -> BeamPlanState:
+    if beam_width <= 0:
+        raise ValueError("beam_width must be positive.")
+    factors = np.asarray(factors, dtype=np.uint8) % 2
+    remaining = tuple(index for index, factor in enumerate(factors) if np.any(factor))
+    states = [
+        BeamPlanState(
+            rows=np.eye(factors.shape[1], dtype=np.uint8),
+            remaining=remaining,
+            qubit_depths=tuple(0 for _ in range(num_qubits)),
+            plan=(),
+            cnot_count=0,
+        )
+    ]
+    while states and states[0].remaining:
+        next_states: list[BeamPlanState] = []
+        for state in states:
+            for factor_index in state.remaining:
+                parity = factors[factor_index]
+                coeffs = factor_coefficients(state.rows, parity)
+                active = [int(index) for index in np.flatnonzero(coeffs)]
+                if not active:
+                    raise ValueError("Could not express nonzero parity in current beam state.")
+                for target in active:
+                    controls = [control for control in active if control != target]
+                    _, ordered_controls, trial_depths = simulate_depth_plan(
+                        controls=controls,
+                        target=target,
+                        mapping=mapping,
+                        qubit_depths=list(state.qubit_depths),
+                    )
+                    rows = state.rows.copy()
+                    for control in ordered_controls:
+                        rows[target] ^= rows[control]
+                    if not np.array_equal(rows[target], parity):
+                        raise RuntimeError("Beam shared-parity plan failed to realize requested parity.")
+                    next_states.append(
+                        BeamPlanState(
+                            rows=rows,
+                            remaining=tuple(item for item in state.remaining if item != factor_index),
+                            qubit_depths=tuple(trial_depths),
+                            plan=(
+                                *state.plan,
+                                (factor_index, target, tuple(ordered_controls)),
+                            ),
+                            cnot_count=state.cnot_count + len(ordered_controls),
+                        )
+                    )
+        states = sorted(next_states, key=beam_state_key)[:beam_width]
+    if not states:
+        raise ValueError("Beam search produced no synthesis plan.")
+    return min(states, key=beam_state_key)
+
+
+def synthesize_beam_shared_parity_circuit(
+    factors: np.ndarray,
+    *,
+    num_qubits: int,
+    mapping: list[int],
+    beam_width: int = 16,
+) -> tuple[Any, list[tuple[int, int]], dict[str, Any]]:
+    from qiskit import QuantumCircuit
+
+    plan = beam_plan_shared_parity(
+        factors,
+        mapping=mapping,
+        num_qubits=num_qubits,
+        beam_width=beam_width,
+    )
+    circuit = QuantumCircuit(num_qubits)
+    cnots: list[tuple[int, int]] = []
+    for factor_index, target, controls in plan.plan:
+        for control in controls:
+            circuit.cx(mapping[control], mapping[target])
+            cnots.append((control, target))
+        circuit.t(mapping[target])
+    for control, target in reversed(cnots):
+        circuit.cx(mapping[control], mapping[target])
+    metadata = {
+        "beam_width": beam_width,
+        "beam_forward_cnot_count": len(cnots),
+        "beam_forward_depth_estimate": max(plan.qubit_depths) if plan.qubit_depths else 0,
+        "beam_plan_factor_order": [int(item[0]) for item in plan.plan],
+        "beam_plan_targets": [int(item[1]) for item in plan.plan],
+    }
+    return circuit, cnots, metadata
+
+
+def synthesize_naive_parity_circuit(
+    factors: np.ndarray,
+    *,
+    num_qubits: int,
+    mapping: list[int],
+    target_strategy: str = "min-change",
+) -> tuple[Any, list[tuple[int, int]]]:
+    from qiskit import QuantumCircuit
+
+    tensor_size = factors.shape[1]
+    circuit = QuantumCircuit(num_qubits)
+    identity_rows = np.eye(tensor_size, dtype=np.uint8)
+    cnots: list[tuple[int, int]] = []
+    for factor in factors:
+        parity = np.asarray(factor, dtype=np.uint8) % 2
+        active = [int(index) for index in np.flatnonzero(parity)]
+        if not active:
+            continue
+        target = choose_target_index(
+            active,
+            rows=identity_rows,
+            parity=parity,
+            mapping=mapping,
+            strategy=target_strategy,
+        )
+        controls = [control for control in active if control != target]
+        for control in controls:
+            circuit.cx(mapping[control], mapping[target])
+            cnots.append((control, target))
+        circuit.t(mapping[target])
+        for control in reversed(controls):
+            circuit.cx(mapping[control], mapping[target])
+            cnots.append((control, target))
+    return circuit, cnots
+
+
 def phase_polynomial(matrix: np.ndarray) -> np.ndarray:
     matrix = np.asarray(matrix, dtype=np.uint8) % 2
     n_rows, n_cols = matrix.shape
@@ -321,16 +568,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest-csv", type=Path, required=True)
     parser.add_argument("--candidate-kind", required=True)
     parser.add_argument(
+        "--synthesis",
+        choices=(
+            "shared-parity",
+            "depth-aware-shared-parity",
+            "beam-shared-parity",
+            "naive-parity",
+        ),
+        default="shared-parity",
+    )
+    parser.add_argument("--beam-width", type=int, default=16)
+    parser.add_argument(
         "--factor-order",
-        choices=[
-            "given",
-            "support-ascending",
-            "support-descending",
-            "lex",
-            "reverse",
-            "greedy-cnot",
-        ],
         default="given",
+        help=(
+            "Factor ordering strategy. Supported values are given, reverse, lex, "
+            "support-ascending, support-descending, greedy-cnot, and "
+            "random-seed-N for deterministic random controls."
+        ),
     )
     parser.add_argument(
         "--target-strategy",
@@ -395,12 +650,46 @@ def main() -> int:
         raise ValueError("Ordered candidate factors do not reconstruct target tensor.")
     original_qasm = benchmark_dir / f"{args.target}.qasm"
     num_qubits = max(load_qasm_circuit(original_qasm).num_qubits, max(mapping) + 1)
-    block_circuit, shared_cnots = synthesize_shared_parity_circuit(
-        synthesis_factors,
-        num_qubits=num_qubits,
-        mapping=mapping,
-        target_strategy=args.target_strategy,
-    )
+    synthesis_metadata: dict[str, Any] = {}
+    if args.synthesis == "shared-parity":
+        block_circuit, parity_cnots = synthesize_shared_parity_circuit(
+            synthesis_factors,
+            num_qubits=num_qubits,
+            mapping=mapping,
+            target_strategy=args.target_strategy,
+        )
+        synthesis_name = "shared_parity_network"
+        forward_cnot_count = len(parity_cnots)
+        total_cnot_count = 2 * len(parity_cnots)
+    elif args.synthesis == "depth-aware-shared-parity":
+        block_circuit, parity_cnots = synthesize_depth_aware_shared_parity_circuit(
+            synthesis_factors,
+            num_qubits=num_qubits,
+            mapping=mapping,
+        )
+        synthesis_name = "depth_aware_shared_parity_network"
+        forward_cnot_count = len(parity_cnots)
+        total_cnot_count = 2 * len(parity_cnots)
+    elif args.synthesis == "beam-shared-parity":
+        block_circuit, parity_cnots, synthesis_metadata = synthesize_beam_shared_parity_circuit(
+            synthesis_factors,
+            num_qubits=num_qubits,
+            mapping=mapping,
+            beam_width=args.beam_width,
+        )
+        synthesis_name = "beam_shared_parity_network"
+        forward_cnot_count = len(parity_cnots)
+        total_cnot_count = 2 * len(parity_cnots)
+    else:
+        block_circuit, parity_cnots = synthesize_naive_parity_circuit(
+            synthesis_factors,
+            num_qubits=num_qubits,
+            mapping=mapping,
+            target_strategy=args.target_strategy,
+        )
+        synthesis_name = "naive_parity_network"
+        forward_cnot_count = len(parity_cnots) // 2
+        total_cnot_count = len(parity_cnots)
     original_matrix = np.load(benchmark_dir / f"{args.target}.matrix.npy").astype(np.uint8)
     correction_gate_count = append_clifford_correction(
         block_circuit,
@@ -419,14 +708,21 @@ def main() -> int:
         "status": "ok",
         "target": args.target,
         "candidate_kind": args.candidate_kind,
-        "synthesis": "shared_parity_network",
+        "synthesis": synthesis_name,
         "factor_order": args.factor_order,
         "target_strategy": args.target_strategy,
+        "beam_width": args.beam_width if args.synthesis == "beam-shared-parity" else "",
         "manifest_csv": str(manifest_csv),
         "factor_path": str(resolve_project_path(row["factor_path"])),
         "num_factors": int(synthesis_factors.shape[0]),
-        "num_shared_forward_cnots": len(shared_cnots),
-        "num_shared_total_cnots": 2 * len(shared_cnots),
+        "num_forward_cnots": forward_cnot_count,
+        "num_total_cnots": total_cnot_count,
+        "num_shared_forward_cnots": (
+            forward_cnot_count if "shared-parity" in args.synthesis else 0
+        ),
+        "num_shared_total_cnots": (
+            total_cnot_count if "shared-parity" in args.synthesis else 0
+        ),
         "num_correction_gates": correction_gate_count,
         "reconstruction_ok": bool(reconstruction_ok),
         "ordered_reconstruction_ok": bool(ordered_reconstruction_ok),
@@ -437,6 +733,7 @@ def main() -> int:
         "block_metrics": block_metrics,
         "assembled_metrics": assembled_metrics,
         "external_structural_metrics": external_metrics,
+        "synthesis_metadata": synthesis_metadata,
     }
     write_json(output_root / "summary.json", summary)
     print(json.dumps(summary, indent=2, sort_keys=True))

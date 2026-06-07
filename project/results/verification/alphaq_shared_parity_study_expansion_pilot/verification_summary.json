@@ -18,7 +18,7 @@
     "proof_path": "results/verification/alphaq_shared_parity_study_expansion_pilot/cuccaro_adder_n3/milp_span_mixed_pair_pairo6_wfull.verify.txt",
     "returncode": 0,
     "target": "cuccaro_adder_n3",
-    "verification_status": "failed"
+    "verification_status": "inconclusive"
   },
   {
     "candidate_kind": "milp_span_mixed_pair_pairo6_wfull",

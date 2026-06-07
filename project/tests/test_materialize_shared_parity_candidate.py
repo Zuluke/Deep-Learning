@@ -59,6 +59,18 @@ def test_factor_order_strategies_are_deterministic() -> None:
     assert np.array_equal(shared.ordered_factors(factors, "reverse"), factors[::-1])
 
 
+def test_random_factor_order_is_seeded_and_deterministic() -> None:
+    factors = np.eye(5, dtype=np.uint8)
+
+    ordered_once = shared.ordered_factors(factors, "random-seed-7")
+    ordered_twice = shared.ordered_factors(factors, "random-seed-7")
+    different_seed = shared.ordered_factors(factors, "random-seed-8")
+
+    assert np.array_equal(ordered_once, ordered_twice)
+    assert sorted(map(tuple, ordered_once.tolist())) == sorted(map(tuple, factors.tolist()))
+    assert not np.array_equal(ordered_once, different_seed)
+
+
 def test_target_strategy_changes_shared_network_shape() -> None:
     factors = np.array(
         [
@@ -101,6 +113,113 @@ def test_shared_parity_synthesis_skips_zero_factor() -> None:
 
     assert circuit.count_ops()["t"] == 1
     assert cnots == []
+
+
+def test_naive_parity_synthesis_recomputes_each_factor() -> None:
+    factors = np.array(
+        [
+            [1, 1, 0],
+            [1, 1, 0],
+        ],
+        dtype=np.uint8,
+    )
+
+    circuit, cnots = shared.synthesize_naive_parity_circuit(
+        factors,
+        num_qubits=3,
+        mapping=[0, 1, 2],
+        target_strategy="min-index",
+    )
+
+    ops = circuit.count_ops()
+    assert ops["t"] == 2
+    assert ops["cx"] == 4
+    assert len(cnots) == 4
+
+
+def test_depth_aware_target_plan_avoids_busy_target_when_possible() -> None:
+    rows = np.eye(3, dtype=np.uint8)
+    parity = np.array([1, 1, 1], dtype=np.uint8)
+
+    target, controls, trial_depths = shared.depth_aware_target_plan(
+        [0, 1, 2],
+        rows=rows,
+        parity=parity,
+        mapping=[0, 1, 2],
+        qubit_depths=[10, 0, 0],
+    )
+
+    assert target == 1
+    assert controls == [2, 0]
+    assert trial_depths[1] == 12
+
+
+def test_depth_aware_shared_parity_synthesis_preserves_t_count() -> None:
+    factors = np.array(
+        [
+            [1, 1, 0],
+            [1, 1, 1],
+            [0, 1, 1],
+        ],
+        dtype=np.uint8,
+    )
+
+    circuit, cnots = shared.synthesize_depth_aware_shared_parity_circuit(
+        factors,
+        num_qubits=3,
+        mapping=[0, 1, 2],
+    )
+
+    ops = circuit.count_ops()
+    assert ops["t"] == 3
+    assert ops["cx"] == 2 * len(cnots)
+    assert len(cnots) > 0
+
+
+def test_beam_plan_consumes_each_nonzero_factor_once() -> None:
+    factors = np.array(
+        [
+            [1, 1, 0],
+            [1, 1, 1],
+            [0, 1, 1],
+        ],
+        dtype=np.uint8,
+    )
+
+    plan = shared.beam_plan_shared_parity(
+        factors,
+        num_qubits=3,
+        mapping=[0, 1, 2],
+        beam_width=4,
+    )
+
+    assert sorted(item[0] for item in plan.plan) == [0, 1, 2]
+    assert plan.remaining == ()
+    assert plan.cnot_count == sum(len(item[2]) for item in plan.plan)
+
+
+def test_beam_shared_parity_synthesis_preserves_t_count() -> None:
+    factors = np.array(
+        [
+            [1, 1, 0],
+            [1, 1, 1],
+            [0, 1, 1],
+        ],
+        dtype=np.uint8,
+    )
+
+    circuit, cnots, metadata = shared.synthesize_beam_shared_parity_circuit(
+        factors,
+        num_qubits=3,
+        mapping=[0, 1, 2],
+        beam_width=4,
+    )
+
+    ops = circuit.count_ops()
+    assert ops["t"] == 3
+    assert ops["cx"] == 2 * len(cnots)
+    assert metadata["beam_width"] == 4
+    assert len(metadata["beam_plan_factor_order"]) == 3
 
 
 def test_clifford_correction_is_empty_for_identical_phase_matrix() -> None:
