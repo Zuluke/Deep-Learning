@@ -34,6 +34,8 @@ DEFAULT_TRANSFER_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_externa
 DEFAULT_STATUS_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_validation_status.csv"
 DEFAULT_STATUS_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_external_validation_status.md"
 DEFAULT_READINESS_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_validation_readiness.csv"
+DEFAULT_PAPER_ZX_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_validation_paper_zx_audit.csv"
+DEFAULT_PAPER_ZX_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_external_validation_paper_zx_audit.md"
 
 
 def parse_args() -> argparse.Namespace:
@@ -88,9 +90,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--readiness-csv", type=Path, default=DEFAULT_READINESS_CSV)
     parser.add_argument("--status-csv", type=Path, default=DEFAULT_STATUS_CSV)
     parser.add_argument("--status-report-path", type=Path, default=DEFAULT_STATUS_REPORT)
+    parser.add_argument("--paper-zx-csv", type=Path, default=DEFAULT_PAPER_ZX_CSV)
+    parser.add_argument("--paper-zx-report-path", type=Path, default=DEFAULT_PAPER_ZX_REPORT)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--skip-decomposition", action="store_true")
     parser.add_argument("--skip-beam-grid", action="store_true")
+    parser.add_argument(
+        "--skip-paper-zx-audit",
+        action="store_true",
+        help="Skip the paper-style ZX audit over the external beam-grid candidates.",
+    )
     return parser.parse_args()
 
 
@@ -207,6 +216,19 @@ def main() -> int:
             str(args.status_report_path),
         ]
     )
+    if not args.skip_paper_zx_audit:
+        run_command(
+            [
+                sys.executable,
+                "scripts/compare_zx_border_detectors.py",
+                "--input-csv",
+                str(args.beam_grid_csv),
+                "--output-csv",
+                str(args.paper_zx_csv),
+                "--report-path",
+                str(args.paper_zx_report_path),
+            ]
+        )
     return 0
 
 

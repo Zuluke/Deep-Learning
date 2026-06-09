@@ -33,7 +33,16 @@ DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_selecto
 DEFAULT_DETAIL_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_selector_transfer_details.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_external_selector_transfer.md"
 PAIRWISE_SELECTOR = "loto_pairwise_linear_alphaq"
-REQUIRED_OBJECTIVES = frozenset({"factor_count", "factor_count_pair_cap", "mixed_pair"})
+REQUIRED_OBJECTIVES = frozenset(
+    {
+        "factor_count",
+        "factor_count_pair_cap",
+        "mixed_pair",
+        "frontier_pair",
+        "depth_guarded_mixed_pair",
+        "t_preserving_frontier_pair",
+    }
+)
 
 
 def parse_args() -> argparse.Namespace:

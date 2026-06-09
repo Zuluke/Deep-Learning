@@ -42,7 +42,7 @@ def test_collect_rows_can_record_objective_failures_without_fallback(monkeypatch
         continue_on_error=True,
     )
 
-    assert len(rows) == 3
+    assert len(rows) == len(OBJECTIVE_VARIANTS)
     assert {row["execution_status"] for row in rows} == {"failed"}
     assert all(row["summary_path"] == "" for row in rows)
     assert all("timeout" in row["error_message"] for row in rows)

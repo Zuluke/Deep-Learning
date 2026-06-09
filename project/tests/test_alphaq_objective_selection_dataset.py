@@ -29,6 +29,42 @@ def test_dataset_marks_oracle_from_best_materialized_beam() -> None:
     assert by_objective["mixed_pair"]["objective_rank"] == ""
 
 
+def test_constrained_oracle_rejects_t_unsafe_candidate() -> None:
+    decomp_rows = [
+        make_decomp("toy", "factor_count", "ok", tcount=10),
+        make_decomp("toy", "mixed_pair", "ok", tcount=20),
+    ]
+    grid_rows = [
+        make_grid("toy", "factor_count", tcount=10, primary=2.0, qasm=100),
+        make_grid("toy", "mixed_pair", tcount=20, primary=0.1, qasm=80),
+    ]
+
+    rows = dataset_rows_for_split("unit", decomp_rows, grid_rows, {})
+    by_objective = {row["objective_variant"]: row for row in rows}
+
+    assert by_objective["factor_count"]["objective_is_oracle"] is True
+    assert by_objective["factor_count"]["oracle_selection_status"] == "constrained"
+    assert by_objective["mixed_pair"]["objective_t_safe"] is False
+
+
+def test_constrained_oracle_can_select_safe_nonbaseline_objective() -> None:
+    decomp_rows = [
+        make_decomp("toy", "factor_count", "ok", tcount=10),
+        make_decomp("toy", "factor_count_pair_cap", "ok", tcount=10),
+    ]
+    grid_rows = [
+        make_grid("toy", "factor_count", tcount=10, primary=2.0, qasm=100),
+        make_grid("toy", "factor_count_pair_cap", tcount=9, primary=1.5, qasm=90),
+    ]
+
+    rows = dataset_rows_for_split("unit", decomp_rows, grid_rows, {})
+    by_objective = {row["objective_variant"]: row for row in rows}
+
+    assert by_objective["factor_count_pair_cap"]["objective_is_oracle"] is True
+    assert by_objective["factor_count_pair_cap"]["objective_t_safe"] is True
+    assert by_objective["factor_count_pair_cap"]["objective_qasm_safe"] is True
+
+
 def test_readiness_requires_enough_groups_and_label_diversity() -> None:
     rows = []
     for index in range(8):
@@ -90,7 +126,7 @@ def test_build_dataset_uses_available_sources(tmp_path: Path) -> None:
     )
 
     toy_rows = [row for row in rows if row["target"] == "toy"]
-    assert len(toy_rows) == 3
+    assert len(toy_rows) == len(dataset.OBJECTIVES)
     assert toy_rows[0]["family"] == "unit"
     assert {row["oracle_objective"] for row in toy_rows} == {"mixed_pair"}
 

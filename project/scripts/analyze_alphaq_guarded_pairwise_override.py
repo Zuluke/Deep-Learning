@@ -40,6 +40,9 @@ BASELINE_TIE_RANK = {
     "factor_count_pair_cap": 0,
     "factor_count": 1,
     "mixed_pair": 2,
+    "depth_guarded_mixed_pair": 3,
+    "t_preserving_frontier_pair": 4,
+    "frontier_pair": 5,
 }
 
 

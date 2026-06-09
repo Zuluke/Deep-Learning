@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from scripts.analyze_alphaq_external_selector_transfer import complete_target_rows
 from scripts.analyze_alphaq_external_selector_transfer import ok_rows
+from scripts.analyze_alphaq_external_selector_transfer import REQUIRED_OBJECTIVES
 from scripts.analyze_alphaq_external_selector_transfer import summary_rows
 
 
@@ -17,9 +18,10 @@ def test_ok_rows_skips_failed_external_decompositions() -> None:
 
 def test_complete_target_rows_requires_all_objective_variants() -> None:
     rows = [
-        {"target": "complete", "objective_variant": "factor_count"},
-        {"target": "complete", "objective_variant": "factor_count_pair_cap"},
-        {"target": "complete", "objective_variant": "mixed_pair"},
+        *[
+            {"target": "complete", "objective_variant": objective}
+            for objective in sorted(REQUIRED_OBJECTIVES)
+        ],
         {"target": "partial", "objective_variant": "factor_count"},
     ]
 

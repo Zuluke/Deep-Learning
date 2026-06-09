@@ -66,14 +66,21 @@ Entry points:
 - `verify_beam_materializer_candidates.py`
 
 This is the main machinery behind the current `factor_count`,
-`factor_count_pair_cap`, and `mixed_pair` comparisons.
+`factor_count_pair_cap`, `mixed_pair`, and experimental `frontier_pair`
+comparisons. `frontier_pair` is the AlphaQ-only proxy added after the
+paper-style ZX border audit: it penalizes cross-partition support pairs and
+off-target tensor mass while rewarding useful target coverage.
 
 ## 5. Journal Evidence Layer
 
 Entry points:
 
 - `run_alphaq_external_validation_pipeline.py`: external validation pipeline for
-  target batches.
+  target batches. It now runs the paper-style ZX audit as the final external
+  evaluation step unless `--skip-paper-zx-audit` is passed.
+- `prepare_alphaq_article_experiment.py`: freezes article-facing objectives,
+  target batches, metrics, and Apuana-ready commands without submitting heavy
+  jobs.
 - `consolidate_alphaq_external_runs.py`: folds standard, night-long, and
   journal-battery runs into one table.
 - `build_alphaq_objective_selection_dataset.py`: builds the supervised

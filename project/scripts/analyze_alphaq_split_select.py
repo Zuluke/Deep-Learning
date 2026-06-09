@@ -26,7 +26,14 @@ DEFAULT_DETAILS = PROJECT_ROOT / "results" / "csv" / "alphaq_split_select_detail
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_split_select.md"
 DEFAULT_FIGURE = PROJECT_ROOT / "results" / "figures" / "alphaq_split_select.png"
 
-OBJECTIVES = ("factor_count", "factor_count_pair_cap", "mixed_pair")
+OBJECTIVES = (
+    "factor_count",
+    "factor_count_pair_cap",
+    "mixed_pair",
+    "frontier_pair",
+    "depth_guarded_mixed_pair",
+    "t_preserving_frontier_pair",
+)
 BASELINE_OBJECTIVE = "factor_count"
 ALPHAQ_FEATURES = (
     "factor_count",
@@ -123,14 +130,24 @@ def objective_row(items: list[dict[str, str]], objective: str) -> dict[str, str]
 
 
 def oracle_row(items: list[dict[str, str]]) -> dict[str, str]:
+    labeled = next(
+        (
+            row
+            for row in items
+            if row.get("objective_variant") == row.get("oracle_objective")
+        ),
+        None,
+    )
+    if labeled is not None:
+        return labeled
     return min(items, key=oracle_key)
 
 
 def oracle_key(row: dict[str, str]) -> tuple[float, float, float, str]:
     return (
         inf_if_missing(row.get("best_beam_tcount")),
-        inf_if_missing(row.get("best_beam_primary_nc_depth_ratio")),
         inf_if_missing(row.get("best_beam_qasm_depth")),
+        inf_if_missing(row.get("best_beam_primary_nc_depth_ratio")),
         row.get("objective_variant", ""),
     )
 
@@ -624,7 +641,7 @@ def write_report(
         f"Detail CSV: `{detail_csv}`.",
         f"Figure: `{figure_path}`.",
         "",
-        "This report evaluates whether the consolidated objective-selection dataset is strong enough to train a deployable AlphaQuantum Split-Select policy. The selector chooses among `factor_count`, `factor_count_pair_cap`, and `mixed_pair` using only AlphaQuantum/QASM-side candidate descriptors; ZX/feynver metrics are labels/audit targets only, not selector inputs.",
+        "This report evaluates whether the consolidated objective-selection dataset is strong enough to train a deployable AlphaQuantum Split-Select policy. The selector chooses among the available AlphaQ objectives, including `factor_count`, `factor_count_pair_cap`, `mixed_pair`, and the article-inspired `frontier_pair`, using only AlphaQuantum/QASM-side candidate descriptors; ZX/feynver metrics are labels/audit targets only, not selector inputs.",
         "",
         "## Decision",
         "",

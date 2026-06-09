@@ -148,7 +148,9 @@ if [[ -n "$(printf "%s" "$OUTPUT_SUFFIX")" ]]; then
     --transfer-detail-csv "results/csv/alphaq_external_selector_transfer_$(printf "%s" "$OUTPUT_SUFFIX")_details.csv" \\
     --transfer-report-path "results/reports/alphaq_external_selector_transfer_$(printf "%s" "$OUTPUT_SUFFIX").md" \\
     --status-csv "results/csv/alphaq_external_validation_status_$(printf "%s" "$OUTPUT_SUFFIX").csv" \\
-    --status-report-path "results/reports/alphaq_external_validation_status_$(printf "%s" "$OUTPUT_SUFFIX").md")
+    --status-report-path "results/reports/alphaq_external_validation_status_$(printf "%s" "$OUTPUT_SUFFIX").md" \\
+    --paper-zx-csv "results/csv/alphaq_external_validation_paper_zx_audit_$(printf "%s" "$OUTPUT_SUFFIX").csv" \\
+    --paper-zx-report-path "results/reports/alphaq_external_validation_paper_zx_audit_$(printf "%s" "$OUTPUT_SUFFIX").md")
 fi
 if [[ -n "${FORCE_ARG}" ]]; then
   PIPELINE_CMD+=("${FORCE_ARG}")

@@ -181,10 +181,13 @@ def objective_weights_for_actions(
     mixed_weight_scale: float,
     support_weight_scale: float,
     pair_weight_scale: float,
+    overlap_bonus_scale: float = 0.35,
 ) -> np.ndarray:
     if objective == "factor-count":
         return np.ones((len(actions),), dtype=float)
     partition = balanced_contiguous_partition(int(tensor.shape[0]))
+    target = np.asarray(tensor, dtype=np.uint8)
+    target_weight = max(int(np.count_nonzero(target)), 1)
     weights = []
     for action in actions:
         factor = factor_from_action(int(tensor.shape[0]), action)
@@ -225,13 +228,150 @@ def objective_weights_for_actions(
                 + pair_penalty
                 + mixed_weight_scale * factor_mixed_weight / denominator
             )
+        elif objective == "depth-guarded-mixed-pair":
+            factor_mixed_weight = mixed_weight(outer3(factor), partition)
+            denominator = max(int(np.count_nonzero(tensor)), 1)
+            weights.append(
+                1.0
+                + support_penalty
+                + pair_penalty
+                + mixed_weight_scale * factor_mixed_weight / denominator
+            )
+        elif objective == "frontier-pair":
+            weights.append(
+                frontier_pair_action_weight(
+                    target=target,
+                    factor=factor,
+                    partition=partition.block_of,
+                    target_weight=target_weight,
+                    mixed_weight_scale=mixed_weight_scale,
+                    support_weight_scale=support_weight_scale,
+                    pair_weight_scale=pair_weight_scale,
+                    overlap_bonus_scale=overlap_bonus_scale,
+                )
+            )
+        elif objective == "t-preserving-frontier-pair":
+            weights.append(
+                t_preserving_frontier_pair_action_weight(
+                    target=target,
+                    factor=factor,
+                    partition=partition.block_of,
+                    target_weight=target_weight,
+                    mixed_weight_scale=mixed_weight_scale,
+                    support_weight_scale=support_weight_scale,
+                    pair_weight_scale=pair_weight_scale,
+                )
+            )
         else:
             raise ValueError(
                 "Unknown objective "
                 f"{objective!r}; expected factor-count, bridge-count, mixed-weight, "
-                "support-weight, pair-weight, mixed-support, or mixed-pair."
+                "support-weight, pair-weight, mixed-support, mixed-pair, "
+                "depth-guarded-mixed-pair, frontier-pair, "
+                "or t-preserving-frontier-pair."
             )
     return np.asarray(weights, dtype=float)
+
+
+def frontier_pair_action_weight(
+    *,
+    target: np.ndarray,
+    factor: np.ndarray,
+    partition: np.ndarray,
+    target_weight: int,
+    mixed_weight_scale: float,
+    support_weight_scale: float,
+    pair_weight_scale: float,
+    overlap_bonus_scale: float,
+) -> float:
+    """Cost proxy for the article-style Clifford/non-Clifford frontier.
+
+    The ZX detector in arXiv:2504.16004 shrinks the non-Clifford region by
+    pushing Clifford structure away and closing only crossing gates.  In the
+    tensor objective we cannot run ZX, so this proxy penalizes the action-level
+    ingredients that later materialize as hard frontiers: cross-partition pairs,
+    broad parity supports, and tensor mass outside the target.  It also gives a
+    bounded bonus to factors that cover many target entries, which prevents the
+    objective from becoming purely local and too fragmented.
+    """
+
+    vector = np.asarray(factor, dtype=np.uint8) % 2
+    support = np.flatnonzero(vector)
+    tensor_size = int(vector.shape[0])
+    max_pairs = max(tensor_size * (tensor_size - 1) // 2, 1)
+    support_pairs = max(len(support) * (len(support) - 1) // 2, 0)
+    cross_pairs = 0
+    for left_index, left in enumerate(support):
+        for right in support[left_index + 1 :]:
+            if int(partition[left]) != int(partition[right]):
+                cross_pairs += 1
+
+    action_tensor = outer3(vector)
+    action_weight = max(int(np.count_nonzero(action_tensor)), 1)
+    target_overlap = int(np.count_nonzero(action_tensor & target))
+    off_target = action_weight - target_overlap
+
+    frontier_penalty = cross_pairs / max_pairs
+    support_penalty = support_pairs / max_pairs
+    impurity_penalty = off_target / action_weight
+    coverage_bonus = target_overlap / max(target_weight, 1)
+
+    weight = (
+        1.0
+        + mixed_weight_scale * frontier_penalty
+        + support_weight_scale * support_penalty
+        + pair_weight_scale * impurity_penalty
+        - overlap_bonus_scale * min(coverage_bonus, 1.0)
+    )
+    return max(0.05, float(weight))
+
+
+def t_preserving_frontier_pair_action_weight(
+    *,
+    target: np.ndarray,
+    factor: np.ndarray,
+    partition: np.ndarray,
+    target_weight: int,
+    mixed_weight_scale: float,
+    support_weight_scale: float,
+    pair_weight_scale: float,
+) -> float:
+    """Frontier proxy with no negative action bonus.
+
+    This objective is meant to be paired with a hard `max_factors` guard from
+    the factor-count baseline.  The per-action weights are still useful as a
+    tie-breaker inside that feasible set, but they never go below one, so the
+    frontier term cannot buy extra factors by itself.
+    """
+
+    vector = np.asarray(factor, dtype=np.uint8) % 2
+    support = np.flatnonzero(vector)
+    tensor_size = int(vector.shape[0])
+    max_pairs = max(tensor_size * (tensor_size - 1) // 2, 1)
+    support_pairs = max(len(support) * (len(support) - 1) // 2, 0)
+    cross_pairs = 0
+    for left_index, left in enumerate(support):
+        for right in support[left_index + 1 :]:
+            if int(partition[left]) != int(partition[right]):
+                cross_pairs += 1
+
+    action_tensor = outer3(vector)
+    action_weight = max(int(np.count_nonzero(action_tensor)), 1)
+    target_overlap = int(np.count_nonzero(action_tensor & target))
+    off_target = action_weight - target_overlap
+
+    frontier_penalty = cross_pairs / max_pairs
+    support_penalty = support_pairs / max_pairs
+    impurity_penalty = off_target / action_weight
+    coverage_penalty = 1.0 - min(target_overlap / max(target_weight, 1), 1.0)
+
+    return float(
+        1.0
+        + mixed_weight_scale * frontier_penalty
+        + support_weight_scale * support_penalty
+        + pair_weight_scale * impurity_penalty
+        + 0.05 * coverage_penalty
+    )
 
 
 def pair_incidence_for_actions(tensor_size: int, actions: list[int]) -> np.ndarray:
@@ -351,12 +491,16 @@ def parse_args() -> argparse.Namespace:
             "pair-weight",
             "mixed-support",
             "mixed-pair",
+            "depth-guarded-mixed-pair",
+            "frontier-pair",
+            "t-preserving-frontier-pair",
         ),
         default="factor-count",
     )
     parser.add_argument("--mixed-weight-scale", type=float, default=1.0)
     parser.add_argument("--support-weight-scale", type=float, default=0.25)
     parser.add_argument("--pair-weight-scale", type=float, default=0.0)
+    parser.add_argument("--overlap-bonus-scale", type=float, default=0.35)
     parser.add_argument(
         "--max-factors",
         type=int,
@@ -409,6 +553,7 @@ def run(args: argparse.Namespace) -> int:
         mixed_weight_scale=args.mixed_weight_scale,
         support_weight_scale=args.support_weight_scale,
         pair_weight_scale=getattr(args, "pair_weight_scale", 0.0),
+        overlap_bonus_scale=getattr(args, "overlap_bonus_scale", 0.35),
     )
     max_pair_overlap = getattr(args, "max_pair_overlap", None)
     solution = solve_mod2_milp(
@@ -473,6 +618,7 @@ def run(args: argparse.Namespace) -> int:
         "mixed_weight_scale": args.mixed_weight_scale,
         "support_weight_scale": args.support_weight_scale,
         "pair_weight_scale": getattr(args, "pair_weight_scale", 0.0),
+        "overlap_bonus_scale": getattr(args, "overlap_bonus_scale", 0.35),
         "max_factors": args.max_factors,
         "max_pair_overlap": max_pair_overlap,
         "num_actions": len(actions),

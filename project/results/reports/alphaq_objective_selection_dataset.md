@@ -8,9 +8,9 @@ This dataset reframes the current evidence as supervised objective selection: ea
 
 Decision: `prototype-ready`.
 
-Train-ready target groups: 18/22.
-External train-ready target groups: 10.
-Oracle objective distribution: factor_count=8, factor_count_pair_cap=7, mixed_pair=3.
+Train-ready target groups: 29/37.
+External train-ready target groups: 21.
+Oracle objective distribution: factor_count=13, factor_count_pair_cap=9, frontier_pair=2, mixed_pair=5.
 
 We can proceed with a prototype selector and leave-one-target validation. The dataset is still too small for a high-capacity deep model or a broad journal-level generalization claim.
 
@@ -18,6 +18,21 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 
 | split | target | train ready | materialized objectives | oracle objective |
 |---|---|---:|---:|---|
+| external_article_core | barenco_tof_4 | False | 1 | frontier_pair |
+| external_article_core | gf_2pow2_mult | True | 4 | factor_count |
+| external_article_core | hamming_weight_n4 | True | 4 | factor_count |
+| external_article_core | hamming_weight_n5 | True | 4 | factor_count |
+| external_article_core | mod_5_4 | True | 4 | factor_count |
+| external_article_core | nc_tof_4 | True | 4 | frontier_pair |
+| external_article_core | vbe_adder_3 | True | 3 | factor_count |
+| external_article_extended | cuccaro_adder_n4 | True | 4 | factor_count_pair_cap |
+| external_article_extended | cuccaro_adder_n5 | False | 0 | - |
+| external_article_extended | gf_2pow4_mult | True | 4 | factor_count_pair_cap |
+| external_article_extended | gf_2pow5_mult | False | 0 | - |
+| external_article_extended | hamming_weight_n6 | True | 4 | factor_count_pair_cap |
+| external_article_extended | hamming_weight_n7 | True | 4 | frontier_pair |
+| external_article_extended | mod_mult_55 | True | 4 | mixed_pair |
+| external_article_extended | nc_tof_5 | False | 0 | - |
 | external_journal_full_cuccaro_adder_n4 | cuccaro_adder_n4 | True | 3 | factor_count |
 | external_journal_full_gf_2pow4_mult | gf_2pow4_mult | True | 3 | factor_count_pair_cap |
 | external_journal_full_gf_2pow5_mult | gf_2pow5_mult | False | 0 | - |
@@ -34,9 +49,20 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 | external_standard | vbe_adder_3 | True | 2 | factor_count |
 | internal | barenco_tof_3 | True | 3 | factor_count |
 | internal | cuccaro_adder_n3 | True | 3 | factor_count_pair_cap |
-| internal | gf_2pow2_mult | True | 3 | factor_count_pair_cap |
+| internal | gf_2pow2_mult | True | 3 | mixed_pair |
 | internal | gf_2pow3_mult | True | 3 | factor_count_pair_cap |
 | internal | hamming_weight_n4 | True | 3 | mixed_pair |
 | internal | hamming_weight_n5 | True | 3 | factor_count_pair_cap |
 | internal | mod_5_4 | True | 3 | factor_count |
 | internal | nc_tof_3 | True | 3 | factor_count_pair_cap |
+
+## Objective Runtime And Coverage
+
+| objective | rows | ok | beam rows | failures | oracle count | median runtime sec | mean runtime sec |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| factor_count | 37 | 29 | 29 | 8 | 13 |  |  |
+| factor_count_pair_cap | 37 | 29 | 29 | 8 | 10 |  |  |
+| mixed_pair | 37 | 27 | 27 | 10 | 5 |  |  |
+| frontier_pair | 37 | 12 | 12 | 25 | 3 |  |  |
+| depth_guarded_mixed_pair | 37 | 0 | 0 | 37 | 0 |  |  |
+| t_preserving_frontier_pair | 37 | 0 | 0 | 37 | 0 |  |  |

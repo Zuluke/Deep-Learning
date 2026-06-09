@@ -1,4 +1,12 @@
 target,family,tensor_size,tcount_original,action_space_class,readiness_status,recommended_stage,priority_score,next_action
+nc_tof_4,arithmetic,11,35,full-action-feasible,ready-full-action,full-action-repair,124,Run objective-by-beam grid and guarded selector policy comparison.
+barenco_tof_4,arithmetic,14,56,full-action-feasible,ready-full-action,full-action-repair,121,Run objective-by-beam grid and guarded selector policy comparison.
+vbe_adder_3,arithmetic,14,70,full-action-feasible,ready-full-action,full-action-repair,121,Run objective-by-beam grid and guarded selector policy comparison.
+mod_mult_55,arithmetic,11,49,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,44,Run tensor-v3/profile screening before objective-grid expansion.
+cuccaro_adder_n4,applications,12,56,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,43,Run tensor-v3/profile screening before objective-grid expansion.
+gf_2pow4_mult,arithmetic,12,112,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,43,Run tensor-v3/profile screening before objective-grid expansion.
+hamming_weight_n6,applications,12,28,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,43,Run tensor-v3/profile screening before objective-grid expansion.
+hamming_weight_n7,applications,13,28,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,42,Run tensor-v3/profile screening before objective-grid expansion.
 gf_2pow5_mult,arithmetic,15,175,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,40,Run tensor-v3/profile screening before objective-grid expansion.
 nc_tof_5,arithmetic,15,49,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,40,Run tensor-v3/profile screening before objective-grid expansion.
 cuccaro_adder_n5,applications,16,70,full-action-feasible,needs-tensor-v3-screen,tensor-v3-screen,39,Run tensor-v3/profile screening before objective-grid expansion.

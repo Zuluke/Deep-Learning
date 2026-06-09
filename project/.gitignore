@@ -27,6 +27,10 @@ results/csv/*
 !results/csv/alphaq_split_select_details.csv
 !results/csv/alphaq_journal_evidence_gates.csv
 !results/csv/alphaq_journal_next_battery.csv
+!results/csv/zx_border_detector_comparison.csv
+!results/csv/alphaq_frontier_pair_smoke.csv
+!results/csv/alphaq_article_experiment_protocol.csv
+!results/csv/alphaq_external_validation_paper_zx_audit*.csv
 !results/figures/
 results/figures/*
 !results/figures/entrega1/
@@ -53,6 +57,11 @@ results/reports/*
 !results/reports/alphaq_journal_evidence.md
 !results/reports/alphaq_journal_current_state.md
 !results/reports/alphaq_journal_battery_commands.md
+!results/reports/zx_border_detector_comparison.md
+!results/reports/alphaq_frontier_pair_smoke.md
+!results/reports/alphaq_article_experiment_protocol.md
+!results/reports/alphaq_article_apuana_commands.md
+!results/reports/alphaq_external_validation_paper_zx_audit*.md
 !results/reproducibility/
 results/reproducibility/*
 !results/reproducibility/paper/

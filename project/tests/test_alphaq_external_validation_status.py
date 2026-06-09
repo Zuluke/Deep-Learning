@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from scripts.analyze_alphaq_external_validation_status import status_rows
+from scripts.analyze_alphaq_external_selector_transfer import REQUIRED_OBJECTIVES
 
 
 def test_status_rows_requires_all_objectives_and_transfer() -> None:
@@ -11,9 +12,10 @@ def test_status_rows_requires_all_objectives_and_transfer() -> None:
         {"target": "ready", "readiness_status": "ready-full-action"},
     ]
     decomposition = [
-        {"target": "complete", "objective_variant": "factor_count"},
-        {"target": "complete", "objective_variant": "factor_count_pair_cap"},
-        {"target": "complete", "objective_variant": "mixed_pair"},
+        *[
+            {"target": "complete", "objective_variant": objective}
+            for objective in sorted(REQUIRED_OBJECTIVES)
+        ],
         {"target": "partial", "objective_variant": "factor_count"},
         {"target": "failed", "objective_variant": "factor_count"},
         {
@@ -21,9 +23,10 @@ def test_status_rows_requires_all_objectives_and_transfer() -> None:
             "objective_variant": "factor_count_pair_cap",
             "execution_status": "failed",
         },
-        {"target": "ready", "objective_variant": "factor_count"},
-        {"target": "ready", "objective_variant": "factor_count_pair_cap"},
-        {"target": "ready", "objective_variant": "mixed_pair"},
+        *[
+            {"target": "ready", "objective_variant": objective}
+            for objective in sorted(REQUIRED_OBJECTIVES)
+        ],
     ]
     transfer = [{"target": "complete"}]
 

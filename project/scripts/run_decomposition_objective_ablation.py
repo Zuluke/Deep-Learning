@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import subprocess
 import sys
 import time
@@ -30,6 +31,12 @@ DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "results" / "alphaq_decomposition_objective
 DEFAULT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_decomposition_objective_ablation.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_decomposition_objective_ablation.md"
 DEFAULT_FIGURE = PROJECT_ROOT / "results" / "figures" / "alphaq_decomposition_objective_ablation.png"
+SPLIT_AWARE_OBJECTIVES = {
+    "mixed-pair",
+    "depth-guarded-mixed-pair",
+    "frontier-pair",
+    "t-preserving-frontier-pair",
+}
 
 
 @dataclass(frozen=True)
@@ -38,6 +45,7 @@ class ObjectiveVariant:
     objective: str
     candidate_kind: str
     use_pair_cap: bool
+    use_factor_count_cap: bool = False
 
 
 OBJECTIVE_VARIANTS = (
@@ -58,6 +66,25 @@ OBJECTIVE_VARIANTS = (
         objective="mixed-pair",
         candidate_kind="milp_span_mixed_pair_decomp",
         use_pair_cap=True,
+    ),
+    ObjectiveVariant(
+        name="frontier_pair",
+        objective="frontier-pair",
+        candidate_kind="milp_span_frontier_pair_decomp",
+        use_pair_cap=False,
+    ),
+    ObjectiveVariant(
+        name="depth_guarded_mixed_pair",
+        objective="depth-guarded-mixed-pair",
+        candidate_kind="milp_span_depth_guarded_mixed_pair_decomp",
+        use_pair_cap=True,
+    ),
+    ObjectiveVariant(
+        name="t_preserving_frontier_pair",
+        objective="t-preserving-frontier-pair",
+        candidate_kind="milp_span_t_preserving_frontier_pair_decomp",
+        use_pair_cap=False,
+        use_factor_count_cap=True,
     ),
 )
 
@@ -117,6 +144,28 @@ def optimization_dir(linear_root: Path, target: str, max_weight: int, objective:
     return linear_root / f"{target}_low-weight_w{max_weight}_k175_{objective}"
 
 
+def factor_count_cap(output_root: Path, target: str) -> int:
+    case = STUDY_CASES[target]
+    factor_variant = next(variant for variant in OBJECTIVE_VARIANTS if variant.name == "factor_count")
+    manifest = (
+        output_root
+        / "linear_span"
+        / factor_variant.name
+        / f"{target}_low-weight_w{case.max_action_weight}_k175_{factor_variant.objective}"
+        / "candidate_factors_manifest.csv"
+    )
+    if not manifest.exists():
+        raise RuntimeError(
+            f"`t_preserving_frontier_pair` requires a solved factor_count baseline for {target}; "
+            f"missing {manifest}."
+        )
+    row = load_manifest_row(manifest, target=target, candidate_kind=factor_variant.candidate_kind)
+    value = coerce_float(row.get("effective_t_cost") or row.get("num_moves"))
+    if value is None:
+        raise RuntimeError(f"Cannot read factor_count cap for {target} from {manifest}.")
+    return int(value)
+
+
 def run_optimization(
     *,
     target: str,
@@ -142,11 +191,11 @@ def run_optimization(
         "--objective",
         variant.objective,
         "--mixed-weight-scale",
-        str(case.mixed_weight_scale if variant.objective == "mixed-pair" else 1.0),
+        str(case.mixed_weight_scale if variant.objective in SPLIT_AWARE_OBJECTIVES else 1.0),
         "--support-weight-scale",
         "0.25",
         "--pair-weight-scale",
-        str(case.pair_weight_scale if variant.objective == "mixed-pair" else 0.0),
+        str(case.pair_weight_scale if variant.objective in SPLIT_AWARE_OBJECTIVES else 0.0),
         "--candidate-kind",
         variant.candidate_kind,
         "--output-root",
@@ -156,6 +205,8 @@ def run_optimization(
     ]
     if variant.use_pair_cap and case.max_pair_overlap is not None:
         cmd.extend(["--max-pair-overlap", str(case.max_pair_overlap)])
+    if variant.use_factor_count_cap:
+        cmd.extend(["--max-factors", str(factor_count_cap(output_root, target))])
     print(f"+ optimize {target} {variant.name}", flush=True)
     wall_timeout = max(float(time_limit_sec) + 120.0, float(time_limit_sec) * 1.2)
     started = time.monotonic()
@@ -182,12 +233,12 @@ def run_materialization(
     manifest: Path,
     output_root: Path,
     force: bool,
-) -> Path:
+) -> tuple[Path, float]:
     case = STUDY_CASES[target]
     destination = output_root / target / variant.name / "shared-parity"
     summary_path = destination / "summary.json"
     if summary_path.exists() and not force:
-        return summary_path
+        return summary_path, 0.0
     destination.mkdir(parents=True, exist_ok=True)
     cmd = [
         sys.executable,
@@ -221,7 +272,26 @@ def run_materialization(
             f"with return code {completed.returncode} after {elapsed:.1f}s."
         )
     print(f"+ materialized {target} {variant.name} in {elapsed:.1f}s", flush=True)
-    return summary_path
+    return summary_path, elapsed
+
+
+def optimization_summary_from_manifest(manifest: Path) -> dict[str, Any]:
+    summary_path = manifest.parent / "summary.json"
+    if not summary_path.exists():
+        return {}
+    return json.loads(summary_path.read_text(encoding="utf-8"))
+
+
+def elapsed_sum(*values: Any) -> float | str:
+    total = 0.0
+    seen = False
+    for value in values:
+        parsed = coerce_float(value)
+        if parsed is None:
+            continue
+        total += parsed
+        seen = True
+    return total if seen else ""
 
 
 def factor_metrics_from_manifest(manifest: Path, *, target: str, variant: ObjectiveVariant) -> dict[str, Any]:
@@ -261,7 +331,8 @@ def collect_rows(
                     time_limit_sec=time_limit_sec,
                     force=force,
                 )
-                summary_path = run_materialization(
+                optimization_summary = optimization_summary_from_manifest(manifest)
+                summary_path, materialization_elapsed_sec = run_materialization(
                     target=target,
                     variant=variant,
                     manifest=manifest,
@@ -276,6 +347,13 @@ def collect_rows(
                         "objective_variant": variant.name,
                         "span_objective": variant.objective,
                         "pair_cap_enabled": variant.use_pair_cap,
+                        "factor_count_cap_enabled": variant.use_factor_count_cap,
+                        "optimization_elapsed_sec": optimization_summary.get("elapsed_sec", ""),
+                        "materialization_elapsed_sec": materialization_elapsed_sec,
+                        "objective_elapsed_sec": elapsed_sum(
+                            optimization_summary.get("elapsed_sec", ""),
+                            materialization_elapsed_sec,
+                        ),
                         "execution_status": "ok",
                         "error_message": "",
                     }
@@ -296,7 +374,11 @@ def error_row(target: str, variant: ObjectiveVariant, exc: Exception) -> dict[st
         "objective_variant": variant.name,
         "span_objective": variant.objective,
         "pair_cap_enabled": variant.use_pair_cap,
+        "factor_count_cap_enabled": variant.use_factor_count_cap,
         "candidate_kind": variant.candidate_kind,
+        "optimization_elapsed_sec": "",
+        "materialization_elapsed_sec": "",
+        "objective_elapsed_sec": "",
         "structural_target_status": "not-materialized",
         "summary_path": "",
         "execution_status": "failed",
@@ -311,6 +393,7 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "objective_variant",
         "span_objective",
         "pair_cap_enabled",
+        "factor_count_cap_enabled",
         "candidate_kind",
         "factor_count",
         "factor_unique_parity_count",
@@ -326,6 +409,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "primary_nc_depth_ratio",
         "qasm_depth_ratio",
         "structural_cost",
+        "optimization_elapsed_sec",
+        "materialization_elapsed_sec",
+        "objective_elapsed_sec",
         "structural_target_status",
         "summary_path",
         "execution_status",
@@ -348,11 +434,17 @@ def pairwise_summary(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         factor = target_rows.get("factor_count")
         matched = target_rows.get("factor_count_pair_cap")
         mixed = target_rows.get("mixed_pair")
-        if factor is None or mixed is None:
+        frontier = target_rows.get("frontier_pair")
+        if factor is None:
             continue
-        summaries.append(compare_rows(target, "mixed_pair_vs_factor_count", mixed, factor))
-        if matched is not None:
-            summaries.append(compare_rows(target, "mixed_pair_vs_factor_count_pair_cap", mixed, matched))
+        if mixed is not None:
+            summaries.append(compare_rows(target, "mixed_pair_vs_factor_count", mixed, factor))
+            if matched is not None:
+                summaries.append(compare_rows(target, "mixed_pair_vs_factor_count_pair_cap", mixed, matched))
+        if frontier is not None:
+            summaries.append(compare_rows(target, "frontier_pair_vs_factor_count", frontier, factor))
+            if matched is not None:
+                summaries.append(compare_rows(target, "frontier_pair_vs_factor_count_pair_cap", frontier, matched))
     return summaries
 
 
@@ -411,11 +503,12 @@ def write_report(path: Path, rows: list[dict[str, Any]], csv_path: Path, figure_
     path.parent.mkdir(parents=True, exist_ok=True)
     summaries = pairwise_summary(rows)
     failures = [row for row in rows if not row_ok(row)]
-    matched = [row for row in summaries if row["comparison"] == "mixed_pair_vs_factor_count_pair_cap"]
-    primary_wins = [row for row in matched if is_win(row.get("primary_ratio"))]
-    qasm_wins = [row for row in matched if is_win(row.get("qasm_depth_ratio"))]
+    mixed_matched = [row for row in summaries if row["comparison"] == "mixed_pair_vs_factor_count_pair_cap"]
+    frontier_matched = [row for row in summaries if row["comparison"] == "frontier_pair_vs_factor_count_pair_cap"]
+    primary_wins = [row for row in frontier_matched if is_win(row.get("primary_ratio"))]
+    qasm_wins = [row for row in frontier_matched if is_win(row.get("qasm_depth_ratio"))]
     tcount_wins_or_ties = [
-        row for row in matched
+        row for row in frontier_matched
         if row.get("mixed_tcount") is not None
         and row.get("baseline_tcount") is not None
         and float(row["mixed_tcount"]) <= float(row["baseline_tcount"])
@@ -432,12 +525,14 @@ def write_report(path: Path, rows: list[dict[str, Any]], csv_path: Path, figure_
         f"Completed objective rows: {sum(row_ok(row) for row in rows)}/{len(rows)}.",
         f"Failed objective rows: {len(failures)}/{len(rows)}.",
         "",
-        "The main controlled comparison is `mixed_pair` versus `factor_count_pair_cap`, "
-        "because both use the same pair-overlap constraint.",
+        "`frontier_pair` is the article-inspired AlphaQ-only proxy: it penalizes "
+        "cross-partition support pairs and off-target tensor mass while rewarding "
+        "target coverage. `mixed_pair` is retained as the previous proxy.",
         "",
-        f"- `mixed_pair` has T-count <= matched factor-count in {len(tcount_wins_or_ties)}/{len(matched)} targets.",
-        f"- `mixed_pair` improves primary NC ratio in {len(primary_wins)}/{len(matched)} matched comparisons.",
-        f"- `mixed_pair` improves QASM depth ratio in {len(qasm_wins)}/{len(matched)} matched comparisons.",
+        f"- `frontier_pair` has T-count <= matched factor-count in {len(tcount_wins_or_ties)}/{len(frontier_matched)} targets.",
+        f"- `frontier_pair` improves primary NC ratio in {len(primary_wins)}/{len(frontier_matched)} matched comparisons.",
+        f"- `frontier_pair` improves QASM depth ratio in {len(qasm_wins)}/{len(frontier_matched)} matched comparisons.",
+        f"- `mixed_pair` remains available for direct comparison in {len(mixed_matched)} matched rows.",
         "",
         "| target | comparison | factor count ratio | parity reuse delta | pairwise overlap ratio | parity CI ratio | primary ratio | QASM ratio | T-depth ratio |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|",
@@ -485,7 +580,7 @@ def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
     targets = ordered_targets(rows)
     variants = [variant.name for variant in OBJECTIVE_VARIANTS]
     x = list(range(len(targets)))
-    width = 0.24
+    width = min(0.8 / max(len(variants), 1), 0.24)
     fig, axes = plt.subplots(1, 3, figsize=(13.0, 4.0), constrained_layout=True)
     fields = [
         ("factor_pairwise_support_overlap_mean", "Mean pairwise support overlap"),
@@ -496,6 +591,9 @@ def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
         "factor_count": "#7f7f7f",
         "factor_count_pair_cap": "#4c78a8",
         "mixed_pair": "#1b9e77",
+        "frontier_pair": "#d95f02",
+        "depth_guarded_mixed_pair": "#984ea3",
+        "t_preserving_frontier_pair": "#e7298a",
     }
     by_target_variant = {
         (row["target"], row["objective_variant"]): row
@@ -507,8 +605,9 @@ def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
                 coerce_float(by_target_variant.get((target, variant), {}).get(field)) or 0.0
                 for target in targets
             ]
-            positions = [item + (offset - 1) * width for item in x]
-            ax.bar(positions, values, width=width, label=variant, color=colors[variant])
+            center_offset = offset - (len(variants) - 1) / 2
+            positions = [item + center_offset * width for item in x]
+            ax.bar(positions, values, width=width, label=variant, color=colors.get(variant, "#999999"))
         if "ratio" in field:
             ax.axhline(1.0, color="#333333", linestyle="--", linewidth=1.0)
         ax.set_title(title)

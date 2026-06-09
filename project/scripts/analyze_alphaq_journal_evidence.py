@@ -28,7 +28,14 @@ DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_evidence
 DEFAULT_BATTERY_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_next_battery.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_journal_evidence.md"
 
-OBJECTIVES = ("factor_count", "factor_count_pair_cap", "mixed_pair")
+OBJECTIVES = (
+    "factor_count",
+    "factor_count_pair_cap",
+    "mixed_pair",
+    "frontier_pair",
+    "depth_guarded_mixed_pair",
+    "t_preserving_frontier_pair",
+)
 
 
 def parse_args() -> argparse.Namespace:

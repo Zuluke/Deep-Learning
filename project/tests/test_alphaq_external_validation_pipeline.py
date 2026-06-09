@@ -54,3 +54,25 @@ def test_objective_variants_argument_is_parsed(monkeypatch) -> None:
     args = parse_args()
 
     assert args.objective_variants == "factor_count_pair_cap"
+
+
+def test_paper_zx_audit_paths_are_parsed(monkeypatch, tmp_path) -> None:
+    paper_csv = tmp_path / "paper.csv"
+    paper_report = tmp_path / "paper.md"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "run_alphaq_external_validation_pipeline.py",
+            "--paper-zx-csv",
+            str(paper_csv),
+            "--paper-zx-report-path",
+            str(paper_report),
+            "--skip-paper-zx-audit",
+        ],
+    )
+
+    args = parse_args()
+
+    assert args.paper_zx_csv == paper_csv
+    assert args.paper_zx_report_path == paper_report
+    assert args.skip_paper_zx_audit is True

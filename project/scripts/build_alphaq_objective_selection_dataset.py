@@ -38,6 +38,11 @@ DEFAULT_NIGHT_GRID_CSV = (
     / "alphaq_objective_beam_policy_external_validation_night_long_grid.csv"
 )
 DEFAULT_EXTRA_EXTERNAL_RUNS = (
+    "article_core",
+    "article_extended",
+    "selector_v1_small6",
+    "selector_v1_medium6",
+    "selector_v1_fast6",
     "journal_repair_paircap",
     "journal_full_mod_mult_55",
     "journal_full_cuccaro_adder_n4",
@@ -52,7 +57,17 @@ DEFAULT_READINESS_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_vali
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_objective_selection_dataset.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_objective_selection_dataset.md"
 
-OBJECTIVES = ("factor_count", "factor_count_pair_cap", "mixed_pair")
+OBJECTIVES = (
+    "factor_count",
+    "factor_count_pair_cap",
+    "mixed_pair",
+    "frontier_pair",
+    "depth_guarded_mixed_pair",
+    "t_preserving_frontier_pair",
+)
+BASELINE_OBJECTIVE = "factor_count"
+T_SAFE_REL_TOL = 0.05
+QASM_SAFE_REL_TOL = 0.25
 
 
 def parse_args() -> argparse.Namespace:
@@ -215,6 +230,9 @@ def candidate_row(
         "decomp_qasm_depth": decomp.get("qasm_depth", ""),
         "decomp_qasm_depth_ratio": decomp.get("qasm_depth_ratio", ""),
         "decomp_structural_status": decomp.get("structural_target_status", ""),
+        "optimization_elapsed_sec": decomp.get("optimization_elapsed_sec", ""),
+        "materialization_elapsed_sec": decomp.get("materialization_elapsed_sec", ""),
+        "objective_elapsed_sec": decomp.get("objective_elapsed_sec", ""),
         "best_beam_materializer": beam.get("materializer", ""),
         "best_beam_tcount": beam.get("tcount", ""),
         "best_beam_tdepth": beam.get("tdepth", ""),
@@ -229,23 +247,71 @@ def candidate_row(
 def annotate_oracle(rows: list[dict[str, Any]]) -> None:
     materialized = [row for row in rows if row["execution_status"] == "ok" and row["has_beam_candidate"]]
     train_ready = len(materialized) >= 2
-    oracle = min(materialized, key=oracle_key) if materialized else None
+    admissible = constrained_admissible_rows(materialized)
+    oracle_pool = admissible or materialized
+    oracle = min(oracle_pool, key=oracle_key) if oracle_pool else None
     oracle_objective = oracle["objective_variant"] if oracle else ""
-    sorted_rows = sorted(materialized, key=oracle_key)
+    sorted_rows = sorted(oracle_pool, key=oracle_key)
     ranks = {row["objective_variant"]: index + 1 for index, row in enumerate(sorted_rows)}
+    safety = objective_safety_flags(materialized)
     for row in rows:
         row["target_objective_count"] = len(materialized)
         row["train_ready"] = train_ready
         row["oracle_objective"] = oracle_objective
+        row["oracle_selection_status"] = (
+            "constrained"
+            if admissible
+            else ("unconstrained-no-safe-candidate" if materialized else "missing")
+        )
+        row["objective_t_safe"] = safety.get(row["objective_variant"], {}).get("t_safe", False)
+        row["objective_qasm_safe"] = safety.get(row["objective_variant"], {}).get("qasm_safe", False)
         row["objective_is_oracle"] = row["objective_variant"] == oracle_objective
         row["objective_rank"] = ranks.get(row["objective_variant"], "")
 
 
-def oracle_key(row: dict[str, Any]) -> tuple[float, float, float, str]:
+def constrained_admissible_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    safety = objective_safety_flags(rows)
+    return [
+        row
+        for row in rows
+        if safety.get(row["objective_variant"], {}).get("t_safe", False)
+        and safety.get(row["objective_variant"], {}).get("qasm_safe", False)
+    ]
+
+
+def objective_safety_flags(rows: list[dict[str, Any]]) -> dict[str, dict[str, bool]]:
+    baseline = next((row for row in rows if row["objective_variant"] == BASELINE_OBJECTIVE), None)
+    if baseline is None:
+        return {
+            row["objective_variant"]: {"t_safe": True, "qasm_safe": True}
+            for row in rows
+        }
+    baseline_t = coerce_float(baseline.get("best_beam_tcount"))
+    baseline_qasm = coerce_float(baseline.get("best_beam_qasm_depth"))
+    flags: dict[str, dict[str, bool]] = {}
+    for row in rows:
+        tcount = coerce_float(row.get("best_beam_tcount"))
+        qasm = coerce_float(row.get("best_beam_qasm_depth"))
+        t_safe = (
+            baseline_t is None
+            or tcount is not None
+            and tcount <= baseline_t * (1.0 + T_SAFE_REL_TOL)
+        )
+        qasm_safe = (
+            baseline_qasm is None
+            or qasm is not None
+            and qasm <= baseline_qasm * (1.0 + QASM_SAFE_REL_TOL)
+        )
+        flags[row["objective_variant"]] = {"t_safe": bool(t_safe), "qasm_safe": bool(qasm_safe)}
+    return flags
+
+
+def oracle_key(row: dict[str, Any]) -> tuple[float, float, float, float, str]:
     return (
         inf_if_none(row.get("best_beam_tcount")),
-        inf_if_none(row.get("best_beam_primary_nc_depth_ratio")),
         inf_if_none(row.get("best_beam_qasm_depth")),
+        inf_if_none(row.get("best_beam_primary_nc_depth_ratio")),
+        inf_if_none(row.get("objective_elapsed_sec")),
         row.get("objective_variant", ""),
     )
 
@@ -272,6 +338,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "decomp_qasm_depth",
         "decomp_qasm_depth_ratio",
         "decomp_structural_status",
+        "optimization_elapsed_sec",
+        "materialization_elapsed_sec",
+        "objective_elapsed_sec",
         "best_beam_materializer",
         "best_beam_tcount",
         "best_beam_tdepth",
@@ -282,6 +351,9 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "target_objective_count",
         "train_ready",
         "oracle_objective",
+        "oracle_selection_status",
+        "objective_t_safe",
+        "objective_qasm_safe",
         "objective_is_oracle",
         "objective_rank",
         "best_beam_summary_path",
@@ -322,6 +394,53 @@ def grouped_targets(rows: list[dict[str, Any]]) -> dict[tuple[str, str], list[di
     return grouped
 
 
+def objective_runtime_summary(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    oracle_counts = Counter(
+        row["objective_variant"]
+        for row in rows
+        if row.get("objective_is_oracle") is True
+    )
+    summaries = []
+    for objective in OBJECTIVES:
+        items = [row for row in rows if row.get("objective_variant") == objective]
+        ok = [row for row in items if row.get("execution_status") == "ok"]
+        with_beam = [row for row in ok if bool(row.get("has_beam_candidate"))]
+        runtimes = [
+            value
+            for row in ok
+            if (value := coerce_float(row.get("objective_elapsed_sec"))) is not None
+        ]
+        summaries.append(
+            {
+                "objective": objective,
+                "rows": len(items),
+                "ok_rows": len(ok),
+                "beam_rows": len(with_beam),
+                "fail_rows": len(items) - len(ok),
+                "oracle_count": oracle_counts[objective],
+                "median_runtime_sec": median(runtimes),
+                "mean_runtime_sec": mean(runtimes),
+            }
+        )
+    return summaries
+
+
+def median(values: list[float]) -> float | str:
+    values = sorted(values)
+    if not values:
+        return ""
+    mid = len(values) // 2
+    if len(values) % 2:
+        return values[mid]
+    return (values[mid - 1] + values[mid]) / 2
+
+
+def mean(values: list[float]) -> float | str:
+    if not values:
+        return ""
+    return sum(values) / len(values)
+
+
 def write_report(path: Path, rows: list[dict[str, Any]], csv_path: Path) -> None:
     summary = readiness_summary(rows)
     groups = grouped_targets(rows)
@@ -358,7 +477,34 @@ def write_report(path: Path, rows: list[dict[str, Any]], csv_path: Path) -> None
         lines.append(
             f"| {split} | {target} | {first['train_ready']} | {first['target_objective_count']} | {first['oracle_objective'] or '-'} |"
         )
+    lines.extend(
+        [
+            "",
+            "## Objective Runtime And Coverage",
+            "",
+            "| objective | rows | ok | beam rows | failures | oracle count | median runtime sec | mean runtime sec |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for row in objective_runtime_summary(rows):
+        lines.append(
+            "| {objective} | {rows} | {ok_rows} | {beam_rows} | {fail_rows} | {oracle_count} | {median_runtime} | {mean_runtime} |".format(
+                objective=row["objective"],
+                rows=row["rows"],
+                ok_rows=row["ok_rows"],
+                beam_rows=row["beam_rows"],
+                fail_rows=row["fail_rows"],
+                oracle_count=row["oracle_count"],
+                median_runtime=fmt(row["median_runtime_sec"]),
+                mean_runtime=fmt(row["mean_runtime_sec"]),
+            )
+        )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def fmt(value: Any) -> str:
+    parsed = coerce_float(value)
+    return "" if parsed is None else f"{parsed:.3g}"
 
 
 def format_counts(counts: dict[str, int]) -> str:

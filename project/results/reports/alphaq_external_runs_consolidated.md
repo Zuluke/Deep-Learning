@@ -15,6 +15,7 @@ Complete targets: 8/11.
 | cuccaro_adder_n4 | mixed_pair | journal_full_cuccaro_adder_n4 | ok | 32.0 | 252.0 | journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n5 | factor_count | journal_full_cuccaro_adder_n5 | ok | 590.0 |  | journal_full_cuccaro_adder_n5 |  |
 | cuccaro_adder_n5 | factor_count_pair_cap | journal_full_cuccaro_adder_n5 | failed |  |  |  | journal_full_cuccaro_adder_n5 |
+| cuccaro_adder_n5 | mixed_pair | journal_full_cuccaro_adder_n5 | failed |  |  |  | journal_full_cuccaro_adder_n5 |
 | gf_2pow4_mult | factor_count | journal_full_gf_2pow4_mult | ok | 57.0 | 461.0 | journal_full_gf_2pow4_mult |  |
 | gf_2pow4_mult | factor_count_pair_cap | journal_full_gf_2pow4_mult | ok | 55.0 | 462.0 | journal_full_gf_2pow4_mult |  |
 | gf_2pow4_mult | mixed_pair | journal_full_gf_2pow4_mult | ok | 63.0 | 452.0 | journal_full_gf_2pow4_mult |  |

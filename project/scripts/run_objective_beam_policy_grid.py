@@ -39,7 +39,14 @@ DEFAULT_POLICY_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_objective_beam_p
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_objective_beam_policy_summary.md"
 DEFAULT_FIGURE = PROJECT_ROOT / "results" / "figures" / "alphaq_objective_beam_policy_summary.png"
 DEFAULT_BEAM_WIDTHS = (4, 16)
-OBJECTIVE_POLICIES = ("factor_count", "factor_count_pair_cap", "mixed_pair")
+DEFAULT_OBJECTIVE_POLICIES = (
+    "factor_count",
+    "factor_count_pair_cap",
+    "mixed_pair",
+    "frontier_pair",
+    "depth_guarded_mixed_pair",
+    "t_preserving_frontier_pair",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -152,7 +159,7 @@ def policy_summary_rows(
 ) -> list[dict[str, Any]]:
     current = best_current_beams(current_rows)
     rows = []
-    for policy in OBJECTIVE_POLICIES:
+    for policy in objective_policies(grid_rows):
         policy_beams = best_policy_beams(grid_rows, policy)
         target_rows = []
         for target, selected in sorted(policy_beams.items()):
@@ -162,6 +169,17 @@ def policy_summary_rows(
             target_rows.append(compare_policy_target(policy, selected, baseline))
         rows.append(summarize_policy(policy, target_rows))
     return rows
+
+
+def objective_policies(rows: list[dict[str, Any]]) -> tuple[str, ...]:
+    present = {
+        str(row.get("objective_variant", ""))
+        for row in rows
+        if row.get("objective_variant")
+    }
+    ordered = [policy for policy in DEFAULT_OBJECTIVE_POLICIES if policy in present]
+    ordered.extend(sorted(present - set(ordered)))
+    return tuple(ordered)
 
 
 def compare_policy_target(

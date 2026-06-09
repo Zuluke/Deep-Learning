@@ -13,6 +13,7 @@ from scripts._analysis_common import normalize_circuit_to_basis
 
 
 Direction = Literal["left", "right"]
+PaperRewriteLevel = Literal["graphlike", "clifford", "full"]
 
 
 @dataclass(frozen=True)
@@ -61,9 +62,106 @@ def compute_zx_splitting_metrics(circuit: Any) -> dict[str, Any]:
         }
 
 
+def compute_paper_zx_splitting_metrics_from_qasm(
+    path: Path,
+    *,
+    rewrite_level: PaperRewriteLevel = "clifford",
+) -> dict[str, Any]:
+    circuit = load_qasm_circuit(path)
+    normalized, status, error = normalize_circuit_to_basis(circuit)
+    if normalized is None:
+        return {
+            "paper_zx_split_status": status,
+            "paper_zx_split_error": error,
+            "paper_zx_split_normalization_status": status,
+            "paper_zx_split_normalization_error": error,
+        }
+    metrics = compute_paper_zx_splitting_metrics(
+        normalized,
+        rewrite_level=rewrite_level,
+    )
+    metrics["paper_zx_split_normalization_status"] = status
+    metrics["paper_zx_split_normalization_error"] = error
+    return metrics
+
+
+def compute_paper_zx_splitting_metrics(
+    circuit: Any,
+    *,
+    rewrite_level: PaperRewriteLevel = "clifford",
+) -> dict[str, Any]:
+    """ZX-calculus border detector following arXiv:2504.16004 operationally.
+
+    The paper first turns the circuit-like diagram into a same-color spider
+    representation and pushes non-Clifford spiders through Clifford structure
+    using ZX rewrites before applying the recursive crossing-gate closure.  We
+    implement that pushing stage with PyZX graph-like conversion plus Clifford
+    simplification, then reuse the same explicit border/closure code as the
+    baseline detector.
+    """
+
+    try:
+        graph = _circuit_to_graph(circuit)
+        rewritten, rewrite_metrics = _paper_rewrite_graph(graph, rewrite_level)
+        metrics = _rename_zx_metrics(
+            _compute_graph_metrics(rewritten),
+            prefix="paper_zx",
+        )
+        metrics.update(rewrite_metrics)
+        return metrics
+    except Exception as exc:  # pragma: no cover - defensive integration path
+        return {
+            "paper_zx_split_status": "failed",
+            "paper_zx_split_error": str(exc),
+            "paper_zx_detector_variant": f"2504.16004-{rewrite_level}",
+        }
+
+
 def _circuit_to_graph(circuit: Any) -> Any:
     qasm_text = qasm2.dumps(circuit)
     return zx.Circuit.from_qasm(qasm_text).to_graph()
+
+
+def _paper_rewrite_graph(
+    graph: Any,
+    rewrite_level: PaperRewriteLevel,
+) -> tuple[Any, dict[str, Any]]:
+    rewritten = graph.copy()
+    before_vertices = len(list(rewritten.vertices()))
+    before_edges = len(list(rewritten.edges()))
+
+    zx.simplify.to_graph_like(rewritten)
+    graphlike_vertices = len(list(rewritten.vertices()))
+    graphlike_edges = len(list(rewritten.edges()))
+
+    clifford_rewrites = 0
+    if rewrite_level in {"clifford", "full"}:
+        clifford_rewrites = int(zx.simplify.clifford_simp(rewritten, quiet=True))
+    if rewrite_level == "full":
+        zx.simplify.full_reduce(rewritten, quiet=True)
+
+    return rewritten, {
+        "paper_zx_detector_variant": f"2504.16004-{rewrite_level}",
+        "paper_zx_rewrite_status": "ok",
+        "paper_zx_rewrite_level": rewrite_level,
+        "paper_zx_vertices_before_rewrite": before_vertices,
+        "paper_zx_edges_before_rewrite": before_edges,
+        "paper_zx_vertices_after_graphlike": graphlike_vertices,
+        "paper_zx_edges_after_graphlike": graphlike_edges,
+        "paper_zx_clifford_rewrite_rounds": clifford_rewrites,
+        "paper_zx_vertices_after_rewrite": len(list(rewritten.vertices())),
+        "paper_zx_edges_after_rewrite": len(list(rewritten.edges())),
+    }
+
+
+def _rename_zx_metrics(metrics: dict[str, Any], *, prefix: str) -> dict[str, Any]:
+    renamed = {}
+    for key, value in metrics.items():
+        if key.startswith("zx_"):
+            renamed[f"{prefix}_{key[3:]}"] = value
+        else:
+            renamed[key] = value
+    return renamed
 
 
 def _compute_graph_metrics(graph: Any) -> dict[str, Any]:

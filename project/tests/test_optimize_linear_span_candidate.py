@@ -5,10 +5,14 @@ import csv
 import numpy as np
 
 from scripts.materialize_split_reward_candidate import rank_one_tensor_sum
+from scripts.optimize_linear_span_candidate import objective_weights_for_actions
 from scripts.optimize_linear_span_candidate import pair_incidence_for_actions
+from scripts.optimize_linear_span_candidate import frontier_pair_action_weight
 from scripts.optimize_linear_span_candidate import load_target_tensor
 from scripts.optimize_linear_span_candidate import solve_mod2_milp
+from scripts.optimize_linear_span_candidate import t_preserving_frontier_pair_action_weight
 from scripts.optimize_linear_span_candidate import write_solution_manifest
+from scripts.tensor_split_core import outer3
 
 
 def test_solve_mod2_milp_minimizes_exact_toy_solution():
@@ -56,6 +60,75 @@ def test_pair_incidence_for_actions_marks_shared_support_pairs():
     assert incidence[:, 0].tolist() == [0, 0, 0]
     assert incidence[:, 1].tolist() == [1, 0, 0]
     assert incidence[:, 2].tolist() == [0, 1, 0]
+
+
+def test_frontier_pair_objective_prefers_local_target_covering_factor():
+    local_factor = np.array([1, 1, 0, 0], dtype=np.uint8)
+    target = outer3(local_factor)
+
+    weights = objective_weights_for_actions(
+        tensor=target,
+        actions=[2, 4],  # 0011 local on left block, 0101 crossing blocks.
+        objective="frontier-pair",
+        mixed_weight_scale=4.0,
+        support_weight_scale=0.25,
+        pair_weight_scale=0.5,
+        overlap_bonus_scale=0.35,
+    )
+
+    assert weights[0] < weights[1]
+
+
+def test_frontier_pair_action_weight_is_positive_with_large_overlap_bonus():
+    factor = np.array([1, 1, 0, 0], dtype=np.uint8)
+    target = outer3(factor)
+
+    weight = frontier_pair_action_weight(
+        target=target,
+        factor=factor,
+        partition=np.array([0, 0, 1, 1], dtype=np.int32),
+        target_weight=int(target.sum()),
+        mixed_weight_scale=1.0,
+        support_weight_scale=0.0,
+        pair_weight_scale=0.0,
+        overlap_bonus_scale=100.0,
+    )
+
+    assert weight == 0.05
+
+
+def test_depth_guarded_mixed_pair_penalizes_broad_crossing_support():
+    local_factor = np.array([1, 1, 0, 0], dtype=np.uint8)
+    target = outer3(local_factor)
+
+    weights = objective_weights_for_actions(
+        tensor=target,
+        actions=[2, 14],  # 0011 local and 1111 broad/crossing.
+        objective="depth-guarded-mixed-pair",
+        mixed_weight_scale=4.0,
+        support_weight_scale=0.25,
+        pair_weight_scale=0.5,
+        overlap_bonus_scale=0.35,
+    )
+
+    assert weights[0] < weights[1]
+
+
+def test_t_preserving_frontier_pair_has_no_negative_action_bonus():
+    factor = np.array([1, 1, 0, 0], dtype=np.uint8)
+    target = outer3(factor)
+
+    weight = t_preserving_frontier_pair_action_weight(
+        target=target,
+        factor=factor,
+        partition=np.array([0, 0, 1, 1], dtype=np.int32),
+        target_weight=int(target.sum()),
+        mixed_weight_scale=1.0,
+        support_weight_scale=0.0,
+        pair_weight_scale=0.0,
+    )
+
+    assert weight >= 1.0
 
 
 def test_write_solution_manifest_preserves_existing_candidate_rows(tmp_path):
@@ -118,6 +191,7 @@ def test_optimize_linear_span_candidate_reconstructs_hamming_n4_loww3(tmp_path):
         mixed_weight_scale=1.0,
         support_weight_scale=0.25,
         pair_weight_scale=0.0,
+        overlap_bonus_scale=0.35,
         max_factors=None,
         max_pair_overlap=None,
         time_limit_sec=20.0,
