@@ -101,6 +101,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bootstrap-samples", type=int, default=BOOTSTRAP_SAMPLES)
     parser.add_argument("--permutation-samples", type=int, default=PERMUTATION_SAMPLES)
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
+    parser.add_argument(
+        "--fold-attr",
+        choices=("target", "functional_family"),
+        default="target",
+        help=(
+            "Cross-validation unit: leave-one-target-out (default) or "
+            "leave-one-functional-family-out for a stricter generalization test."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -244,32 +253,50 @@ def metric_eq(left: Any, right: Any) -> bool:
     return left_num is not None and right_num is not None and left_num == right_num
 
 
+def fold_of_target(rows: list[dict[str, str]], fold_attr: str) -> dict[str, str]:
+    if fold_attr == "target":
+        return {target: target for target in target_folds(rows)}
+    folds: dict[str, str] = {}
+    for row in rows:
+        folds[row["target"]] = row.get(fold_attr) or "unknown"
+    return folds
+
+
 def loto_rankings(
     rows: list[dict[str, str]],
+    fold_attr: str = "target",
 ) -> tuple[dict[tuple[str, str], list[dict[str, Any]]], dict[str, str]]:
-    """Rank each group's candidates with weights trained without its target."""
+    """Rank each group's candidates with weights trained without its fold.
+
+    With ``fold_attr='target'`` this is leave-one-target-out; with
+    ``fold_attr='functional_family'`` the selector never sees any target of
+    the held-out construction family during training.
+    """
     normalized = normalize_rows(rows, ALPHAQ_FEATURES)
     normalized_by_group = grouped(normalized)
+    target_fold = fold_of_target(rows, fold_attr)
     rankings: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    weights_by_target: dict[str, str] = {}
-    for holdout in target_folds(rows):
-        train_targets = {target for target in target_folds(rows) if target != holdout}
+    weights_by_fold: dict[str, str] = {}
+    for holdout in sorted(set(target_fold.values())):
+        train_targets = {
+            target for target, fold in target_fold.items() if fold != holdout
+        }
         weights = train_linear_weights(
             rows=normalized,
             train_targets=train_targets,
             features=ALPHAQ_FEATURES,
             levels=SELECTOR_LEVELS,
         )
-        weights_by_target[holdout] = ",".join(
+        weights_by_fold[holdout] = ",".join(
             f"{feature}:{weight}"
             for feature, weight in zip(ALPHAQ_FEATURES, weights)
             if weight != 0
         )
         for key, items in normalized_by_group.items():
-            if key[1] != holdout:
+            if target_fold.get(key[1]) != holdout:
                 continue
             rankings[key] = ranked_candidates(items, ALPHAQ_FEATURES, weights)
-    return rankings, weights_by_target
+    return rankings, weights_by_fold
 
 
 def random_rankings(
@@ -364,9 +391,10 @@ def evaluate_scope(
     *,
     bootstrap_samples: int,
     permutation_samples: int,
+    fold_attr: str = "target",
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     groups_raw = grouped(rows)
-    rankings, _weights = loto_rankings(rows)
+    rankings, _weights = loto_rankings(rows, fold_attr)
     groups = {key: rankings[key] for key in rankings}
     details_out: list[dict[str, Any]] = []
     summaries: list[dict[str, Any]] = []
@@ -547,6 +575,7 @@ def main() -> int:
             rng,
             bootstrap_samples=args.bootstrap_samples,
             permutation_samples=args.permutation_samples,
+            fold_attr=args.fold_attr,
         )
         all_details.extend(details)
         all_summaries.extend(summaries)

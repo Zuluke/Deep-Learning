@@ -30,6 +30,11 @@ Primary CSVs:
 - `csv/alphaq_external_runs_consolidated.csv`
 - `csv/alphaq_split_select_summary.csv`
 - `csv/alphaq_split_select_details.csv`
+- `csv/alphaq_portfolio_budget_summary.csv` (guarded portfolio budget evaluation with statistics)
+- `csv/alphaq_portfolio_budget_details.csv`
+- `csv/alphaq_verification_impact.csv` (selection wins joined with proof status)
+- `verification/alphaq_external_*/verification_summary.csv` (feynver proofs per portfolio candidate)
+- `verification/alphaq_external_numeric/verification_numeric.csv` (numeric resolution of inconclusive proofs)
 - `csv/alphaq_objective_selection_dataset.csv`
 - `csv/alphaq_journal_next_battery.csv`
 

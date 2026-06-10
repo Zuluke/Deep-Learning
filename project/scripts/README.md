@@ -86,6 +86,14 @@ Entry points:
 - `build_alphaq_objective_selection_dataset.py`: builds the supervised
   objective-selection dataset.
 - `analyze_alphaq_split_select.py`: evaluates Split-Select policies.
+- `analyze_alphaq_portfolio_budget.py`: evaluates guarded portfolio selection
+  under a materialization budget with sign tests, bootstrap CIs, and
+  random-ranking permutation controls.
+- `verify_candidates_numeric.py`: resolves inconclusive feynver proofs by
+  exact basis enumeration with postselected ancillas; characterizes residual
+  Clifford/non-Clifford correction layers.
+- `analyze_alphaq_verification_impact.py`: joins portfolio selection wins
+  with formal-verification status.
 - `analyze_alphaq_journal_evidence.py`: emits evidence gates and next-battery
   recommendations.
 - `build_alphaq_journal_battery_commands.py`: turns next-battery rows into

@@ -33,6 +33,8 @@ results/csv/*
 !results/csv/alphaq_external_validation_paper_zx_audit*.csv
 !results/csv/alphaq_portfolio_budget_summary.csv
 !results/csv/alphaq_portfolio_budget_details.csv
+!results/csv/alphaq_portfolio_budget_lofo_summary.csv
+!results/csv/alphaq_portfolio_budget_lofo_details.csv
 !results/csv/alphaq_verification_impact.csv
 !results/csv/alphaq_circuit_objective_selector_summary.csv
 !results/csv/alphaq_circuit_objective_selector_details.csv
@@ -47,6 +49,7 @@ results/figures/*
 !results/figures/alphaq_shared_parity_expanded_candidates.png
 !results/figures/alphaq_journal_current_state.png
 !results/figures/alphaq_portfolio_budget.png
+!results/figures/alphaq_portfolio_budget_lofo.png
 !results/reports/
 results/reports/*
 !results/reports/paper_reproduction_summary.md
@@ -69,6 +72,7 @@ results/reports/*
 !results/reports/alphaq_article_apuana_commands.md
 !results/reports/alphaq_external_validation_paper_zx_audit*.md
 !results/reports/alphaq_portfolio_budget.md
+!results/reports/alphaq_portfolio_budget_lofo.md
 !results/reports/alphaq_verification_impact.md
 !results/reports/alphaq_circuit_objective_selector.md
 !results/reproducibility/

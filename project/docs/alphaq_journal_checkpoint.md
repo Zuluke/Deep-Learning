@@ -49,6 +49,13 @@ unique targets):
 
 - The budget-1 learned selection already recovers oracle T-count on every
   group; random ranking recovers ~54%.
+- **Leave-one-functional-family-out** (selector never sees the held-out
+  construction family): pure top-1 shows its first regression (6 wins / 1
+  loss at target level), while **guarded top-2 removes the regression**
+  (6 wins / 0 losses, sign-test p = 0.016, oracle-T 15/16). This is the
+  empirical case for the guard: it converts a heuristic that can fail
+  off-distribution into a method that is never worse by construction.
+  (`results/csv/alphaq_portfolio_budget_lofo_summary.csv`)
 - Geometric-mean T-count ratio vs baseline: 0.950 (groups), 0.925 (targets) —
   including ties, with zero regressions.
 - Median QASM-depth ratio is 1.0 (depth-conservative).
