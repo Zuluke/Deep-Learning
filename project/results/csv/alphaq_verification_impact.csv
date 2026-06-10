@@ -8,7 +8,7 @@ hamming_weight_n6,external_article_extended,frontier_pair,1.0,tie,equal,equal,Tr
 mod_5_4,external_article_core,factor_count,1.0,tie,equal,equal,True,False
 nc_tof_3,internal,factor_count_pair_cap,1.0,tie,unverified,unverified,False,False
 vbe_adder_3,external_night_long,factor_count,1.0,tie,nonclifford-correction,nonclifford-correction,False,False
-barenco_tof_4,external_night_long,mixed_pair,0.65625,win,unverified,unverified,False,False
+barenco_tof_4,external_night_long,mixed_pair,0.65625,win,equal,equal,True,True
 cuccaro_adder_n4,external_article_extended,factor_count_pair_cap,0.75,win,not-equal,not-equal,False,False
 gf_2pow3_mult,internal,factor_count_pair_cap,0.9428571428571428,win,unverified,unverified,False,False
 gf_2pow4_mult,external_article_extended,factor_count_pair_cap,0.9655172413793104,win,not-equal,not-equal,False,False

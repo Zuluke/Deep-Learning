@@ -62,6 +62,24 @@ unique targets):
 - Cost: the oracle needs K materializations + audits per target; guarded
   top-2 needs 2. Decomposition-stage features are byproducts of optimization.
 
+## 2b. The Selection Rule Is Interpretable And Nearly Constant
+
+14 of 16 leave-one-target-out folds learn the identical sparse weight vector:
+
+> rank candidates by normalized `factor_count` (weight +2), preferring higher
+> `factor_qubit_concentration_index` and `factor_support_weight_mean`
+> (each -1), and lower `factor_pairwise_support_overlap_mean` and
+> `factor_pairwise_jaccard_mean` (each +1).
+
+Hardcoding this modal rule (no training at all) reproduces the full result:
+oracle-T 29/29 groups and 16/16 targets, 10/0 and 7/0 wins/losses. Caveat:
+the rule is distilled from the same dataset, so the LOTO/LOFO evaluations
+remain the out-of-sample evidence; the value here is interpretability and
+zero adoption cost. Mechanistically the rule says: take the cheapest
+decomposition unless its factor structure is diffuse and overlapping, in
+which case a concentrated alternative materializes better — consistent with
+the splitting intuition that motivated the `mixed_pair` objective.
+
 ## 3. Formal Verification Campaign (New)
 
 52 candidate proofs across the external batteries (feynver path-sum +
@@ -88,6 +106,14 @@ exact numeric isometry checking with postselected gadget ancillas,
 - The benchmark block reconstructions themselves verify exactly against the
   original circuits (checked for nc_tof_4), so the defect is ours, not the
   benchmark's.
+
+The non-Clifford defects have tiny, highly structured footprints. ANF of the
+residual phase function: nc_tof_4 = x0x1x2 + x0x1 + x2 (+ linear terms) —
+exactly a CCZ(0,1,2)*CZ(0,1)*Z(2) discrepancy, the signature of a single
+T<->T-dagger orientation error in one factor gadget; vbe_adder_3 =
+(x4+x5)*e2(x0,x1,x2) plus Clifford terms — the same pattern on two carry
+qubits. The likely root cause is a dagger-orientation bug in specific gadget
+instances, so the repair should be **T-count neutral**.
 
 **Action item (pre-submission blocker):** repair the shared-parity assembly
 correction layer for the affected targets, re-materialize, re-verify.

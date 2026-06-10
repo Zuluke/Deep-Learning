@@ -2,7 +2,7 @@
 
 Policy: `guarded_top2` (scope `targets`). CSV: `/Users/caio/Deep-Learning/project/results/csv/alphaq_verification_impact.csv`.
 
-T-count wins vs baseline: 7; wins whose selected candidate is fully proven: 2.
+T-count wins vs baseline: 7; wins whose selected candidate is fully proven: 3.
 
 | target | split | selected objective | T ratio | outcome | selected proof | baseline proof |
 |---|---|---|---:|---|---|---|
@@ -15,7 +15,7 @@ T-count wins vs baseline: 7; wins whose selected candidate is fully proven: 2.
 | mod_5_4 | external_article_core | factor_count | 1.0 | tie | equal | equal |
 | nc_tof_3 | internal | factor_count_pair_cap | 1.0 | tie | unverified | unverified |
 | vbe_adder_3 | external_night_long | factor_count | 1.0 | tie | nonclifford-correction | nonclifford-correction |
-| barenco_tof_4 | external_night_long | mixed_pair | 0.65625 | win | unverified | unverified |
+| barenco_tof_4 | external_night_long | mixed_pair | 0.65625 | win | equal | equal |
 | cuccaro_adder_n4 | external_article_extended | factor_count_pair_cap | 0.75 | win | not-equal | not-equal |
 | gf_2pow3_mult | internal | factor_count_pair_cap | 0.9428571428571428 | win | unverified | unverified |
 | gf_2pow4_mult | external_article_extended | factor_count_pair_cap | 0.9655172413793104 | win | not-equal | not-equal |
