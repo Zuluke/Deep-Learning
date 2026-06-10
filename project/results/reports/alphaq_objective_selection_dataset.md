@@ -8,7 +8,7 @@ This dataset reframes the current evidence as supervised objective selection: ea
 
 Decision: `prototype-ready`.
 
-Train-ready target groups: 29/37.
+Train-ready target groups: 29/38.
 External train-ready target groups: 21.
 Oracle objective distribution: factor_count=13, factor_count_pair_cap=9, frontier_pair=2, mixed_pair=5.
 
@@ -34,6 +34,7 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 | external_article_extended | mod_mult_55 | True | 4 | mixed_pair |
 | external_article_extended | nc_tof_5 | False | 0 | - |
 | external_journal_full_cuccaro_adder_n4 | cuccaro_adder_n4 | True | 3 | factor_count |
+| external_journal_full_cuccaro_adder_n5 | cuccaro_adder_n5 | False | 1 | factor_count |
 | external_journal_full_gf_2pow4_mult | gf_2pow4_mult | True | 3 | factor_count_pair_cap |
 | external_journal_full_gf_2pow5_mult | gf_2pow5_mult | False | 0 | - |
 | external_journal_full_hamming_weight_n6 | hamming_weight_n6 | True | 3 | factor_count_pair_cap |
@@ -60,9 +61,9 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 
 | objective | rows | ok | beam rows | failures | oracle count | median runtime sec | mean runtime sec |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| factor_count | 37 | 29 | 29 | 8 | 13 |  |  |
-| factor_count_pair_cap | 37 | 29 | 29 | 8 | 10 |  |  |
-| mixed_pair | 37 | 27 | 27 | 10 | 5 |  |  |
-| frontier_pair | 37 | 12 | 12 | 25 | 3 |  |  |
-| depth_guarded_mixed_pair | 37 | 0 | 0 | 37 | 0 |  |  |
-| t_preserving_frontier_pair | 37 | 0 | 0 | 37 | 0 |  |  |
+| factor_count | 38 | 30 | 30 | 8 | 14 |  |  |
+| factor_count_pair_cap | 38 | 29 | 29 | 9 | 10 |  |  |
+| mixed_pair | 38 | 27 | 27 | 11 | 5 |  |  |
+| frontier_pair | 38 | 12 | 12 | 26 | 3 |  |  |
+| depth_guarded_mixed_pair | 38 | 0 | 0 | 38 | 0 |  |  |
+| t_preserving_frontier_pair | 38 | 0 | 0 | 38 | 0 |  |  |

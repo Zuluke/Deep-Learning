@@ -7,7 +7,7 @@ Next battery CSV: `/Users/caio/Deep-Learning/project/results/csv/alphaq_journal_
 
 Decision: `not-yet-journal-ready`.
 
-passed gates=3/6; blocking gates=dataset_scale_and_label_diversity, external_generalization_coverage, formal_verification_coverage.
+passed gates=4/6; blocking gates=dataset_scale_and_label_diversity, formal_verification_coverage.
 
 The current evidence is strong enough to justify a prototype integration experiment, but it is not yet enough for a journal-level robustness claim. The blocking issues are external coverage, repeated non-baseline external wins, and complete formal verification over the promoted/expanded candidates.
 
@@ -16,26 +16,18 @@ The current evidence is strong enough to justify a prototype integration experim
 | gate | status | score | evidence | required next |
 |---|---|---:|---|---|
 | selector_loto | pass | 0.759 | best Split-Select `split_select_linear_alphaq` has oracle matches 25/29; baseline has 13/29; T-count wins over baseline 10/29. | Keep the trained selector as prototype policy; expand held-out targets before journal claims. |
-| dataset_scale_and_label_diversity | partial | 0.967 | train-ready groups=29/37; external train-ready groups=21; oracle labels=factor_count=13, factor_count_pair_cap=9, frontier_pair=2, mixed_pair=5. | Grow to at least 30 train-ready target/run groups with at least 10 external groups and all three objective labels represented. |
-| external_generalization_coverage | partial | 0 | complete external targets=0 (-); partial external targets=9 (barenco_tof_4, cuccaro_adder_n4, cuccaro_adder_n5, gf_2pow4_mult, hamming_weight_n6, hamming_weight_n7, mod_mult_55, nc_tof_4, vbe_adder_3); external families in dataset=2. | Run a broader external battery: at least 10 complete external targets spanning at least 3 families. |
+| dataset_scale_and_label_diversity | partial | 0.967 | train-ready groups=29/38; external train-ready groups=21; oracle labels=factor_count=13, factor_count_pair_cap=9, frontier_pair=2, mixed_pair=5. | Grow to at least 30 train-ready target/run groups with at least 10 external groups and all three objective labels represented. |
+| external_generalization_coverage | pass | 1 | complete external targets=12 (barenco_tof_4, cuccaro_adder_n4, gf_2pow2_mult, gf_2pow4_mult, hamming_weight_n4, hamming_weight_n5, hamming_weight_n6, hamming_weight_n7, mod_5_4, mod_mult_55, nc_tof_4, vbe_adder_3); partial external targets=1 (cuccaro_adder_n5); external families in dataset=5. | Run a broader external battery: at least 10 complete external targets spanning at least 3 families. |
 | external_nonbaseline_effect | pass | 1 | non-baseline external improvements=4 (barenco_tof_4:mixed_pair, gf_2pow4_mult:factor_count_pair_cap, hamming_weight_n6:factor_count_pair_cap, mod_mult_55:mixed_pair); non-baseline regressions=0 (-). | Find repeated external cases where Split-Select chooses a non-factor-count objective and improves T-count/depth. |
-| formal_verification_coverage | fail | 0 | formal verification rows=0; equal=0; inconclusive=0; failures=0. | Resolve inconclusive proofs and verify all promoted candidates, including the expanded external battery. |
+| formal_verification_coverage | fail | 0.659 | formal verification rows=44; proven=29 (equal=28, equal-numeric=1, equal-up-to-clifford=0); characterized assembly defects=7; inconclusive=0; unexplained failures=8. | Repair the assembly defect on targets with non-Clifford corrections, re-materialize, and re-verify; then all promoted candidates should be proven. |
 | depth_control | pass | 1 | best Split-Select median QASM ratio=1; QASM non-worse=24/29. | Keep depth as a hard audit metric; avoid claiming T-count wins alone. |
-| overall_journal_readiness | not-yet-journal-ready | 0.5 | passed gates=3/6; blocking gates=dataset_scale_and_label_diversity, external_generalization_coverage, formal_verification_coverage. | Do not frame as journal-ready until blocking gates pass; use current results as prototype evidence. |
-| next_decisive_battery | planned | 1 | recommended full-action expansion targets=0; tensor-v3 screening targets=8; restricted-action pilot targets=1. | Run tensor-v3 screening before repeating failed full-action targets; then implement the restricted-action pilot if the signal survives. |
+| overall_journal_readiness | not-yet-journal-ready | 0.667 | passed gates=4/6; blocking gates=dataset_scale_and_label_diversity, formal_verification_coverage. | Do not frame as journal-ready until blocking gates pass; use current results as prototype evidence. |
+| next_decisive_battery | planned | 0.5 | recommended full-action expansion targets=0; tensor-v3 screening targets=3; restricted-action pilot targets=1. | Run tensor-v3 screening before repeating failed full-action targets; then implement the restricted-action pilot if the signal survives. |
 
 ## Recommended Next Battery
 
 | target | family | tensor size | T original | stage | status | action |
 |---|---|---:|---:|---|---|---|
-| nc_tof_4 | arithmetic | 11 | 35 | full-action-repair | ready-full-action | Run objective-by-beam grid and guarded selector policy comparison. |
-| barenco_tof_4 | arithmetic | 14 | 56 | full-action-repair | ready-full-action | Run objective-by-beam grid and guarded selector policy comparison. |
-| vbe_adder_3 | arithmetic | 14 | 70 | full-action-repair | ready-full-action | Run objective-by-beam grid and guarded selector policy comparison. |
-| mod_mult_55 | arithmetic | 11 | 49 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
-| cuccaro_adder_n4 | applications | 12 | 56 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
-| gf_2pow4_mult | arithmetic | 12 | 112 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
-| hamming_weight_n6 | applications | 12 | 28 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
-| hamming_weight_n7 | applications | 13 | 28 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
 | gf_2pow5_mult | arithmetic | 15 | 175 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
 | nc_tof_5 | arithmetic | 15 | 49 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |
 | cuccaro_adder_n5 | applications | 16 | 70 | tensor-v3-screen | needs-tensor-v3-screen | Run tensor-v3/profile screening before objective-grid expansion. |

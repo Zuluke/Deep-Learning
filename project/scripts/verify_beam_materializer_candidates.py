@@ -41,6 +41,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--materializer-prefix", default="beam-shared-parity")
     parser.add_argument("--objective-variant", default=None)
     parser.add_argument("--timeout-sec", type=int, default=60)
+    parser.add_argument(
+        "--path-map",
+        default=None,
+        help=(
+            "OLD=NEW prefix rewrite applied to artifact paths, for verifying "
+            "candidates whose summaries were generated on another host."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -54,12 +62,18 @@ def read_json(path: Path) -> dict[str, Any]:
 
 
 def best_beam_rows(rows: list[dict[str, str]], materializer_prefix: str = "beam-shared-parity") -> list[dict[str, str]]:
+    # Verify one candidate per (target, objective) when the grid carries
+    # objective variants, so every portfolio candidate gets a proof; older
+    # grids without objectives fall back to one candidate per target.
     best = []
-    for target in sorted({row["target"] for row in rows}):
+    keys = sorted({(row["target"], row.get("objective_variant", "")) for row in rows})
+    for target, objective in keys:
         candidates = [
             row
             for row in rows
-            if row["target"] == target and row.get("materializer", "").startswith(materializer_prefix)
+            if row["target"] == target
+            and row.get("objective_variant", "") == objective
+            and row.get("materializer", "").startswith(materializer_prefix)
         ]
         if not candidates:
             continue
@@ -82,18 +96,34 @@ def inf_if_none(value: Any) -> float:
     return float("inf") if numeric is None else numeric
 
 
+def parse_path_map(value: str | None) -> tuple[str, str] | None:
+    if not value:
+        return None
+    old, separator, new = value.partition("=")
+    if not separator or not old:
+        raise SystemExit(f"Invalid --path-map (expected OLD=NEW): {value}")
+    return old, new
+
+
+def remap_path(value: str | None, path_map: tuple[str, str] | None) -> str | None:
+    if value and path_map and value.startswith(path_map[0]):
+        return path_map[1] + value[len(path_map[0]) :]
+    return value
+
+
 def verify_rows(
     *,
     rows: list[dict[str, str]],
     output_root: Path,
     materializer_prefix: str,
     timeout_sec: int,
+    path_map: tuple[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     proof_root = ensure_dir(output_root / "proofs")
     normalized_root = ensure_dir(output_root / "normalized_qasm")
     results = []
     for index, row in enumerate(best_beam_rows(rows, materializer_prefix), start=1):
-        summary_path = project_path(row.get("summary_path"))
+        summary_path = project_path(remap_path(row.get("summary_path"), path_map))
         if summary_path is None or not summary_path.exists():
             result = {
                 "verification_status": "missing-summary",
@@ -106,11 +136,12 @@ def verify_rows(
         else:
             summary = read_json(summary_path)
             target = str(row["target"])
-            benchmark_dir = Path(str(summary["benchmark_dir"]))
+            benchmark_dir = Path(str(remap_path(str(summary["benchmark_dir"]), path_map)))
             original_qasm = benchmark_dir / f"{target}.qasm"
-            candidate_qasm = Path(str(summary["assembled_qasm"]))
-            pair_dir = ensure_dir(proof_root / target)
-            normalized_dir = ensure_dir(normalized_root / target / row["materializer"])
+            candidate_qasm = Path(str(remap_path(str(summary["assembled_qasm"]), path_map)))
+            objective = row.get("objective_variant", "") or "default"
+            pair_dir = ensure_dir(proof_root / target / objective)
+            normalized_dir = ensure_dir(normalized_root / target / objective / row["materializer"])
             result = run_verification_pair(
                 original_qasm=original_qasm,
                 candidate_qasm=candidate_qasm,
@@ -126,6 +157,7 @@ def verify_rows(
         results.append(
             {
                 "target": row["target"],
+                "objective_variant": row.get("objective_variant", ""),
                 "materializer": row["materializer"],
                 "beam_width": row.get("beam_width"),
                 "candidate_kind": row.get("candidate_kind", ""),
@@ -194,6 +226,7 @@ def main() -> int:
         output_root=args.output_root,
         materializer_prefix=args.materializer_prefix,
         timeout_sec=args.timeout_sec,
+        path_map=parse_path_map(args.path_map),
     )
     write_csv_rows(rows, args.summary_csv)
     write_json(rows, args.summary_json)

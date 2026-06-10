@@ -19,6 +19,8 @@ DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_external_runs_co
 DEFAULT_RUNS = (
     "standard",
     "night_long",
+    "article_core",
+    "article_extended",
     "journal_repair",
     "journal_repair_paircap",
     "journal_full_1_rerun",
@@ -33,6 +35,10 @@ DEFAULT_RUNS = (
     "journal_full_gf_2pow5_mult",
     "journal_full_nc_tof_5",
     "journal_full_cuccaro_adder_n5",
+    "article_repair2_barenco",
+    "article_repair2_vbe",
+    "journal_full_nc_tof_5_long",
+    "journal_full_gf_2pow5_mult_long",
 )
 
 

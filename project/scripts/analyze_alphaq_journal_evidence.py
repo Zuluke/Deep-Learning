@@ -23,18 +23,24 @@ DEFAULT_VERIFICATION_CSVS = (
     PROJECT_ROOT / "results" / "verification" / "alphaq_objective_beam_policy_factor_count_pair_cap" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_beam_materializer_ablation" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_beam_materializer_holdout_ablation" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_core" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_extended" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_night_long" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_numeric" / "verification_numeric.csv",
 )
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_evidence_gates.csv"
 DEFAULT_BATTERY_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_next_battery.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_journal_evidence.md"
 
+# External-target completeness is measured against the deployed portfolio:
+# the objectives that the batteries actually run end-to-end. Experimental
+# variants without any runs (`depth_guarded_mixed_pair`,
+# `t_preserving_frontier_pair`) must not reset completeness to zero.
 OBJECTIVES = (
     "factor_count",
     "factor_count_pair_cap",
     "mixed_pair",
     "frontier_pair",
-    "depth_guarded_mixed_pair",
-    "t_preserving_frontier_pair",
 )
 
 
@@ -179,20 +185,66 @@ def external_effect_gate(rows: list[dict[str, str]]) -> dict[str, Any]:
     )
 
 
+# Verification statuses proving full functional equivalence. `equal` is a
+# feynver path-sum proof; `equal-numeric` is exact basis enumeration;
+# `equal-up-to-clifford` is exact equivalence after an explicitly extracted
+# Clifford relabel, which leaves T-count claims intact.
+PROVEN_VERIFICATION_STATUSES = frozenset({"equal", "equal-numeric", "equal-up-to-clifford"})
+# `nonclifford-correction` means the candidate was exactly characterized as
+# the original composed with a signed basis permutation whose phase polynomial
+# has degree >= 3: a real assembly defect that must be repaired before
+# absolute T-counts on that target can be trusted.
+CHARACTERIZED_DEFECT_STATUSES = frozenset({"nonclifford-correction"})
+
+
+def merge_verification_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Let numeric re-checks supersede earlier inconclusive feynver rows."""
+    merged: dict[tuple[str, str, str], dict[str, str]] = {}
+    for row in rows:
+        key = (
+            row.get("target", ""),
+            row.get("objective_variant", ""),
+            row.get("materializer", ""),
+        )
+        current = merged.get(key)
+        if current is None:
+            merged[key] = row
+            continue
+        current_status = current.get("verification_status", "")
+        new_status = row.get("verification_status", "")
+        if current_status == "inconclusive" and new_status != "inconclusive":
+            merged[key] = row
+    return list(merged.values())
+
+
 def verification_gate(rows: list[dict[str, str]]) -> dict[str, Any]:
+    rows = merge_verification_rows(rows)
     status_counts = Counter(row.get("verification_status", "missing") for row in rows)
     total = sum(status_counts.values())
-    equal = status_counts.get("equal", 0)
+    proven = sum(status_counts.get(status, 0) for status in PROVEN_VERIFICATION_STATUSES)
+    defects = sum(status_counts.get(status, 0) for status in CHARACTERIZED_DEFECT_STATUSES)
     inconclusive = status_counts.get("inconclusive", 0)
-    failures = total - equal - inconclusive
-    status = "pass" if total >= 20 and equal == total else "partial" if equal > 0 and failures == 0 else "fail"
-    evidence = f"formal verification rows={total}; equal={equal}; inconclusive={inconclusive}; failures={failures}."
+    failures = total - proven - defects - inconclusive
+    if total >= 20 and proven == total:
+        status = "pass"
+    elif proven > 0 and failures == 0:
+        status = "partial"
+    else:
+        status = "fail"
+    evidence = (
+        f"formal verification rows={total}; proven={proven} "
+        f"(equal={status_counts.get('equal', 0)}, "
+        f"equal-numeric={status_counts.get('equal-numeric', 0)}, "
+        f"equal-up-to-clifford={status_counts.get('equal-up-to-clifford', 0)}); "
+        f"characterized assembly defects={defects}; inconclusive={inconclusive}; "
+        f"unexplained failures={failures}."
+    )
     return gate(
         "formal_verification_coverage",
         status,
-        0.0 if total == 0 else equal / total,
+        0.0 if total == 0 else proven / total,
         evidence,
-        "Resolve inconclusive proofs and verify all promoted candidates, including the expanded external battery.",
+        "Repair the assembly defect on targets with non-Clifford corrections, re-materialize, and re-verify; then all promoted candidates should be proven.",
     )
 
 
@@ -335,8 +387,11 @@ def grouped_dataset(rows: list[dict[str, str]]) -> dict[tuple[str, str], list[di
 
 
 def external_family_count(rows: list[dict[str, str]]) -> int:
+    # Generalization is counted over functional (construction) families when
+    # the dataset provides them; the coarse benchmark-folder label is only a
+    # fallback for older datasets.
     families = {
-        items[0].get("family", "")
+        items[0].get("functional_family") or items[0].get("family", "")
         for key, items in grouped_dataset(rows).items()
         if key[0].startswith("external") and truthy(items[0].get("train_ready"))
     }

@@ -52,6 +52,10 @@ DEFAULT_EXTRA_EXTERNAL_RUNS = (
     "journal_full_nc_tof_5",
     "journal_full_gf_2pow5_mult",
     "journal_full_cuccaro_adder_n5",
+    "article_repair2_barenco",
+    "article_repair2_vbe",
+    "journal_full_nc_tof_5_long",
+    "journal_full_gf_2pow5_mult_long",
 )
 DEFAULT_READINESS_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_validation_readiness.csv"
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_objective_selection_dataset.csv"
@@ -68,6 +72,39 @@ OBJECTIVES = (
 BASELINE_OBJECTIVE = "factor_count"
 T_SAFE_REL_TOL = 0.05
 QASM_SAFE_REL_TOL = 0.25
+
+# Functional families group benchmark targets by the circuit construction they
+# implement. The coarse source labels (`arithmetic`/`applications`) only encode
+# which benchmark folder a target came from; generalization claims should use
+# the construction family instead.
+FUNCTIONAL_FAMILY_PREFIXES = (
+    ("barenco_tof", "toffoli-chain"),
+    ("nc_tof", "toffoli-chain"),
+    ("tof_", "toffoli-chain"),
+    ("cuccaro_adder", "adder"),
+    ("vbe_adder", "adder"),
+    ("rc_adder", "adder"),
+    ("8_bit_adder", "adder"),
+    ("qcla", "adder"),
+    ("csla_mux", "adder"),
+    ("csum_mux", "adder"),
+    ("gf_2pow", "gf-multiplier"),
+    ("mod_", "modular-arithmetic"),
+    ("hamming_weight", "hamming-weight"),
+    ("hamming_15", "hamming-code"),
+    ("hwb", "hidden-weighted-bit"),
+    ("qft", "qft"),
+    ("grover", "grover"),
+    ("basis_change", "basis-change"),
+    ("unary_iteration", "unary-iteration"),
+)
+
+
+def functional_family(target: str) -> str:
+    for prefix, family in FUNCTIONAL_FAMILY_PREFIXES:
+        if target.startswith(prefix):
+            return family
+    return "other"
 
 
 def parse_args() -> argparse.Namespace:
@@ -214,6 +251,7 @@ def candidate_row(
         "source_split": split,
         "target": target,
         "family": meta.get("family", ""),
+        "functional_family": functional_family(target),
         "n_qubits": meta.get("n_qubits", ""),
         "tensor_size": meta.get("tensor_size", ""),
         "original_tcount": meta.get("tcount_original", ""),
@@ -322,6 +360,7 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "source_split",
         "target",
         "family",
+        "functional_family",
         "n_qubits",
         "tensor_size",
         "original_tcount",

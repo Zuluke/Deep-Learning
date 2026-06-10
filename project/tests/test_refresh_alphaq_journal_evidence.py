@@ -19,6 +19,8 @@ def test_refresh_runs_steps_in_dependency_order() -> None:
         "scripts/consolidate_alphaq_external_runs.py",
         "scripts/build_alphaq_objective_selection_dataset.py",
         "scripts/analyze_alphaq_split_select.py",
+        "scripts/train_alphaq_circuit_objective_selector.py",
+        "scripts/analyze_alphaq_portfolio_budget.py",
         "scripts/analyze_alphaq_journal_evidence.py",
     ]
     assert all(call[1]["check"] is True for call in calls)

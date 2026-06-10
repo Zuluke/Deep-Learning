@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from scripts.analyze_alphaq_journal_evidence import OBJECTIVES
 from scripts.analyze_alphaq_journal_evidence import evidence_rows
 from scripts.analyze_alphaq_journal_evidence import external_effect_gate
 from scripts.analyze_alphaq_journal_evidence import external_target_status
 from scripts.analyze_alphaq_journal_evidence import next_battery_rows
+
+NON_BASELINE_OBJECTIVES = tuple(
+    objective for objective in OBJECTIVES if objective != "factor_count"
+)
 
 
 def test_evidence_rows_block_journal_when_external_and_formal_are_insufficient() -> None:
@@ -45,26 +50,24 @@ def test_evidence_rows_pass_journal_when_all_core_gates_pass() -> None:
 
 
 def test_external_target_status_distinguishes_complete_partial_and_failed() -> None:
-    rows = [
-        make_external("a", "factor_count", "ok"),
-        make_external("a", "factor_count_pair_cap", "ok"),
-        make_external("a", "mixed_pair", "ok"),
-        make_external("b", "factor_count", "ok"),
-        make_external("b", "factor_count_pair_cap", "failed"),
-        make_external("b", "mixed_pair", "failed"),
-        make_external("c", "factor_count", "failed"),
-        make_external("c", "factor_count_pair_cap", "failed"),
-        make_external("c", "mixed_pair", "failed"),
-    ]
+    rows = (
+        [make_external("a", objective, "ok") for objective in OBJECTIVES]
+        + [make_external("b", "factor_count", "ok")]
+        + [
+            make_external("b", objective, "failed")
+            for objective in NON_BASELINE_OBJECTIVES
+        ]
+        + [make_external("c", objective, "failed") for objective in OBJECTIVES]
+    )
 
     assert external_target_status(rows) == {"a": "complete", "b": "partial", "c": "failed"}
 
 
 def test_external_target_status_accepts_consolidated_best_schema() -> None:
     rows = [
-        {"target": "a", "objective_variant": "factor_count", "best_status": "ok"},
-        {"target": "a", "objective_variant": "factor_count_pair_cap", "best_status": "ok"},
-        {"target": "a", "objective_variant": "mixed_pair", "best_status": "ok"},
+        {"target": "a", "objective_variant": objective, "best_status": "ok"}
+        for objective in OBJECTIVES
+    ] + [
         {"target": "b", "objective_variant": "factor_count", "best_status": "ok"},
         {"target": "b", "objective_variant": "factor_count_pair_cap", "best_status": "failed"},
         {"target": "b", "objective_variant": "mixed_pair", "best_status": "missing"},
@@ -95,9 +98,8 @@ def test_next_battery_prioritizes_repair_then_full_action_expansion() -> None:
         make_readiness("control", "current-grid-control", priority=200),
     ]
     external = [
-        make_external("validated", "factor_count", "ok"),
-        make_external("validated", "factor_count_pair_cap", "ok"),
-        make_external("validated", "mixed_pair", "ok"),
+        make_external("validated", objective, "ok") for objective in OBJECTIVES
+    ] + [
         make_external("partial", "factor_count", "ok"),
         make_external("partial", "factor_count_pair_cap", "failed"),
         make_external("partial", "mixed_pair", "ok"),
@@ -166,13 +168,21 @@ def external_rows(
     for index in range(complete):
         target = f"ext_{index}"
         mixed_wins = index < nonbaseline_improvements
-        rows.extend(
-            [
-                make_external(target, "factor_count", "ok", tcount=20, qasm=100),
-                make_external(target, "factor_count_pair_cap", "ok", tcount=22, qasm=110),
-                make_external(target, "mixed_pair", "ok", tcount=10 if mixed_wins else 25, qasm=90 if mixed_wins else 120),
-            ]
+        rows.append(make_external(target, "factor_count", "ok", tcount=20, qasm=100))
+        rows.append(make_external(target, "factor_count_pair_cap", "ok", tcount=22, qasm=110))
+        rows.append(
+            make_external(
+                target,
+                "mixed_pair",
+                "ok",
+                tcount=10 if mixed_wins else 25,
+                qasm=90 if mixed_wins else 120,
+            )
         )
+        for objective in OBJECTIVES:
+            if objective in {"factor_count", "factor_count_pair_cap", "mixed_pair"}:
+                continue
+            rows.append(make_external(target, objective, "ok", tcount=24, qasm=115))
     if partial:
         rows.extend(
             [

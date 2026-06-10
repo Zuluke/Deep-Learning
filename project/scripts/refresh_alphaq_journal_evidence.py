@@ -21,6 +21,7 @@ REFRESH_STEPS = (
     RefreshStep("objective-selection dataset", "scripts/build_alphaq_objective_selection_dataset.py"),
     RefreshStep("Split-Select evaluation", "scripts/analyze_alphaq_split_select.py"),
     RefreshStep("circuit-conditioned objective selector", "scripts/train_alphaq_circuit_objective_selector.py"),
+    RefreshStep("guarded portfolio budget evaluation", "scripts/analyze_alphaq_portfolio_budget.py"),
     RefreshStep("journal evidence audit", "scripts/analyze_alphaq_journal_evidence.py"),
 )
 
