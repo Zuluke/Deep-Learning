@@ -80,9 +80,11 @@ exact numeric isometry checking with postselected gadget ancillas,
   (selector-level) claims are internally consistent; absolute T-counts on
   these targets need the assembly repair.
 - cuccaro_adder_n4 candidates equal the benchmark **block reference** up to a
-  Clifford (degree-1) frame; the original-vs-blocks gap is the benchmark's
-  own hopt gadget convention. gf_2pow4_mult is a clean scaled isometry with a
-  correction still being characterized (Clifford conjugation test pending).
+  Clifford (degree-1 X/Z frame); gf_2pow4_mult's residual correction against
+  the block reference is proven Clifford by a full Pauli-conjugation closure
+  test. For both targets the T-count claims are therefore intact and the
+  assembly repair is free in T gates. Only nc_tof_4 and vbe_adder_3 carry
+  non-Clifford (degree-3) defects whose repair may add T gates.
 - The benchmark block reconstructions themselves verify exactly against the
   original circuits (checked for nc_tof_4), so the defect is ours, not the
   benchmark's.
