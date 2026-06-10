@@ -37,30 +37,35 @@ Two findings motivate this framing and are results in their own right:
 
 ## 2. Headline Evidence (`scripts/analyze_alphaq_portfolio_budget.py`)
 
-Leave-one-target-out, on the consolidated dataset (29 train-ready groups, 16
-unique targets):
+Leave-one-target-out, on the consolidated dataset after the 2026-06-09/10
+repair and long-budget batteries (32 train-ready groups, 17 unique targets):
 
-| policy | scope | oracle-T recovery | T wins/losses vs baseline | sign-test p | random-ranking recovery | permutation p |
-|---|---|---:|---:|---:|---:|---:|
-| top-1 | groups | 29/29 | 10/0 | 9.8e-4 | 15.5/29 | < 1/2000 |
-| guarded top-2 | groups | 29/29 | 10/0 | 9.8e-4 | 24.0/29 | 1e-3 |
-| top-1 | targets (dedup) | 16/16 | 7/0 | 7.8e-3 | 8.7/16 | < 1/2000 |
-| guarded top-2 | targets (dedup) | 16/16 | 7/0 | 7.8e-3 | 12.5/16 | 5e-3 |
+| policy | scope | oracle-T recovery | T wins/losses vs baseline | sign-test p |
+|---|---|---:|---:|---:|
+| top-1 | groups | 32/32 | 12/0 | 2.4e-4 |
+| guarded top-2 | groups | 32/32 | 12/0 | 2.4e-4 |
+| top-1 | targets (dedup) | 16/17 | 7/0 | 7.8e-3 |
+| guarded top-2 | targets (dedup) | 16/17 | 7/0 | 7.8e-3 |
 
-- The budget-1 learned selection already recovers oracle T-count on every
-  group; random ranking recovers ~54%.
-- **Leave-one-functional-family-out** (selector never sees the held-out
-  construction family): pure top-1 shows its first regression (6 wins / 1
-  loss at target level), while **guarded top-2 removes the regression**
-  (6 wins / 0 losses, sign-test p = 0.016, oracle-T 15/16). This is the
-  empirical case for the guard: it converts a heuristic that can fail
-  off-distribution into a method that is never worse by construction.
-  (`results/csv/alphaq_portfolio_budget_lofo_summary.csv`)
-- Geometric-mean T-count ratio vs baseline: 0.950 (groups), 0.925 (targets) —
-  including ties, with zero regressions.
-- Median QASM-depth ratio is 1.0 (depth-conservative).
-- Cost: the oracle needs K materializations + audits per target; guarded
-  top-2 needs 2. Decomposition-stage features are byproducts of optimization.
+- Random-ranking permutation controls: learned ranking recovers oracle-T on
+  all groups while random ranking recovers roughly half (p < 1/2000 at m=1).
+- **Leave-one-functional-family-out** now matches LOTO (7 wins / 0 losses at
+  target level). At the previous, smaller dataset size, unguarded top-1
+  showed a real off-distribution regression (6W/1L) that the guard removed —
+  the guard remains a zero-cost, by-construction insurance policy.
+- Geometric-mean T-count ratio vs baseline: 0.935 (groups), 0.932 (targets) —
+  including ties, with zero regressions. Median QASM-depth ratio 1.0.
+- New external win from the longer-budget battery: vbe_adder_3 reaches
+  T=51 under `factor_count_pair_cap`/`frontier_pair` vs 65 for the baseline
+  (ratio 0.785); the barenco_tof_4 T=42 `mixed_pair` win reproduced in an
+  independent run; nc_tof_5 (tensor size 15, previously all-failed) landed
+  2/4 objectives at a 3000s MILP budget.
+- Cost reality (measured): the K MILP decompositions dominate wall-time
+  (~2700s each, embarrassingly parallel); per-candidate materialization is
+  seconds. The budget therefore saves the per-candidate audit/verification
+  chain and engineering effort, not raw materialization compute — the
+  method's primary value is the quality improvement with a non-regression
+  guarantee.
 
 ## 2b. The Selection Rule Is Interpretable And Nearly Constant
 
@@ -82,9 +87,15 @@ the splitting intuition that motivated the `mixed_pair` objective.
 
 ## 3. Formal Verification Campaign (New)
 
-52 candidate proofs across the external batteries (feynver path-sum +
+51 merged candidate proofs across the external batteries (feynver path-sum +
 exact numeric isometry checking with postselected gadget ancillas,
-`scripts/verify_candidates_numeric.py`):
+`scripts/verify_candidates_numeric.py`): 31 proven (30 feynver `equal`
+including both independent barenco_tof_4 runs, 1 `equal-numeric`),
+12 characterized target-constant defects, 8 pending two-sided repair
+(cuccaro/gf_2pow4, both proven Clifford-only vs the block reference).
+The vbe_adder_3 defect signature is bit-identical across two independent
+cluster batteries run months apart — a deterministic assembly bug.
+nc_tof_5 carries its own target-constant degree-3 signature.
 
 - **Proven equal**: 30 feynver `equal` + 1 `equal-numeric` (mod_mult_55).
   This includes the flagship barenco_tof_4 `mixed_pair` candidate
@@ -139,15 +150,12 @@ also omitted the `article_core`/`article_extended` runs that contain
 
 ## 5. In-Flight Cluster Work (Apuana)
 
-| job | purpose |
+| job | outcome |
 |---|---|
-| 2994 `article_repair2_barenco` | repair the 3 failed objectives of the article_core barenco_tof_4 group (closes the dataset-scale gate: 29 -> 30 groups) |
-| 2995 `article_repair2_vbe` | complete vbe_adder_3 mixed_pair |
-| 2996 `journal_full_nc_tof_5_long` | failed target retry with +67% MILP budget (scaling evidence) |
-| 2997 `journal_full_gf_2pow5_mult_long` | failed target retry with +67% MILP budget (scaling evidence) |
-
-New runs record optimization/materialization wall-times, enabling an
-empirical cost-asymmetry claim.
+| 2994 `article_repair2_barenco` | done: factor_count (T=64) and mixed_pair (T=42) landed; both feynver-proven equal; dataset gate now passes |
+| 2995 `article_repair2_vbe` | done: all 4 objectives landed; new 0.785 T-ratio win for pair_cap/frontier_pair; known target-constant defect reproduced bit-identically |
+| 2996 `journal_full_nc_tof_5_long` | done: factor_count and frontier_pair landed at T=103 (first success on this size-15 target) |
+| 2997 `journal_full_gf_2pow5_mult_long` | still running |
 
 ## 6. What We Can Claim Now
 

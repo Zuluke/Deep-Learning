@@ -7,10 +7,10 @@ Complete targets: 12/15.
 
 | target | objective | best run | status | T-count | best QASM | completed runs | failed runs |
 |---|---|---|---|---:|---:|---|---|
-| barenco_tof_4 | factor_count | night_long | ok | 64.0 | 298.0 | night_long | standard,article_core |
-| barenco_tof_4 | factor_count_pair_cap | journal_repair_paircap | ok | 61.0 | 286.0 | journal_repair_paircap | standard,night_long,article_core |
-| barenco_tof_4 | frontier_pair | article_core | ok | 64.0 | 298.0 | article_core |  |
-| barenco_tof_4 | mixed_pair | night_long | ok | 42.0 | 266.0 | night_long | standard,article_core |
+| barenco_tof_4 | factor_count | article_repair2_barenco | ok | 64.0 | 298.0 | night_long,article_repair2_barenco | standard,article_core |
+| barenco_tof_4 | factor_count_pair_cap | journal_repair_paircap | ok | 61.0 | 286.0 | journal_repair_paircap | standard,night_long,article_core,article_repair2_barenco |
+| barenco_tof_4 | frontier_pair | article_core | ok | 64.0 | 298.0 | article_core | article_repair2_barenco |
+| barenco_tof_4 | mixed_pair | article_repair2_barenco | ok | 42.0 | 266.0 | night_long,article_repair2_barenco | standard,article_core |
 | cuccaro_adder_n4 | factor_count | journal_full_cuccaro_adder_n4 | ok | 23.0 | 241.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n4 | factor_count_pair_cap | journal_full_cuccaro_adder_n4 | ok | 23.0 | 251.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n4 | frontier_pair | article_extended | ok | 43.0 | 257.0 | article_extended |  |
@@ -59,11 +59,11 @@ Complete targets: 12/15.
 | nc_tof_4 | factor_count_pair_cap | article_core | ok | 32.0 | 248.0 | standard,night_long,article_core |  |
 | nc_tof_4 | frontier_pair | article_core | ok | 32.0 | 245.0 | article_core |  |
 | nc_tof_4 | mixed_pair | night_long | ok | 24.0 | 247.0 | standard,night_long,article_core |  |
-| nc_tof_5 | factor_count | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5 |
-| nc_tof_5 | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5 |
-| nc_tof_5 | frontier_pair | article_extended | failed |  |  |  | article_extended |
-| nc_tof_5 | mixed_pair | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5 |
-| vbe_adder_3 | factor_count | article_core | ok | 65.0 | 296.0 | standard,night_long,article_core |  |
-| vbe_adder_3 | factor_count_pair_cap | night_long | ok | 66.0 | 311.0 | standard,night_long,article_core |  |
-| vbe_adder_3 | frontier_pair | article_core | ok | 79.0 | 311.0 | article_core |  |
-| vbe_adder_3 | mixed_pair | night_long | ok | 88.0 | 318.0 | night_long | standard,article_core |
+| nc_tof_5 | factor_count | journal_full_nc_tof_5_long | ok | 103.0 | 581.0 | journal_full_nc_tof_5_long | article_extended,journal_full_nc_tof_5 |
+| nc_tof_5 | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5,journal_full_nc_tof_5_long |
+| nc_tof_5 | frontier_pair | journal_full_nc_tof_5_long | ok | 103.0 | 581.0 | journal_full_nc_tof_5_long | article_extended |
+| nc_tof_5 | mixed_pair | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5,journal_full_nc_tof_5_long |
+| vbe_adder_3 | factor_count | article_core | ok | 65.0 | 296.0 | standard,night_long,article_core,article_repair2_vbe |  |
+| vbe_adder_3 | factor_count_pair_cap | article_repair2_vbe | ok | 51.0 | 277.0 | standard,night_long,article_core,article_repair2_vbe |  |
+| vbe_adder_3 | frontier_pair | article_repair2_vbe | ok | 51.0 | 285.0 | article_core,article_repair2_vbe |  |
+| vbe_adder_3 | mixed_pair | article_repair2_vbe | ok | 77.0 | 317.0 | night_long,article_repair2_vbe | standard,article_core |
