@@ -14,7 +14,7 @@ Complete targets: 12/15.
 | cuccaro_adder_n4 | factor_count | journal_full_cuccaro_adder_n4 | ok | 23.0 | 241.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n4 | factor_count_pair_cap | journal_full_cuccaro_adder_n4 | ok | 23.0 | 251.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n4 | frontier_pair | article_extended | ok | 43.0 | 257.0 | article_extended |  |
-| cuccaro_adder_n4 | mixed_pair | article_extended | ok | 32.0 | 252.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
+| cuccaro_adder_n4 | mixed_pair | article_extended | ok | 32.0 | 251.0 | article_extended,journal_full_cuccaro_adder_n4 |  |
 | cuccaro_adder_n5 | factor_count | journal_full_cuccaro_adder_n5 | ok | 590.0 | 806.0 | journal_full_cuccaro_adder_n5 | article_extended |
 | cuccaro_adder_n5 | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_cuccaro_adder_n5 |
 | cuccaro_adder_n5 | frontier_pair | article_extended | failed |  |  |  | article_extended |
@@ -27,10 +27,10 @@ Complete targets: 12/15.
 | gf_2pow4_mult | factor_count_pair_cap | journal_full_gf_2pow4_mult | ok | 55.0 | 462.0 | article_extended,journal_full_gf_2pow4_mult |  |
 | gf_2pow4_mult | frontier_pair | article_extended | ok | 64.0 | 465.0 | article_extended |  |
 | gf_2pow4_mult | mixed_pair | article_extended | ok | 63.0 | 452.0 | article_extended,journal_full_gf_2pow4_mult |  |
-| gf_2pow5_mult | factor_count | article_extended | failed |  |  |  | article_extended,journal_full_gf_2pow5_mult |
-| gf_2pow5_mult | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_gf_2pow5_mult |
-| gf_2pow5_mult | frontier_pair | article_extended | failed |  |  |  | article_extended |
-| gf_2pow5_mult | mixed_pair | article_extended | failed |  |  |  | article_extended,journal_full_gf_2pow5_mult |
+| gf_2pow5_mult | factor_count | journal_full_gf_2pow5_mult_long | ok | 163.0 | 718.0 | journal_full_gf_2pow5_mult_long | article_extended,journal_full_gf_2pow5_mult |
+| gf_2pow5_mult | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_gf_2pow5_mult,journal_full_gf_2pow5_mult_long |
+| gf_2pow5_mult | frontier_pair | journal_full_gf_2pow5_mult_long | ok | 163.0 | 718.0 | journal_full_gf_2pow5_mult_long | article_extended |
+| gf_2pow5_mult | mixed_pair | article_extended | failed |  |  |  | article_extended,journal_full_gf_2pow5_mult,journal_full_gf_2pow5_mult_long |
 | hamming_weight_n4 | factor_count | article_core | ok | 19.0 | 164.0 | article_core |  |
 | hamming_weight_n4 | factor_count_pair_cap | article_core | ok | 19.0 | 167.0 | article_core |  |
 | hamming_weight_n4 | frontier_pair | article_core | ok | 19.0 | 171.0 | article_core |  |
@@ -58,12 +58,12 @@ Complete targets: 12/15.
 | nc_tof_4 | factor_count | night_long | ok | 24.0 | 243.0 | standard,night_long,article_core |  |
 | nc_tof_4 | factor_count_pair_cap | article_core | ok | 32.0 | 248.0 | standard,night_long,article_core |  |
 | nc_tof_4 | frontier_pair | article_core | ok | 32.0 | 245.0 | article_core |  |
-| nc_tof_4 | mixed_pair | night_long | ok | 24.0 | 247.0 | standard,night_long,article_core |  |
+| nc_tof_4 | mixed_pair | night_long | ok | 24.0 | 240.0 | standard,night_long,article_core |  |
 | nc_tof_5 | factor_count | journal_full_nc_tof_5_long | ok | 103.0 | 581.0 | journal_full_nc_tof_5_long | article_extended,journal_full_nc_tof_5 |
 | nc_tof_5 | factor_count_pair_cap | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5,journal_full_nc_tof_5_long |
 | nc_tof_5 | frontier_pair | journal_full_nc_tof_5_long | ok | 103.0 | 581.0 | journal_full_nc_tof_5_long | article_extended |
 | nc_tof_5 | mixed_pair | article_extended | failed |  |  |  | article_extended,journal_full_nc_tof_5,journal_full_nc_tof_5_long |
 | vbe_adder_3 | factor_count | article_core | ok | 65.0 | 296.0 | standard,night_long,article_core,article_repair2_vbe |  |
-| vbe_adder_3 | factor_count_pair_cap | article_repair2_vbe | ok | 51.0 | 277.0 | standard,night_long,article_core,article_repair2_vbe |  |
+| vbe_adder_3 | factor_count_pair_cap | article_repair2_vbe | ok | 51.0 | 278.0 | standard,night_long,article_core,article_repair2_vbe |  |
 | vbe_adder_3 | frontier_pair | article_repair2_vbe | ok | 51.0 | 285.0 | article_core,article_repair2_vbe |  |
 | vbe_adder_3 | mixed_pair | article_repair2_vbe | ok | 77.0 | 317.0 | night_long,article_repair2_vbe | standard,article_core |

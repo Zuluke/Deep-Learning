@@ -115,10 +115,6 @@ results/verification/alphaq_external_article_repair2_vbe/*
 results/verification/alphaq_external_journal_full_nc_tof_5_long/*
 !results/verification/alphaq_external_journal_full_nc_tof_5_long/verification_summary.csv
 !results/verification/alphaq_external_journal_full_nc_tof_5_long/verification_summary.md
-!results/verification/alphaq_external_numeric_new/
-results/verification/alphaq_external_numeric_new/*
-!results/verification/alphaq_external_numeric_new/verification_numeric.csv
-!results/verification/alphaq_external_numeric_new/verification_numeric.md
 !results/verification/alphaq_external_numeric/
 results/verification/alphaq_external_numeric/*
 !results/verification/alphaq_external_numeric/verification_numeric.csv

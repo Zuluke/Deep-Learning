@@ -482,50 +482,40 @@ def synthesize_naive_parity_circuit(
 
 
 def phase_polynomial(matrix: np.ndarray) -> np.ndarray:
+    """Multilinear mod-8 phase polynomial of one T gate per matrix column.
+
+    A T gate on the parity of column support S contributes exactly
+
+        sum_{i in S} x_i + 6 * sum_{i<j in S} x_i x_j
+        + 4 * sum_{i<j<k in S} x_i x_j x_k   (mod 8)
+
+    independent of the column weight (degree-4+ terms of the inclusion-
+    exclusion expansion have coefficients divisible by 8). Entries are stored
+    as poly[i, j, k] with i >= j >= k: poly[i, i, i] is the linear
+    coefficient, poly[i, j, j] the pair coefficient, poly[i, j, k] the cubic
+    coefficient. An earlier weight-dependent closed form broke down for
+    columns of weight >= 8, which produced Z-frame assembly defects on
+    targets whose original matrices contain heavy columns (caught by the
+    formal-verification campaign).
+
+    When two matrices realize the same signature tensor, all mod-2 incidence
+    counts match, so their polynomial difference is automatically Clifford:
+    cubic terms cancel mod 8, pair differences lie in {0, 4} (CZ), and
+    linear differences are even (S/Z/Sdg).
+    """
     matrix = np.asarray(matrix, dtype=np.uint8) % 2
     n_rows, n_cols = matrix.shape
     poly = np.zeros((n_rows, n_rows, n_rows), dtype=np.uint8)
     for col in range(n_cols):
-        column = matrix[:, col]
-        parity_weight = int(np.count_nonzero(column)) % 8
-        for i in range(n_rows):
-            for j in range(i):
-                for k in range(j):
-                    poly[i, j, k] = (
-                        int(poly[i, j, k])
-                        + int(column[i] and column[j] and column[k])
-                    ) % 8
-                poly[i, j, j] = (
-                    int(poly[i, j, j])
-                    + (11 - parity_weight) * int(column[i] and column[j])
-                ) % 8
-            poly[i, i, i] = (
-                int(poly[i, i, i])
-                + (((parity_weight + 6) * (parity_weight + 5)) // 2) * int(column[i])
-            ) % 8
-
-    for i in range(n_rows):
-        for j in range(i):
-            for k in range(j):
-                value = int(poly[i, j, k])
-                if value == 0:
-                    continue
-                poly[i, i, i] = (int(poly[i, i, i]) + 7 * value) % 8
-                poly[j, j, j] = (int(poly[j, j, j]) + 7 * value) % 8
-                poly[k, k, k] = (int(poly[k, k, k]) + 7 * value) % 8
-                poly[i, j, j] = (int(poly[i, j, j]) + value) % 8
-                poly[i, k, k] = (int(poly[i, k, k]) + value) % 8
-                poly[j, k, k] = (int(poly[j, k, k]) + value) % 8
-                poly[i, j, k] = (4 * value) % 8
-
-    for i in range(n_rows):
-        for j in range(i):
-            value = int(poly[i, j, j])
-            if value == 0:
-                continue
-            poly[i, i, i] = (int(poly[i, i, i]) + value) % 8
-            poly[j, j, j] = (int(poly[j, j, j]) + value) % 8
-            poly[i, j, j] = (6 * value) % 8
+        support = np.flatnonzero(matrix[:, col])
+        for a, i in enumerate(support):
+            poly[i, i, i] = (int(poly[i, i, i]) + 1) % 8
+            for b in range(a):
+                j = support[b]
+                poly[i, j, j] = (int(poly[i, j, j]) + 6) % 8
+                for c in range(b):
+                    k = support[c]
+                    poly[i, j, k] = (int(poly[i, j, k]) + 4) % 8
     return poly
 
 
@@ -542,9 +532,21 @@ def append_clifford_correction(
     tensor_size = candidate_matrix.shape[0]
     for i in range(tensor_size):
         for j in range(i):
-            if int(correction[i, j, j]) == 4:
+            for k in range(j):
+                if int(correction[i, j, k]) != 0:
+                    raise ValueError(
+                        "Non-Clifford cubic correction "
+                        f"{int(correction[i, j, k])} at ({i}, {j}, {k}); "
+                        "candidate tensor does not match the original."
+                    )
+            pair = int(correction[i, j, j])
+            if pair == 4:
                 circuit.cz(mapping[i], mapping[j])
                 gate_count += 1
+            elif pair != 0:
+                raise ValueError(
+                    f"Non-Clifford pair correction {pair} at ({i}, {j})."
+                )
         phase = int(correction[i, i, i])
         if phase == 2:
             circuit.s(mapping[i])

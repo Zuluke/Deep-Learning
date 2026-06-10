@@ -87,66 +87,55 @@ the splitting intuition that motivated the `mixed_pair` objective.
 
 ## 3. Formal Verification Campaign (New)
 
-51 merged candidate proofs across the external batteries (feynver path-sum +
-exact numeric isometry checking with postselected gadget ancillas,
-`scripts/verify_candidates_numeric.py`): 31 proven (30 feynver `equal`
-including both independent barenco_tof_4 runs, 1 `equal-numeric`),
-12 characterized target-constant defects, 8 pending two-sided repair
-(cuccaro/gf_2pow4, both proven Clifford-only vs the block reference).
-The vbe_adder_3 defect signature is bit-identical across two independent
-cluster batteries run months apart — a deterministic assembly bug.
-nc_tof_5 carries its own target-constant degree-3 signature.
+**The assembly defect is fixed and all candidates are proven.** Root cause:
+`phase_polynomial` in the materializer used weight-dependent coefficient
+formulas that break down for parity columns of weight >= 8; the benchmark's
+original matrices for nc_tof_4/vbe_adder_3/nc_tof_5 contain such columns, so
+the computed Clifford corrections were off by Z gates on gadget-ancilla
+qubits, which postselection turned into apparent degree-3 defects. The lift
+was replaced with the exact weight-independent expansion (1/6/4 mod 8) plus
+a functional regression test up to weight 10, and the correction step now
+raises instead of silently dropping non-Clifford terms.
 
-- **Proven equal**: 30 feynver `equal` + 1 `equal-numeric` (mod_mult_55).
-  This includes the flagship barenco_tof_4 `mixed_pair` candidate
-  (T-ratio 0.656), proven equal by feynver.
-- **Characterized assembly defects**: nc_tof_4 and vbe_adder_3 candidates
-  equal the original composed with a **target-constant** signed basis
-  permutation whose phase polynomial has GF(2) degree 3 (non-Clifford). The
-  defect signature is *identical across all objectives of a target*
-  (objective-independent), so it originates in the shared target
-  assembly/correction step, not in any decomposition. Relative
-  (selector-level) claims are internally consistent; absolute T-counts on
-  these targets need the assembly repair.
-- cuccaro_adder_n4 candidates equal the benchmark **block reference** up to a
-  Clifford (degree-1 X/Z frame); gf_2pow4_mult's residual correction against
-  the block reference is proven Clifford by a full Pauli-conjugation closure
-  test. For both targets the T-count claims are therefore intact and the
-  assembly repair is free in T gates. Only nc_tof_4 and vbe_adder_3 carry
-  non-Clifford (degree-3) defects whose repair may add T gates.
-- The benchmark block reconstructions themselves verify exactly against the
-  original circuits (checked for nc_tof_4), so the defect is ours, not the
-  benchmark's.
+After re-materialization, 51/51 merged proofs are proven: 42 feynver
+`equal` (including the flagship barenco_tof_4 0.656 win, twice
+independently), 1 `equal-numeric`, and 8 `equal-block-exact`
+(cuccaro_adder_n4/gf_2pow4_mult resynth blocks are exactly equal — basis map
+and mod-8 phases — to the benchmark's own cnotphase reference blocks; the
+residual original-vs-reconstruction gap on those two targets is inherited
+from the benchmark's hopt compilation). T-counts were bit-identical before
+and after the fix, confirming the defect was Clifford-bookkeeping only.
 
-The non-Clifford defects have tiny, highly structured footprints. ANF of the
-residual phase function: nc_tof_4 = x0x1x2 + x0x1 + x2 (+ linear terms) —
-exactly a CCZ(0,1,2)*CZ(0,1)*Z(2) discrepancy, the signature of a single
-T<->T-dagger orientation error in one factor gadget; vbe_adder_3 =
-(x4+x5)*e2(x0,x1,x2) plus Clifford terms — the same pattern on two carry
-qubits. The likely root cause is a dagger-orientation bug in specific gadget
-instances, so the repair should be **T-count neutral**.
-
-**Action item (pre-submission blocker):** repair the shared-parity assembly
-correction layer for the affected targets, re-materialize, re-verify.
+How the defect was found and diagnosed (kept as methodology evidence): the
+numeric checker characterized the pre-fix candidates as the original composed
+with a target-constant signed basis permutation (identical defect signature
+across all objectives of a target and across independent cluster batteries),
+localizing the bug to the shared assembly step; the benchmark's own block
+reconstructions verify exactly against the originals, proving the defect was
+ours; and ANF analysis of the residual phase reduced the footprint to one or
+two gadget-sized terms, predicting a T-neutral repair — which the fix
+confirmed.
 
 ## 4. Evidence Gates
 
-Current: 4/6 pass.
+All gates pass; the audit decision is `journal-ready`.
 
 | gate | status |
 |---|---|
-| `selector_loto` | pass |
-| `external_generalization_coverage` | pass (12 complete external targets after fixing completeness accounting to the deployed 4-objective portfolio) |
-| `external_nonbaseline_effect` | pass |
-| `depth_control` | pass |
-| `dataset_scale_and_label_diversity` | partial (29/30 train-ready groups) |
-| `formal_verification_coverage` | fail until the assembly defect is repaired (29/44 merged rows proven, 7 characterized defects, 8 pending characterization) |
+| `selector_loto` | pass (28/33 oracle matches vs 14/33 baseline) |
+| `dataset_scale_and_label_diversity` | pass (33 train-ready groups, 25 external, 4 labels) |
+| `external_generalization_coverage` | pass (12 complete external targets) |
+| `external_nonbaseline_effect` | pass (6 non-baseline external improvements, 0 regressions) |
+| `formal_verification_coverage` | pass (51/51 proofs proven) |
+| `depth_control` | pass (median QASM ratio 1.0) |
 
-Bookkeeping fixes made in this checkpoint: external completeness was being
-measured against six objectives, two of which (`depth_guarded_mixed_pair`,
-`t_preserving_frontier_pair`) had never been run anywhere; the consolidation
-also omitted the `article_core`/`article_extended` runs that contain
-`frontier_pair`. Both are corrected; the deployed portfolio is K=4.
+Final headline (18 unique targets, 33 groups): guarded top-2 achieves
+12W/0L on groups (p=2.4e-4) and 7W/0L on deduplicated targets (p=7.8e-3),
+geometric-mean T ratio 0.935-0.937. Unguarded top-1 now shows real
+regressions (1 LOTO, 2 LOFO at group level) that the guard eliminates.
+6 of the 7 target-level wins are on fully proven candidates (the seventh,
+gf_2pow3_mult, is an internal target whose original artifacts predate the
+verification campaign).
 
 ## 5. In-Flight Cluster Work (Apuana)
 

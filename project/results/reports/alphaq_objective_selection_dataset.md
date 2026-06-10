@@ -8,9 +8,9 @@ This dataset reframes the current evidence as supervised objective selection: ea
 
 Decision: `prototype-ready`.
 
-Train-ready target groups: 32/41.
-External train-ready target groups: 24.
-Oracle objective distribution: factor_count=14, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=6.
+Train-ready target groups: 33/42.
+External train-ready target groups: 25.
+Oracle objective distribution: factor_count=14, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=7.
 
 We can proceed with a prototype selector and leave-one-target validation. The dataset is still too small for a high-capacity deep model or a broad journal-level generalization claim.
 
@@ -39,6 +39,7 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 | external_journal_full_cuccaro_adder_n5 | cuccaro_adder_n5 | False | 1 | factor_count |
 | external_journal_full_gf_2pow4_mult | gf_2pow4_mult | True | 3 | factor_count_pair_cap |
 | external_journal_full_gf_2pow5_mult | gf_2pow5_mult | False | 0 | - |
+| external_journal_full_gf_2pow5_mult_long | gf_2pow5_mult | True | 2 | factor_count |
 | external_journal_full_hamming_weight_n6 | hamming_weight_n6 | True | 3 | factor_count_pair_cap |
 | external_journal_full_hamming_weight_n7 | hamming_weight_n7 | True | 3 | factor_count |
 | external_journal_full_mod_mult_55 | mod_mult_55 | True | 3 | mixed_pair |
@@ -46,7 +47,7 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 | external_journal_full_nc_tof_5_long | nc_tof_5 | True | 2 | factor_count |
 | external_journal_repair_paircap | barenco_tof_4 | False | 1 | factor_count_pair_cap |
 | external_night_long | barenco_tof_4 | True | 2 | mixed_pair |
-| external_night_long | nc_tof_4 | True | 3 | factor_count |
+| external_night_long | nc_tof_4 | True | 3 | mixed_pair |
 | external_night_long | vbe_adder_3 | True | 3 | factor_count |
 | external_standard | barenco_tof_4 | False | 0 | - |
 | external_standard | nc_tof_4 | True | 3 | factor_count |
@@ -64,9 +65,9 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 
 | objective | rows | ok | beam rows | failures | oracle count | median runtime sec | mean runtime sec |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| factor_count | 41 | 33 | 33 | 8 | 15 | 3.01e+03 | 2.97e+03 |
-| factor_count_pair_cap | 41 | 30 | 30 | 11 | 11 | 2.7e+03 | 2.7e+03 |
-| mixed_pair | 41 | 29 | 29 | 12 | 6 | 2.7e+03 | 2.7e+03 |
-| frontier_pair | 41 | 14 | 14 | 27 | 3 | 2.88e+03 | 2.88e+03 |
-| depth_guarded_mixed_pair | 41 | 0 | 0 | 41 | 0 |  |  |
-| t_preserving_frontier_pair | 41 | 0 | 0 | 41 | 0 |  |  |
+| factor_count | 42 | 34 | 34 | 8 | 15 | 3.04e+03 | 2.99e+03 |
+| factor_count_pair_cap | 42 | 30 | 30 | 12 | 11 | 2.7e+03 | 2.7e+03 |
+| mixed_pair | 42 | 29 | 29 | 13 | 7 | 2.7e+03 | 2.7e+03 |
+| frontier_pair | 42 | 15 | 15 | 27 | 3 | 3.06e+03 | 2.97e+03 |
+| depth_guarded_mixed_pair | 42 | 0 | 0 | 42 | 0 |  |  |
+| t_preserving_frontier_pair | 42 | 0 | 0 | 42 | 0 |  |  |

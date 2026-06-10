@@ -7,10 +7,10 @@ Total best-beam candidates checked: 20.
 
 | target | materializer | verification | primary ratio | QASM ratio | proof |
 |---|---|---|---:|---:|---|
-| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.627 | 2.66 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/factor_count/selected-beam-shared-parity-w32.verify.txt` |
-| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.52 | 2.62 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/factor_count_pair_cap/selected-beam-shared-parity-w32.verify.txt` |
+| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.627 | 2.67 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/factor_count/selected-beam-shared-parity-w32.verify.txt` |
+| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.51 | 2.62 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/factor_count_pair_cap/selected-beam-shared-parity-w32.verify.txt` |
 | cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.618 | 2.65 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/frontier_pair/selected-beam-shared-parity-w32.verify.txt` |
-| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.559 | 2.6 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/mixed_pair/selected-beam-shared-parity-w32.verify.txt` |
+| cuccaro_adder_n4 | selected-beam-shared-parity-w32 | inconclusive | 0.559 | 2.59 | `results/verification/alphaq_external_article_extended/proofs/cuccaro_adder_n4/mixed_pair/selected-beam-shared-parity-w32.verify.txt` |
 | gf_2pow4_mult | selected-beam-shared-parity-w32 | inconclusive | 0.755 | 3.47 | `results/verification/alphaq_external_article_extended/proofs/gf_2pow4_mult/factor_count/selected-beam-shared-parity-w32.verify.txt` |
 | gf_2pow4_mult | selected-beam-shared-parity-w32 | inconclusive | 0.739 | 3.47 | `results/verification/alphaq_external_article_extended/proofs/gf_2pow4_mult/factor_count_pair_cap/selected-beam-shared-parity-w32.verify.txt` |
 | gf_2pow4_mult | selected-beam-shared-parity-w32 | inconclusive | 0.739 | 3.5 | `results/verification/alphaq_external_article_extended/proofs/gf_2pow4_mult/frontier_pair/selected-beam-shared-parity-w32.verify.txt` |

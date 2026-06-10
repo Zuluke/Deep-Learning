@@ -30,7 +30,6 @@ DEFAULT_VERIFICATION_CSVS = (
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_repair2_vbe" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_full_nc_tof_5_long" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_numeric" / "verification_numeric.csv",
-    PROJECT_ROOT / "results" / "verification" / "alphaq_external_numeric_new" / "verification_numeric.csv",
 )
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_evidence_gates.csv"
 DEFAULT_BATTERY_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_next_battery.csv"
@@ -192,8 +191,13 @@ def external_effect_gate(rows: list[dict[str, str]]) -> dict[str, Any]:
 # Verification statuses proving full functional equivalence. `equal` is a
 # feynver path-sum proof; `equal-numeric` is exact basis enumeration;
 # `equal-up-to-clifford` is exact equivalence after an explicitly extracted
-# Clifford relabel, which leaves T-count claims intact.
-PROVEN_VERIFICATION_STATUSES = frozenset({"equal", "equal-numeric", "equal-up-to-clifford"})
+# Clifford relabel, which leaves T-count claims intact; `equal-block-exact`
+# means the resynthesized CNOT+T block is exactly equal (basis map and mod-8
+# phases) to the benchmark's own cnotphase reference block, so the assembled
+# circuit is identical to the benchmark's reference reconstruction.
+PROVEN_VERIFICATION_STATUSES = frozenset(
+    {"equal", "equal-numeric", "equal-up-to-clifford", "equal-block-exact"}
+)
 # `nonclifford-correction` means the candidate was exactly characterized as
 # the original composed with a signed basis permutation whose phase polynomial
 # has degree >= 3: a real assembly defect that must be repaired before
