@@ -2,6 +2,7 @@
 
 Summary CSV: `/Users/caio/Deep-Learning/project/results/csv/alphaq_portfolio_budget_summary.csv`.
 Detail CSV: `/Users/caio/Deep-Learning/project/results/csv/alphaq_portfolio_budget_details.csv`.
+Dedupe audit CSV: `/Users/caio/Deep-Learning/project/results/csv/alphaq_portfolio_budget_dedupe_audit.csv`.
 Figure: `/Users/caio/Deep-Learning/project/results/figures/alphaq_portfolio_budget.png`.
 
 The portfolio is the four deployed AlphaQ objectives: `factor_count`, `factor_count_pair_cap`, `mixed_pair`, `frontier_pair`.
@@ -28,3 +29,14 @@ Policies `top-m` materialize the m candidates ranked best by the leave-one-targe
 | targets | guarded_top3 | 3 | 18 | 18 | 8 | 0 | 0.00390625 | 1 | [0.9, 1] | 0.990854 |  |  |
 | targets | guarded_top4 | 4 | 18 | 18 | 8 | 0 | 0.00390625 | 1 | [0.9, 1] | 0.990854 |  |  |
 | targets | oracle_full_portfolio | 4 | 18 | 18 | 8 | 0 | 0.00390625 | 1 | [0.9, 1] | 0.990854 |  |  |
+
+## Dedupe Sensitivity
+
+Default target-level dedupe keeps the most complete group, preferring external splits. The audit CSV lists every repeated target and compares that rule with an alternate best-oracle-T dedupe rule.
+
+| dedupe policy | budget | targets | oracle-T recovered | T wins | T losses |
+|---|---:|---:|---:|---:|---:|
+| current_dedupe | 2 | 18 | 17 | 7 | 0 |
+| current_dedupe | 3 | 18 | 18 | 8 | 0 |
+| best_oracle_t_dedupe | 2 | 18 | 18 | 5 | 0 |
+| best_oracle_t_dedupe | 3 | 18 | 18 | 5 | 0 |

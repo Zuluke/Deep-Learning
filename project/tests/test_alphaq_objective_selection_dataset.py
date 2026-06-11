@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import scripts.build_alphaq_objective_selection_dataset as dataset
+from scripts.alphaq_portfolio_common import linear_span_dir_name
 from scripts.build_alphaq_objective_selection_dataset import build_dataset
 from scripts.build_alphaq_objective_selection_dataset import dataset_rows_for_split
 from scripts.build_alphaq_objective_selection_dataset import readiness_summary
@@ -63,6 +64,37 @@ def test_constrained_oracle_can_select_safe_nonbaseline_objective() -> None:
     assert by_objective["factor_count_pair_cap"]["objective_is_oracle"] is True
     assert by_objective["factor_count_pair_cap"]["objective_t_safe"] is True
     assert by_objective["factor_count_pair_cap"]["objective_qasm_safe"] is True
+
+
+def test_oracle_key_ignores_elapsed_time() -> None:
+    decomp_rows = [
+        make_decomp("toy", "factor_count", "ok", tcount=10),
+        make_decomp("toy", "mixed_pair", "ok", tcount=10),
+    ]
+    decomp_rows[0]["objective_elapsed_sec"] = "999"
+    decomp_rows[1]["objective_elapsed_sec"] = "1"
+    grid_rows = [
+        make_grid("toy", "factor_count", tcount=10, primary=1.0, qasm=100),
+        make_grid("toy", "mixed_pair", tcount=10, primary=1.0, qasm=100),
+    ]
+
+    rows = dataset_rows_for_split("unit", decomp_rows, grid_rows, {})
+    by_objective = {row["objective_variant"]: row for row in rows}
+
+    assert by_objective["factor_count"]["objective_is_oracle"] is True
+    assert by_objective["mixed_pair"]["objective_is_oracle"] is False
+
+
+def test_linear_span_path_builder_preserves_k175_suffix() -> None:
+    assert (
+        linear_span_dir_name(
+            "toy",
+            action_dictionary="low-weight",
+            max_action_weight=5,
+            objective="factor-count",
+        )
+        == "toy_low-weight_w5_k175_factor-count"
+    )
 
 
 def test_readiness_requires_enough_groups_and_label_diversity() -> None:

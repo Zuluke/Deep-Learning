@@ -11,6 +11,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from scripts.alphaq_portfolio_common import BASELINE_OBJECTIVE
+from scripts.alphaq_portfolio_common import canonical_objective_key
 from scripts.run_best_objective_beam_ablation import inf_if_none
 from scripts.run_best_objective_beam_ablation import parse_paths
 from scripts.run_best_objective_beam_ablation import read_csv
@@ -69,7 +71,6 @@ OBJECTIVES = (
     "depth_guarded_mixed_pair",
     "t_preserving_frontier_pair",
 )
-BASELINE_OBJECTIVE = "factor_count"
 T_SAFE_REL_TOL = 0.05
 QASM_SAFE_REL_TOL = 0.25
 
@@ -344,14 +345,8 @@ def objective_safety_flags(rows: list[dict[str, Any]]) -> dict[str, dict[str, bo
     return flags
 
 
-def oracle_key(row: dict[str, Any]) -> tuple[float, float, float, float, str]:
-    return (
-        inf_if_none(row.get("best_beam_tcount")),
-        inf_if_none(row.get("best_beam_qasm_depth")),
-        inf_if_none(row.get("best_beam_primary_nc_depth_ratio")),
-        inf_if_none(row.get("objective_elapsed_sec")),
-        row.get("objective_variant", ""),
-    )
+def oracle_key(row: dict[str, Any]) -> tuple[float, float, float, str]:
+    return canonical_objective_key(row)
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:

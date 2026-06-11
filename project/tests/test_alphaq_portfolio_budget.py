@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.analyze_alphaq_portfolio_budget import (
     BASELINE_OBJECTIVE,
     PORTFOLIO_OBJECTIVES,
@@ -84,6 +86,16 @@ def test_guarded_budget_always_contains_baseline() -> None:
         assert any(row["objective_variant"] == BASELINE_OBJECTIVE for row in chosen)
 
 
+def test_guarded_budget_requires_baseline() -> None:
+    ranking = [
+        {"objective_variant": "mixed_pair"},
+        {"objective_variant": "frontier_pair"},
+    ]
+
+    with pytest.raises(ValueError, match="factor_count baseline"):
+        materialized_set(ranking, 2, guarded=True)
+
+
 def test_full_budget_recovers_oracle_and_guard_never_loses() -> None:
     rows = synthetic_rows()
     rng = random.Random(3)
@@ -132,6 +144,7 @@ def test_cli_runs_on_synthetic_dataset(tmp_path: Path) -> None:
         writer.writerows(rows)
     summary = tmp_path / "summary.csv"
     detail = tmp_path / "detail.csv"
+    dedupe_audit = tmp_path / "dedupe_audit.csv"
     report = tmp_path / "report.md"
     figure = tmp_path / "figure.png"
 
@@ -145,6 +158,8 @@ def test_cli_runs_on_synthetic_dataset(tmp_path: Path) -> None:
             str(summary),
             "--detail-csv",
             str(detail),
+            "--dedupe-audit-csv",
+            str(dedupe_audit),
             "--report-path",
             str(report),
             "--figure-path",
@@ -163,6 +178,7 @@ def test_cli_runs_on_synthetic_dataset(tmp_path: Path) -> None:
     assert completed.returncode == 0, completed.stderr
     assert summary.exists()
     assert detail.exists()
+    assert dedupe_audit.exists()
     assert report.exists()
     assert figure.exists()
     with summary.open(encoding="utf-8", newline="") as handle:

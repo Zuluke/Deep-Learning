@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import os
+import platform
 import sys
 import time
 from dataclasses import dataclass
@@ -38,6 +39,11 @@ if str(EXTERNAL_ROOT) not in sys.path:
 from alphatensor_quantum.src import tensors
 
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "results" / "alphaq_linear_span_optimized"
+
+try:
+    import scipy
+except Exception:  # pragma: no cover - version metadata only.
+    scipy = None
 
 
 @dataclass(frozen=True)
@@ -636,6 +642,8 @@ def run(args: argparse.Namespace) -> int:
         "solver_status": solution.solver_status,
         "solver_message": solution.solver_message,
         "is_optimal": solution.is_optimal,
+        "python_version": platform.python_version(),
+        "scipy_version": "" if scipy is None else scipy.__version__,
         "elapsed_sec": solution.elapsed_sec,
         "reconstruction_ok": bool(reconstruction_ok),
         "factor_path": str(factor_path),

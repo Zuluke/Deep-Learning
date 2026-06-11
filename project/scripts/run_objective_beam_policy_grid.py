@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -319,6 +320,8 @@ def write_report(path: Path, rows: list[dict[str, Any]], policy_csv: Path, figur
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     policies = [row["policy"] for row in rows]
     fields = [

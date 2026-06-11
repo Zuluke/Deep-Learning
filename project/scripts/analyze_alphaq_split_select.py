@@ -4,18 +4,22 @@ import argparse
 import csv
 import itertools
 import math
+import os
 import sys
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from scripts.alphaq_portfolio_common import BASELINE_OBJECTIVE
+from scripts.alphaq_portfolio_common import canonical_objective_key
+from scripts.alphaq_portfolio_common import inf_if_missing
 from scripts.run_best_objective_beam_ablation import safe_ratio
 from scripts.structural_target import coerce_float
 
@@ -34,7 +38,6 @@ OBJECTIVES = (
     "depth_guarded_mixed_pair",
     "t_preserving_frontier_pair",
 )
-BASELINE_OBJECTIVE = "factor_count"
 ALPHAQ_FEATURES = (
     "factor_count",
     "factor_qubit_concentration_index",
@@ -144,17 +147,7 @@ def oracle_row(items: list[dict[str, str]]) -> dict[str, str]:
 
 
 def oracle_key(row: dict[str, str]) -> tuple[float, float, float, str]:
-    return (
-        inf_if_missing(row.get("best_beam_tcount")),
-        inf_if_missing(row.get("best_beam_qasm_depth")),
-        inf_if_missing(row.get("best_beam_primary_nc_depth_ratio")),
-        row.get("objective_variant", ""),
-    )
-
-
-def inf_if_missing(value: Any) -> float:
-    numeric = coerce_float(value)
-    return float("inf") if numeric is None else numeric
+    return canonical_objective_key(row)
 
 
 def normalize_rows(rows: list[dict[str, str]], features: Iterable[str]) -> list[dict[str, Any]]:
@@ -680,6 +673,8 @@ def write_report(
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     plot_rows = [
         row

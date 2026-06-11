@@ -33,13 +33,14 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import random
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -67,6 +68,7 @@ from scripts.structural_target import coerce_float
 DEFAULT_DATASET = PROJECT_ROOT / "results" / "csv" / "alphaq_objective_selection_dataset.csv"
 DEFAULT_SUMMARY = PROJECT_ROOT / "results" / "csv" / "alphaq_portfolio_budget_summary.csv"
 DEFAULT_DETAILS = PROJECT_ROOT / "results" / "csv" / "alphaq_portfolio_budget_details.csv"
+DEFAULT_DEDUPE_AUDIT = PROJECT_ROOT / "results" / "csv" / "alphaq_portfolio_budget_dedupe_audit.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_portfolio_budget.md"
 DEFAULT_FIGURE = PROJECT_ROOT / "results" / "figures" / "alphaq_portfolio_budget.png"
 
@@ -96,6 +98,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset-csv", type=Path, default=DEFAULT_DATASET)
     parser.add_argument("--summary-csv", type=Path, default=DEFAULT_SUMMARY)
     parser.add_argument("--detail-csv", type=Path, default=DEFAULT_DETAILS)
+    parser.add_argument("--dedupe-audit-csv", type=Path, default=DEFAULT_DEDUPE_AUDIT)
     parser.add_argument("--report-path", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--figure-path", type=Path, default=DEFAULT_FIGURE)
     parser.add_argument("--bootstrap-samples", type=int, default=BOOTSTRAP_SAMPLES)
@@ -163,7 +166,9 @@ def materialized_set(
         None,
     )
     if baseline is None:
-        return list(ranking[:budget])
+        raise ValueError(
+            "Guarded portfolio selection requires a factor_count baseline candidate."
+        )
     chosen: list[dict[str, Any]] = [baseline]
     for row in ranking:
         if len(chosen) >= budget:
@@ -384,6 +389,146 @@ def permutation_control(
     return total / samples, at_least / samples
 
 
+def best_oracle_t_dedupe_groups(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    by_target: dict[str, list[tuple[tuple[Any, ...], tuple[str, str], list[dict[str, str]]]]] = {}
+    for key, items in grouped(rows).items():
+        oracle = oracle_row(items)
+        preference = (
+            -inf_if_missing(oracle.get("best_beam_tcount")),
+            len(items),
+            key[0].startswith("external"),
+            key[0],
+        )
+        by_target.setdefault(key[1], []).append((preference, key, items))
+    kept: list[dict[str, str]] = []
+    for target in sorted(by_target):
+        _preference, _key, items = max(by_target[target], key=lambda entry: entry[0])
+        kept.extend(items)
+    return kept
+
+
+def current_dedupe_choice_by_target(
+    rows: list[dict[str, str]],
+) -> dict[str, tuple[tuple[str, str], list[dict[str, str]]]]:
+    return {
+        items[0]["target"]: (key, items)
+        for key, items in grouped(dedupe_groups(rows)).items()
+    }
+
+
+def best_oracle_t_choice_by_target(
+    rows: list[dict[str, str]],
+) -> dict[str, tuple[tuple[str, str], list[dict[str, str]]]]:
+    return {
+        items[0]["target"]: (key, items)
+        for key, items in grouped(best_oracle_t_dedupe_groups(rows)).items()
+    }
+
+
+def dedupe_group_audit_rows(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    repeated_targets = sorted(
+        target
+        for target, split_count in target_group_counts(rows).items()
+        if split_count > 1
+    )
+    current = current_dedupe_choice_by_target(rows)
+    best_oracle_t = best_oracle_t_choice_by_target(rows)
+    out = []
+    for target in repeated_targets:
+        for key, items in sorted(
+            (key, items)
+            for key, items in grouped(rows).items()
+            if key[1] == target
+        ):
+            oracle = oracle_row(items)
+            baseline = next(
+                (row for row in items if row["objective_variant"] == BASELINE_OBJECTIVE),
+                None,
+            )
+            current_key = current[target][0]
+            best_key = best_oracle_t[target][0]
+            out.append(
+                {
+                    "row_type": "group",
+                    "target": target,
+                    "source_split": key[0],
+                    "dedupe_policy": "",
+                    "chosen_by_current_dedupe": key == current_key,
+                    "chosen_by_best_oracle_t_dedupe": key == best_key,
+                    "available_candidates": len(items),
+                    "oracle_objective": oracle["objective_variant"],
+                    "oracle_tcount": oracle.get("best_beam_tcount"),
+                    "baseline_tcount": "" if baseline is None else baseline.get("best_beam_tcount"),
+                    "budget": "",
+                    "groups": "",
+                    "oracle_t_recovered": "",
+                    "tcount_wins_vs_baseline": "",
+                    "tcount_losses_vs_baseline": "",
+                }
+            )
+    return out
+
+
+def target_group_counts(rows: list[dict[str, str]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for _source, target in grouped(rows):
+        counts[target] = counts.get(target, 0) + 1
+    return counts
+
+
+def dedupe_policy_summary_rows(
+    rows: list[dict[str, str]],
+    *,
+    fold_attr: str,
+) -> list[dict[str, Any]]:
+    out = []
+    policies = (
+        ("current_dedupe", dedupe_groups(rows)),
+        ("best_oracle_t_dedupe", best_oracle_t_dedupe_groups(rows)),
+    )
+    for policy, policy_rows in policies:
+        groups_raw = grouped(policy_rows)
+        rankings, _weights = loto_rankings(policy_rows, fold_attr)
+        for budget in (2, 3):
+            details = evaluate_policy_on_groups(groups_raw, rankings, budget, guarded=True)
+            ratios = [
+                value
+                for row in details
+                if (value := coerce_float(row.get("tcount_ratio_vs_baseline"))) is not None
+            ]
+            out.append(
+                {
+                    "row_type": "summary",
+                    "target": "",
+                    "source_split": "",
+                    "dedupe_policy": policy,
+                    "chosen_by_current_dedupe": "",
+                    "chosen_by_best_oracle_t_dedupe": "",
+                    "available_candidates": "",
+                    "oracle_objective": "",
+                    "oracle_tcount": "",
+                    "baseline_tcount": "",
+                    "budget": budget,
+                    "groups": len(details),
+                    "oracle_t_recovered": sum(bool(row["oracle_t_recovered"]) for row in details),
+                    "tcount_wins_vs_baseline": sum(value < 1.0 for value in ratios),
+                    "tcount_losses_vs_baseline": sum(value > 1.0 for value in ratios),
+                }
+            )
+    return out
+
+
+def dedupe_audit_rows(
+    rows: list[dict[str, str]],
+    *,
+    fold_attr: str,
+) -> list[dict[str, Any]]:
+    return [
+        *dedupe_group_audit_rows(rows),
+        *dedupe_policy_summary_rows(rows, fold_attr=fold_attr),
+    ]
+
+
 def evaluate_scope(
     scope: str,
     rows: list[dict[str, str]],
@@ -435,7 +580,9 @@ def write_report(
     *,
     summary_csv: Path,
     detail_csv: Path,
+    dedupe_audit_csv: Path,
     figure_path: Path,
+    dedupe_summaries: list[dict[str, Any]],
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
@@ -443,6 +590,7 @@ def write_report(
         "",
         f"Summary CSV: `{summary_csv}`.",
         f"Detail CSV: `{detail_csv}`.",
+        f"Dedupe audit CSV: `{dedupe_audit_csv}`.",
         f"Figure: `{figure_path}`.",
         "",
         "The portfolio is the four deployed AlphaQ objectives: "
@@ -482,10 +630,36 @@ def write_report(
                 perm=row.get("permutation_p_value", ""),
             )
         )
+    lines.extend(
+        [
+            "",
+            "## Dedupe Sensitivity",
+            "",
+            "Default target-level dedupe keeps the most complete group, preferring external splits. "
+            "The audit CSV lists every repeated target and compares that rule with an alternate "
+            "best-oracle-T dedupe rule.",
+            "",
+            "| dedupe policy | budget | targets | oracle-T recovered | T wins | T losses |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for row in dedupe_summaries:
+        lines.append(
+            "| {policy} | {budget} | {groups} | {rec} | {wins} | {losses} |".format(
+                policy=row["dedupe_policy"],
+                budget=row["budget"],
+                groups=row["groups"],
+                rec=row["oracle_t_recovered"],
+                wins=row["tcount_wins_vs_baseline"],
+                losses=row["tcount_losses_vs_baseline"],
+            )
+        )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_figure(path: Path, summaries: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), constrained_layout=True)
     for scope, ax in zip(("groups", "targets"), axes):
@@ -557,6 +731,24 @@ SUMMARY_FIELDS = [
     "permutation_p_value",
 ]
 
+DEDUPE_AUDIT_FIELDS = [
+    "row_type",
+    "target",
+    "source_split",
+    "dedupe_policy",
+    "chosen_by_current_dedupe",
+    "chosen_by_best_oracle_t_dedupe",
+    "available_candidates",
+    "oracle_objective",
+    "oracle_tcount",
+    "baseline_tcount",
+    "budget",
+    "groups",
+    "oracle_t_recovered",
+    "tcount_wins_vs_baseline",
+    "tcount_losses_vs_baseline",
+]
+
 
 def main() -> int:
     args = parse_args()
@@ -581,16 +773,21 @@ def main() -> int:
         all_summaries.extend(summaries)
     write_csv(args.detail_csv, all_details, DETAIL_FIELDS)
     write_csv(args.summary_csv, all_summaries, SUMMARY_FIELDS)
+    dedupe_rows = dedupe_audit_rows(rows, fold_attr=args.fold_attr)
+    write_csv(args.dedupe_audit_csv, dedupe_rows, DEDUPE_AUDIT_FIELDS)
     write_report(
         args.report_path,
         all_summaries,
         summary_csv=args.summary_csv,
         detail_csv=args.detail_csv,
+        dedupe_audit_csv=args.dedupe_audit_csv,
         figure_path=args.figure_path,
+        dedupe_summaries=[row for row in dedupe_rows if row["row_type"] == "summary"],
     )
     write_figure(args.figure_path, all_summaries)
     print(f"Wrote {args.summary_csv}")
     print(f"Wrote {args.detail_csv}")
+    print(f"Wrote {args.dedupe_audit_csv}")
     print(f"Wrote {args.report_path}")
     print(f"Wrote {args.figure_path}")
     return 0

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import subprocess
 import sys
 import threading
@@ -13,14 +14,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
+
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.analyze_materialized_candidates import read_summary
+from scripts.alphaq_portfolio_common import linear_span_manifest_path
+from scripts.alphaq_portfolio_common import linear_span_run_dir
 from scripts.factor_concentration_metrics import factor_concentration_metrics
 from scripts.materialize_shared_parity_candidate import canonicalize_factors
 from scripts.materialize_shared_parity_candidate import load_manifest_row
@@ -154,18 +158,23 @@ def parse_objective_variants(value: str) -> tuple[ObjectiveVariant, ...]:
 
 
 def optimization_dir(linear_root: Path, target: str, max_weight: int, objective: str) -> Path:
-    return linear_root / f"{target}_low-weight_w{max_weight}_k175_{objective}"
+    return linear_span_run_dir(
+        linear_root,
+        target,
+        max_action_weight=max_weight,
+        objective=objective,
+    )
 
 
 def factor_count_cap(output_root: Path, target: str) -> int:
     case = STUDY_CASES[target]
     factor_variant = next(variant for variant in OBJECTIVE_VARIANTS if variant.name == "factor_count")
-    manifest = (
-        output_root
-        / "linear_span"
-        / factor_variant.name
-        / f"{target}_low-weight_w{case.max_action_weight}_k175_{factor_variant.objective}"
-        / "candidate_factors_manifest.csv"
+    manifest = linear_span_manifest_path(
+        output_root / "linear_span",
+        target,
+        objective_variant=factor_variant.name,
+        max_action_weight=case.max_action_weight,
+        objective=factor_variant.objective,
     )
     if not manifest.exists():
         raise RuntimeError(
@@ -693,6 +702,8 @@ def write_report(path: Path, rows: list[dict[str, Any]], csv_path: Path, figure_
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     targets = ordered_targets(rows)
     variants = [variant.name for variant in OBJECTIVE_VARIANTS]

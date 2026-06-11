@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.analyze_materialized_candidates import read_summary
+from scripts.alphaq_portfolio_common import linear_span_manifest_path
 from scripts.run_decomposition_objective_ablation import OBJECTIVE_VARIANTS
 from scripts.run_decomposition_objective_ablation import parse_targets
 from scripts.run_shared_parity_study import CORE_TARGETS
@@ -123,12 +125,12 @@ def find_manifest(target: str, objective_variant: str, roots: list[Path]) -> Pat
     case = STUDY_CASES[target]
     variant = variant_by_name(objective_variant)
     for root in roots:
-        path = (
-            root
-            / "linear_span"
-            / variant.name
-            / f"{target}_low-weight_w{case.max_action_weight}_k175_{variant.objective}"
-            / "candidate_factors_manifest.csv"
+        path = linear_span_manifest_path(
+            root / "linear_span",
+            target,
+            objective_variant=variant.name,
+            max_action_weight=case.max_action_weight,
+            objective=variant.objective,
         )
         if path.exists():
             return path
@@ -429,6 +431,8 @@ def count(rows: list[dict[str, Any]], key: str, *, strict: bool) -> int:
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     labels = [short_label(str(row["target"])) for row in rows]
     x = range(len(rows))
