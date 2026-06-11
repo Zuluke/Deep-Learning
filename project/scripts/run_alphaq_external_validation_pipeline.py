@@ -48,6 +48,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--targets", default=DEFAULT_TARGETS)
     parser.add_argument("--time-limit-sec", type=float, default=900.0)
     parser.add_argument(
+        "--max-parallel",
+        type=int,
+        default=1,
+        help=(
+            "Run up to N (target, objective) MILP optimizations concurrently "
+            "in the decomposition step."
+        ),
+    )
+    parser.add_argument(
         "--objective-variants",
         default=None,
         help=(
@@ -147,6 +156,8 @@ def main() -> int:
             str(args.time_limit_sec),
             "--continue-on-error",
         ]
+        if args.max_parallel > 1:
+            command.extend(["--max-parallel", str(args.max_parallel)])
         if args.force:
             command.append("--force")
         if args.objective_variants:

@@ -65,6 +65,7 @@ def solve_mod2_milp(
         from scipy.optimize import Bounds
         from scipy.optimize import LinearConstraint
         from scipy.optimize import milp
+        from scipy.sparse import coo_matrix
         from scipy.sparse import eye
         from scipy.sparse import hstack
         from scipy.sparse import lil_matrix
@@ -96,14 +97,22 @@ def solve_mod2_milp(
                 f"(num_pairs, {num_cols}), got {pair_incidence.shape}."
             )
 
-    action_matrix = lil_matrix((num_rows, num_cols), dtype=float)
+    row_chunks = []
+    col_chunks = []
     for col_index, column in enumerate(columns):
         nonzero_rows = np.flatnonzero(np.asarray(column, dtype=np.uint8).reshape(-1))
-        action_matrix[nonzero_rows, col_index] = 1.0
+        row_chunks.append(nonzero_rows)
+        col_chunks.append(np.full(nonzero_rows.size, col_index, dtype=np.int64))
+    row_indices = np.concatenate(row_chunks)
+    col_indices = np.concatenate(col_chunks)
+    action_matrix = coo_matrix(
+        (np.ones(row_indices.size, dtype=float), (row_indices, col_indices)),
+        shape=(num_rows, num_cols),
+    ).tocsr()
 
-    parity_slack = eye(num_rows, dtype=float, format="lil") * -2.0
+    parity_slack = eye(num_rows, dtype=float, format="csr") * -2.0
     parity_matrix = hstack(
-        [action_matrix.tocsr(), parity_slack.tocsr()],
+        [action_matrix, parity_slack],
         format="csr",
     )
     rhs = np.asarray(target, dtype=np.uint8).reshape(-1).astype(float)

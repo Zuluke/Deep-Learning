@@ -5,7 +5,10 @@ import csv
 import json
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -112,6 +115,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
+        "--max-parallel",
+        type=int,
+        default=1,
+        help=(
+            "Run up to N (target, objective) optimizations concurrently. "
+            "Each MILP solve is single-threaded, so N should not exceed the "
+            "available CPU cores."
+        ),
+    )
+    parser.add_argument(
         "--continue-on-error",
         action="store_true",
         help=(
@@ -208,7 +221,9 @@ def run_optimization(
     if variant.use_factor_count_cap:
         cmd.extend(["--max-factors", str(factor_count_cap(output_root, target))])
     print(f"+ optimize {target} {variant.name}", flush=True)
-    wall_timeout = max(float(time_limit_sec) + 120.0, float(time_limit_sec) * 1.2)
+    # Slack covers dictionary/matrix construction, which precedes the MILP
+    # and grows with tensor size (minutes at size ~20).
+    wall_timeout = max(float(time_limit_sec) + 900.0, float(time_limit_sec) * 1.3)
     started = time.monotonic()
     completed = subprocess.run(
         cmd,
@@ -310,6 +325,47 @@ def factor_metrics_from_manifest(manifest: Path, *, target: str, variant: Object
     return prefixed
 
 
+def run_unit(
+    target: str,
+    variant: ObjectiveVariant,
+    output_root: Path,
+    time_limit_sec: float,
+    force: bool,
+) -> dict[str, Any]:
+    manifest = run_optimization(
+        target=target,
+        variant=variant,
+        output_root=output_root,
+        time_limit_sec=time_limit_sec,
+        force=force,
+    )
+    optimization_summary = optimization_summary_from_manifest(manifest)
+    summary_path, materialization_elapsed_sec = run_materialization(
+        target=target,
+        variant=variant,
+        manifest=manifest,
+        output_root=output_root,
+        force=force,
+    )
+    materialized = read_summary(summary_path)
+    return {
+        **materialized,
+        **factor_metrics_from_manifest(manifest, target=target, variant=variant),
+        "objective_variant": variant.name,
+        "span_objective": variant.objective,
+        "pair_cap_enabled": variant.use_pair_cap,
+        "factor_count_cap_enabled": variant.use_factor_count_cap,
+        "optimization_elapsed_sec": optimization_summary.get("elapsed_sec", ""),
+        "materialization_elapsed_sec": materialization_elapsed_sec,
+        "objective_elapsed_sec": elapsed_sum(
+            optimization_summary.get("elapsed_sec", ""),
+            materialization_elapsed_sec,
+        ),
+        "execution_status": "ok",
+        "error_message": "",
+    }
+
+
 def collect_rows(
     targets: list[str],
     output_root: Path,
@@ -319,44 +375,25 @@ def collect_rows(
     objective_variants: tuple[ObjectiveVariant, ...] = OBJECTIVE_VARIANTS,
     continue_on_error: bool = False,
     checkpoint_csv: Path | None = None,
+    max_parallel: int = 1,
 ) -> list[dict[str, Any]]:
+    if max_parallel > 1:
+        return _collect_rows_parallel(
+            targets,
+            output_root,
+            time_limit_sec,
+            force,
+            objective_variants=objective_variants,
+            continue_on_error=continue_on_error,
+            checkpoint_csv=checkpoint_csv,
+            max_parallel=max_parallel,
+        )
     rows = []
     for target in targets:
         for variant in objective_variants:
             try:
-                manifest = run_optimization(
-                    target=target,
-                    variant=variant,
-                    output_root=output_root,
-                    time_limit_sec=time_limit_sec,
-                    force=force,
-                )
-                optimization_summary = optimization_summary_from_manifest(manifest)
-                summary_path, materialization_elapsed_sec = run_materialization(
-                    target=target,
-                    variant=variant,
-                    manifest=manifest,
-                    output_root=output_root,
-                    force=force,
-                )
-                materialized = read_summary(summary_path)
                 rows.append(
-                    {
-                        **materialized,
-                        **factor_metrics_from_manifest(manifest, target=target, variant=variant),
-                        "objective_variant": variant.name,
-                        "span_objective": variant.objective,
-                        "pair_cap_enabled": variant.use_pair_cap,
-                        "factor_count_cap_enabled": variant.use_factor_count_cap,
-                        "optimization_elapsed_sec": optimization_summary.get("elapsed_sec", ""),
-                        "materialization_elapsed_sec": materialization_elapsed_sec,
-                        "objective_elapsed_sec": elapsed_sum(
-                            optimization_summary.get("elapsed_sec", ""),
-                            materialization_elapsed_sec,
-                        ),
-                        "execution_status": "ok",
-                        "error_message": "",
-                    }
+                    run_unit(target, variant, output_root, time_limit_sec, force)
                 )
             except Exception as exc:
                 if not continue_on_error:
@@ -365,6 +402,86 @@ def collect_rows(
             if checkpoint_csv is not None:
                 write_csv(checkpoint_csv, rows)
     return rows
+
+
+def _collect_rows_parallel(
+    targets: list[str],
+    output_root: Path,
+    time_limit_sec: float,
+    force: bool,
+    *,
+    objective_variants: tuple[ObjectiveVariant, ...],
+    continue_on_error: bool,
+    checkpoint_csv: Path | None,
+    max_parallel: int,
+) -> list[dict[str, Any]]:
+    """Run (target, variant) units concurrently.
+
+    Variants with ``use_factor_count_cap`` read the same-root ``factor_count``
+    manifest, so they wait for their target's ``factor_count`` unit. All other
+    units are independent. Independent units are submitted before dependent
+    ones, so a dependent unit can only start once its baseline is already
+    running or finished — workers can never all be blocked waiting.
+    """
+    unit_order = {
+        (target, variant.name): index
+        for index, (target, variant) in enumerate(
+            (target, variant) for target in targets for variant in objective_variants
+        )
+    }
+    results: dict[tuple[str, str], dict[str, Any]] = {}
+    results_lock = threading.Lock()
+
+    def record(target: str, variant: ObjectiveVariant, row: dict[str, Any]) -> None:
+        with results_lock:
+            results[(target, variant.name)] = row
+            if checkpoint_csv is not None:
+                ordered = [results[key] for key in sorted(results, key=unit_order.__getitem__)]
+                write_csv(checkpoint_csv, ordered)
+
+    def work(target: str, variant: ObjectiveVariant) -> None:
+        try:
+            row = run_unit(target, variant, output_root, time_limit_sec, force)
+        except Exception as exc:
+            if not continue_on_error:
+                raise
+            row = error_row(target, variant, exc)
+        record(target, variant, row)
+
+    with ThreadPoolExecutor(max_workers=max_parallel) as pool:
+        futures = {}
+        baseline_futures: dict[str, Any] = {}
+        for target in targets:
+            for variant in objective_variants:
+                if variant.use_factor_count_cap:
+                    continue
+                future = pool.submit(work, target, variant)
+                futures[future] = (target, variant.name)
+                if variant.name == "factor_count":
+                    baseline_futures[target] = future
+
+        def work_after_baseline(target: str, variant: ObjectiveVariant) -> None:
+            baseline = baseline_futures.get(target)
+            if baseline is not None:
+                try:
+                    baseline.result()
+                except Exception:
+                    # The baseline already recorded its own failure; let this
+                    # unit fail on the missing manifest with a clear message.
+                    pass
+            work(target, variant)
+
+        for target in targets:
+            for variant in objective_variants:
+                if not variant.use_factor_count_cap:
+                    continue
+                future = pool.submit(work_after_baseline, target, variant)
+                futures[future] = (target, variant.name)
+
+        for future in as_completed(futures):
+            future.result()
+
+    return [results[key] for key in sorted(results, key=unit_order.__getitem__)]
 
 
 def error_row(target: str, variant: ObjectiveVariant, exc: Exception) -> dict[str, Any]:
@@ -651,6 +768,7 @@ def main() -> int:
         objective_variants=parse_objective_variants(args.objective_variants),
         continue_on_error=args.continue_on_error,
         checkpoint_csv=args.output_csv,
+        max_parallel=args.max_parallel,
     )
     write_csv(args.output_csv, rows)
     write_figure(args.figure_path, rows)

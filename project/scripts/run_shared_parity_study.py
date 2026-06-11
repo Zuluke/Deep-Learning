@@ -162,11 +162,14 @@ STUDY_CASES: dict[str, StudyCase] = {
         factor_order="greedy-cnot",
         target_strategy="max-change",
     ),
+    # Weight 16 (the full 65535-action dictionary) made every objective time
+    # out on this target; weight 7 (26332 actions) matches the largest
+    # dictionary scale that has solved within the long MILP budget.
     "cuccaro_adder_n5": StudyCase(
         target="cuccaro_adder_n5",
-        max_action_weight=16,
+        max_action_weight=7,
         objective="mixed-pair",
-        candidate_kind="milp_span_mixed_pair_pairo6_wfull",
+        candidate_kind="milp_span_mixed_pair_pairo6",
         factor_order="greedy-cnot",
         target_strategy="max-change",
     ),
@@ -188,6 +191,67 @@ STUDY_CASES: dict[str, StudyCase] = {
     ),
     "vbe_adder_3": StudyCase(
         target="vbe_adder_3",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    # Frontier targets (tensor size 18-21). Full dictionaries are infeasible
+    # at these sizes; the capped weights below keep the MILP dictionary at or
+    # below ~31k actions, the scale proven solvable within the 3000s budget.
+    # Weight-3 dictionaries already span every degree-3 signature tensor, so
+    # the caps restrict solution quality, not feasibility.
+    "gf_2pow6_mult": StudyCase(
+        target="gf_2pow6_mult",
+        max_action_weight=6,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "barenco_tof_5": StudyCase(
+        target="barenco_tof_5",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "cuccaro_adder_n6": StudyCase(
+        target="cuccaro_adder_n6",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "unary_iteration_n3": StudyCase(
+        target="unary_iteration_n3",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "hamming_weight_n8": StudyCase(
+        target="hamming_weight_n8",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="given",
+        target_strategy="min-change",
+    ),
+    "gf_2pow7_mult": StudyCase(
+        target="gf_2pow7_mult",
+        max_action_weight=5,
+        objective="mixed-pair",
+        candidate_kind="milp_span_mixed_pair_pairo6",
+        factor_order="greedy-cnot",
+        target_strategy="max-change",
+    ),
+    "csla_mux_3": StudyCase(
+        target="csla_mux_3",
         max_action_weight=5,
         objective="mixed-pair",
         candidate_kind="milp_span_mixed_pair_pairo6",
