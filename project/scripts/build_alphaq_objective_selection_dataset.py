@@ -58,6 +58,8 @@ DEFAULT_EXTRA_EXTERNAL_RUNS = (
     "article_repair2_vbe",
     "journal_full_nc_tof_5_long",
     "journal_full_gf_2pow5_mult_long",
+    "journal_k6_backfill",
+    "journal_k6_frontier",
 )
 DEFAULT_READINESS_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_validation_readiness.csv"
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_objective_selection_dataset.csv"

@@ -31,9 +31,11 @@ PROVEN = {
 
 OBJECTIVE_SHORT = {
     "factor_count": "baseline",
-    "factor_count_pair_cap": "pair\\_cap",
-    "mixed_pair": "mixed\\_pair",
-    "frontier_pair": "frontier\\_pair",
+    "factor_count_pair_cap": "pair cap",
+    "mixed_pair": "mixed pair",
+    "frontier_pair": "frontier",
+    "depth_guarded_mixed_pair": "depth guarded",
+    "t_preserving_frontier_pair": "T-preserving",
 }
 
 
@@ -60,7 +62,7 @@ def main() -> None:
 
     for i, row in enumerate(improved.itertuples(index=False)):
         mark = " ✓" if row.target in PROVEN else ""
-        short = str(row.final_objective).replace("factor_count_pair_cap", "pair_cap")
+        short = OBJECTIVE_SHORT.get(str(row.final_objective), str(row.final_objective))
         label = f"{int(row.baseline_tcount)}→{int(row.final_tcount)} ({short}){mark}"
         ax.text(row.t_reduction + 0.45, i, label, va="center", fontsize=7.6, color="#1a5c36")
     ax.text(

@@ -5,8 +5,9 @@ the T-count regret, in gates, against the available-candidate oracle:
 
     regret = T_selected - T_oracle.
 
-It evaluates budgets m=1..4 for guarded and unguarded rankings, at both group
-and deduplicated-target scope, under LOTO and LOFO folds.
+It evaluates budgets over the deployed objective portfolio for guarded and
+unguarded rankings, at both group and deduplicated-target scope, under LOTO and
+LOFO folds.
 """
 
 from __future__ import annotations

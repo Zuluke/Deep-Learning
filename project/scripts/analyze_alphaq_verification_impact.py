@@ -31,6 +31,9 @@ DEFAULT_VERIFICATION_CSVS = (
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_repair2_barenco" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_repair2_vbe" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_full_nc_tof_5_long" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_backfill" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_backfill" / "verification_numeric.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_frontier" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_numeric" / "verification_numeric.csv",
 )
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_verification_impact.csv"

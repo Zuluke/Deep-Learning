@@ -87,6 +87,9 @@ demo-cuda12 = [
 package = false
 default-groups = ["dev"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.uv.sources]
 dm-haiku = { git = "https://github.com/deepmind/dm-haiku", rev = "af844e988886305286c464c1f6d7fe7656773fde" }
 einshape = { git = "https://github.com/deepmind/einshape", rev = "d91ab136da3d97f4ba2b4582531cdc2dfd9fab0a" }

@@ -2,9 +2,6 @@
 %% CBCTQ 2026 - Full paper (up to 5 pages, incl. references)
 %% Guarded objective-portfolio selection for AlphaTensor-Quantum
 %%
-%% NOTE: numbers marked %K6% may improve once the K=6 battery
-%% (jobs 3068/3069) is consolidated; the claims only get stronger
-%% (the guard cannot add losses).
 %% ============================================================
 
 \documentclass{cbctq}
@@ -51,7 +48,7 @@ Caio A. C. Le\~ao, Centro de Inform\'atica, Universidade Federal de Pernambuco, 
 
 % ============================================================
 \begin{abstract}
-AlphaTensor-Quantum formulates T-count optimization as symmetric tensor decomposition under a fixed objective. This paper shows that the best objective is target-dependent: over 33 instance groups (18 targets), the available portfolio contains two to four candidates and no objective dominates. A guarded layer ranks cheap factor-structure candidates and always synthesizes the baseline plus one ranked alternative. It recovers the available-candidate oracle on 33/33 groups and 17/18 targets at budget two, with zero regressions by construction; budget three recovers 18/18 targets. The largest verified improvement is 34\%.
+AlphaTensor-Quantum frames Clifford$+T$ T-count optimization as symmetric tensor decomposition under one objective. We show objective choice is target-dependent and evaluate a six-objective guarded portfolio over 54 train-ready groups (24 targets). The guard always synthesizes the baseline plus ranked alternatives, guaranteeing zero T-count regressions. Guarded top-2 recovers the available oracle on 54/54 groups (21W/0L) and 23/24 targets (13W/0L); top-3 recovers 24/24 targets. LOFO matches LOTO. Frontier targets up to tensor size 21 show six non-baseline wins, including $165\to137$ on CSLA-MUX3.
 \end{abstract}
 
 \begin{keywords}
@@ -61,13 +58,13 @@ Quantum circuit optimization, T-count, tensor decomposition, AlphaTensor-Quantum
 % ============================================================
 \section{Introduction}
 
-In fault-tolerant quantum computing over the Clifford$+T$ gate set, the dominant cost is the number of $T$ gates. Non-Clifford gates must be implemented through magic-state distillation, whose spacetime overhead exceeds that of all Clifford operations by orders of magnitude \cite{bravyi2005,campbell2017}. Minimizing the \emph{T-count} of a circuit is therefore a central problem of practical quantum compilation, addressed by techniques including matroid partitioning \cite{amy2014}, Reed--Muller decoding \cite{heyfron2018}, and ZX-calculus rewriting \cite{kissinger2020}.
+In fault-tolerant quantum computing over the Clifford$+T$ gate set, the dominant cost is the number of $T$ gates. Non-Clifford gates must be implemented through magic-state distillation, whose spacetime overhead exceeds that of all Clifford operations by orders of magnitude \cite{bravyi2005,campbell2017}. Minimizing the \emph{T-count} of a circuit is therefore a central problem of practical quantum compilation, addressed by techniques including matroid partitioning \cite{amy2014}, Reed--Muller decoding \cite{heyfron2018}, ZX-calculus rewriting \cite{kissinger2020}, and improved TODD-style algorithms \cite{vandaele2025}.
 
 AlphaTensor-Quantum \cite{ruiz2025} recast T-count optimization as a tensor decomposition problem. The non-Clifford content of a {CNOT}$+T$ circuit is captured by a symmetric \emph{signature tensor} over $\mathbb{F}_2$, and every decomposition of that tensor into $R$ symmetric rank-one terms yields an implementation using $R$ $T$ gates, or fewer when gadgetization applies. In the published pipeline, the decomposition is produced by a search agent that minimizes a single, fixed objective: in essence, the number of factors.
 
-The present work begins from an empirical observation: \emph{the most effective decomposition objective is target-dependent}. Across a benchmark suite of arithmetic and Toffoli-network circuits, the available-candidate oracle distributes $14/10/7/2$ over four natural objectives; no single member dominates. The data therefore do not support the search for a better universal cost function. They do, however, reveal an exploitable spread between objectives: on one benchmark, selecting the right objective reduces the T-count by 34\%.
+The present work begins from an empirical observation: \emph{the most effective decomposition objective is target-dependent}. Across a benchmark suite of arithmetic and Toffoli-network circuits, the available-candidate oracle distributes $21/10/7/2/6/8$ over six natural objectives; no single member dominates. The data therefore do not support the search for a better universal cost function. They do, however, reveal an exploitable spread between objectives: on one benchmark, selecting the right objective reduces the T-count by 34\%.
 
-To exploit this spread, this work proposes a \emph{guarded objective-portfolio selection} layer, in the tradition of algorithm portfolios \cite{rice1976,xu2008}, placed on top of the AlphaTensor-Quantum pipeline. The layer operates in three steps:
+To exploit this spread, this work proposes a \emph{guarded objective-portfolio selection} layer, in the tradition of algorithm portfolios \cite{rice1976,xu2008}, placed on top of the AlphaTensor-Quantum pipeline. Machine-learning selection already appears in quantum compilation for device and pass selection \cite{quetschlich2024}, but here the selected object is a decomposition objective and the guard gives a per-instance T-count guarantee. The layer operates in three steps:
 
 \begin{enumerate}
     \item decompose the target tensor under the available portfolio objectives;
@@ -79,9 +76,9 @@ The reserved slot is what makes the layer \emph{guarded}: for any budget $m\ge 2
 
 This paper makes four contributions:
 (i) empirical evidence that objective choice in tensor-decomposition-based T-count optimization is target-dependent, and that a priori, circuit-level classifiers fail to predict the correct choice;
-(ii) a guarded selection layer with provable non-regression, monotonicity, and oracle-convergence guarantees (Proposition~\ref{prop:guard}) that reaches the available-candidate oracle on every group at budget two and every deduplicated target at budget three;
+(ii) a guarded selection layer with provable non-regression, monotonicity, and oracle-convergence guarantees (Proposition~\ref{prop:guard}) that reaches the available-candidate oracle on 54/54 groups at budget two and 24/24 targets at budget three, with identical LOTO and LOFO headline rows;
 (iii) an audit showing that the current signal concentrates in candidate factor count, with the five-feature scorer matching rank-only oracle recovery while providing an interpretable robustness layer, together with a constructive spanning lemma (Lemma~\ref{lem:weight3}) that licenses dictionary-restricted search; and
-(iv) formal equivalence proofs for every final circuit, including the largest (34\%) improvement, and MILP optimality certificates where the dictionary search closes.
+(iv) a verification audit with 85 merged circuit-level proof obligations passing, plus decomposition-level verification for frontier candidates beyond the current checker scale.
 
 % ============================================================
 \section{Background}
@@ -109,8 +106,7 @@ For $|S|=3$ the construction uses the seven subsets of $S$, precisely the textbo
 
 \subsection{Decomposition objectives}
 
-The rank $R$ is not the only property of a decomposition that affects the final circuit. After synthesis, factors are realized as networks of shared parities, and the overlap structure of the factor supports governs how much CNOT structure the synthesizer can reuse, how deep the resulting circuit becomes, and how many $T$ gates remain after gadgetization. The deployed portfolio has $K=4$ objectives: \texttt{factor\_count}, the baseline, which minimizes $R$; \texttt{factor\_count\_pair\_cap}, which minimizes $R$ subject to a cap on the number of factors sharing any given qubit pair; \texttt{mixed\_pair}, which augments the factor count with a pairwise-support penalty; and \texttt{frontier\_pair}, a frontier-weighted variant of the pairwise penalty.%
-\footnote{Two further pre-registered variants (\texttt{depth\_guarded\_mixed\_pair} and \texttt{t\_preserving\_frontier\_pair}) extend the portfolio to $K=6$ in an evaluation currently in progress. The guard guarantees that the results reported here can only improve.}
+The rank $R$ is not the only property of a decomposition that affects the final circuit. After synthesis, factors are realized as networks of shared parities, and the overlap structure of the factor supports governs how much CNOT structure the synthesizer can reuse, how deep the resulting circuit becomes, and how many $T$ gates remain after gadgetization. The deployed evaluation portfolio has $K=6$ objectives: \texttt{factor\_count}, the baseline; \texttt{factor\_count\_pair\_cap}; \texttt{mixed\_pair}; \texttt{frontier\_pair}; \texttt{depth\_guarded\_mixed\_pair}; and \texttt{t\_preserving\_frontier\_pair}. Legacy journal-readiness gates remain defined on the core four-objective subset, but the selection evaluation below is the full six-objective portfolio.
 
 % ============================================================
 \section{Guarded Portfolio Selection}
@@ -149,25 +145,24 @@ where $\widetilde{R}$ is the normalized factor count, $\widetilde{C}$ the qubit 
 % ============================================================
 \section{Experimental Setup}
 
-\textbf{Instantiation.} Candidate generation is implemented with a deterministic mixed-integer linear programming (MILP) solver over low-weight action dictionaries (feasible for any weight cap $w\ge3$ by Lemma~\ref{lem:weight3}), with per-objective time budgets of 900--3000\,s. Determinism makes every reported number exactly reproducible and gives all portfolio members an identical computational budget. It also yields \emph{optimality certificates}: when the solver closes its gap, the reported incumbent is optimal for its stated MILP objective over the dictionary. In the current artifact set, 12 of 62 linear-span summaries are certified, including \texttt{mod\_5\_4} ($R=7$), \texttt{gf\_2pow2\_mult} ($R=17$), and the \texttt{mod\_mult\_55} headline win. The selection layer itself is engine-agnostic: it applies unchanged to candidates produced by the original reinforcement-learning agent, which trains one policy per reward function and is therefore precisely the component a portfolio varies.
+\textbf{Instantiation.} Candidate generation is implemented with a deterministic mixed-integer linear programming (MILP) solver over low-weight action dictionaries (feasible for any weight cap $w\ge3$ by Lemma~\ref{lem:weight3}), with per-objective time budgets of 900--3000\,s. Determinism makes every reported number exactly reproducible and gives all portfolio members an identical computational budget. It also yields \emph{optimality certificates}: when the solver closes its gap, the reported incumbent is optimal for its stated MILP objective over the dictionary. In the current artifact set, 29 of 95 target/objective linear-span summaries are certified. The selection layer itself is engine-agnostic: it applies unchanged to candidates produced by the original reinforcement-learning agent, which trains one policy per reward function and is therefore precisely the component a portfolio varies.
 
-\textbf{Benchmarks.} The evaluation covers 18 unique targets, comprising 33 instance groups when independent experimental batteries are counted separately, drawn from the standard T-count benchmark suite \cite{amy2014,heyfron2018}: Barenco and NC Toffoli networks, Cuccaro and VBE adders, $GF(2^m)$ multipliers, Hamming-weight circuits, and modular arithmetic, with signature tensors of size up to 15. Candidate availability is uneven: 11 groups have all four deployed objectives, 17 have three, and five have two; all oracle statements are therefore relative to the available candidates.
-%K6% frontier battery extends to size 21 and two new families.
+\textbf{Benchmarks.} The evaluation covers 24 deduplicated targets and 54 train-ready instance groups, 46 of them external, drawn from arithmetic and Toffoli-network benchmarks \cite{amy2014,heyfron2018}: adders, $GF(2^m)$ multipliers, Hamming-weight, modular arithmetic, unary iteration, and carry-select adder/mux circuits. Signature tensors reach size 21. Candidate availability is uneven: 14 groups have two candidates, 29 have three, and 11 have four; all oracle statements are relative to available candidates.
 
 \textbf{Statistics.} Wins and losses against the \texttt{factor\_count} baseline are assessed with an exact one-sided sign test, excluding ties. \emph{Oracle recovery} denotes agreement between the final T-count and the post-hoc best over available candidates. Target-clustered bootstrap intervals (10{,}000 resamples) report uncertainty for effect sizes. Target-level results deduplicate repeated batteries, and transfer across circuit families is evaluated leave-one-functional-family-out (LOFO).
 
-\textbf{Verification.} Every final circuit is checked for functional equivalence against the original benchmark circuit: 42 instances are proven equal by the path-sum checker \texttt{feynver} \cite{amy2018}, and the remainder by exact numerical isometry comparison with postselected gadget ancillas. All 51 proof obligations pass. The largest improvement (34\%, \texttt{barenco\_tof\_4}) was verified by \texttt{feynver} in two independent runs.
+\textbf{Verification.} Circuit-level equivalence is proven for every candidate at tensor size at most 15. The merged verification registry contains 85 proven circuit obligations (66 \texttt{feynver} equal, 17 exact block/isometry checks, and 2 exact numerical checks) and no unexplained failures. The $K=6$ backfill contributes 38 passing candidates (27 \texttt{feynver}, 10 exact block checks, and 1 exact numerical check). The 17 frontier candidates at tensor sizes 20--21 are beyond the current checker scale because of gadget ancillas; they are verified at the decomposition level, with exact mod-2 reconstruction of the signature tensor in every summary. During the $K=6$ campaign this verification chain caught a stale materializer deployment with Clifford-bookkeeping defects, after which the candidates were re-synthesized with the fixed materializer and re-proven where circuit-level checking was feasible.
 
 % ============================================================
 \section{Results}
 
 \subsection{Objective choice is target-dependent and hard to predict a priori}
 
-Over the 33 instance groups, the available-candidate oracle distributes $14/10/7/2$ across the four objectives: the baseline is optimal most often, yet is strictly beaten on roughly one third of the groups. Circuit-conditioned classifiers operating on tensor-level features (softmax regression, $k$-nearest-neighbors, nearest-centroid) do not outperform a shuffled-label control at the present dataset size. The predictive signal appears only after decomposition, in the candidate factor lists that the selection layer consumes.
+Over the 54 train-ready instance groups, the available-candidate oracle distributes $21/10/7/2/6/8$ across the six objectives \texttt{factor\_count}, \texttt{factor\_count\_pair\_cap}, \texttt{mixed\_pair}, \texttt{frontier\_pair}, \texttt{depth\_guarded\_mixed\_pair}, and \texttt{t\_preserving\_frontier\_pair}. Every portfolio member is optimal somewhere. Circuit-conditioned classifiers operating on tensor-level features do not outperform a shuffled-label control at the present dataset size; the predictive signal appears only after decomposition, in the candidate factor lists that the selection layer consumes.
 
 \subsection{Oracle recovery with zero regressions}
 
-Figure~\ref{fig:budget} summarizes budget sensitivity. Under LOTO, guarded top-2 attains the available oracle on 33/33 groups and 17/18 deduplicated targets; guarded top-3 attains 18/18 targets. Under LOFO, guarded top-2 has one group-level oracle miss, but no baseline regressions, and guarded top-3 again reaches the full available oracle. At group scope, guarded top-2 records 12 improvements and zero regressions (sign test $p=2.4\times10^{-4}$), with geometric-mean T-count ratio $0.937$ and target-clustered 95\% CI $[0.888,0.973]$; the clustered CI for the win count is $[7,18]$ and for maximum regression is $[0,0]$. The single guarded top-2 target miss is \texttt{cuccaro\_adder\_n4} ($32$ selected vs.\ $24$ oracle).
+Figure~\ref{fig:budget} summarizes budget sensitivity. Under LOTO, guarded top-2 attains the available oracle on 54/54 groups with 21 wins and zero losses against the baseline (one-sided sign test $p=4.77\times10^{-7}$, geometric-mean T-count ratio $0.943$). At target scope it recovers 23/24 targets with 13 wins and zero losses ($p=1.2\times10^{-4}$, ratio $0.932$), and guarded top-3 recovers 24/24 targets with 14 wins and zero losses ($p=6.1\times10^{-5}$, ratio $0.921$). The LOFO rows are identical to LOTO on all these headline metrics, so the same recovery and non-regression hold when transferring to unseen circuit families. Target-clustered bootstrap intervals for guarded top-2 are $[0.910,0.971]$ for the geometric-mean T-count ratio, $[14,28]$ for the win count, and $[0,0]$ for maximum regression.
 
 \begin{figure}[hbt]
 \centering
@@ -179,11 +174,11 @@ Figure~\ref{fig:budget} summarizes budget sensitivity. Under LOTO, guarded top-2
 \begin{figure}[hbt]
 \centering
 \includegraphics[width=\linewidth]{fig_tcount_reductions.png}
-\caption{\footnotesize T-count reductions for the seven improved deduplicated targets under guarded top-2 selection; the aggregate row records the eleven remaining targets where the baseline is kept with no regression. Labels give baseline $\to$ selected T-count and the winning objective; \checkmark{} marks formally verified candidates.}
+\caption{\footnotesize T-count reductions for the 13 improved deduplicated targets under guarded top-2 selection; the aggregate row records the 11 remaining targets where the baseline is kept with no regression. Labels give baseline $\to$ selected T-count and the winning objective; \checkmark{} marks circuit-level verified candidates.}
 \label{fig:reductions}
 \end{figure}
 
-The largest verified improvements are \texttt{barenco\_tof\_4} ($64\to42$, $-34\%$, \texttt{mixed\_pair}), \texttt{vbe\_adder\_3} ($65\to51$, $-22\%$, \texttt{frontier\_pair}), and \texttt{hamming\_weight\_n7} ($34\to28$, $-18\%$, \texttt{frontier\_pair}). Several wins are modest: five of twelve group-level wins are 1--2 $T$ gates, while the largest distinct wins are 22 and 14 $T$ gates; the group-level median win is 4 $T$ gates. Certificate audit marks \texttt{mod\_mult\_55}/\texttt{mixed\_pair} certified optimal; \texttt{barenco\_tof\_4}, \texttt{vbe\_adder\_3}, \texttt{hamming\_weight\_n7}, \texttt{nc\_tof\_4}, and \texttt{gf\_2pow4\_mult} are time-limit incumbents, and the internal \texttt{gf\_2pow3\_mult} win has no retained linear-span summary. The median circuit-depth ratio is $1.0$.
+The frontier battery is the main new scale result. It adds six targets at tensor sizes 20--21, including unary iteration and carry-select adder/mux families, and all six landed non-baseline wins. The \texttt{t\_preserving\_frontier\_pair} objective beats the baseline on every landed frontier target: \texttt{csla\_mux\_3} $165\to137$ ($-17\%$), \texttt{gf\_2pow7\_mult} $305\to279$, \texttt{hamming\_weight\_n8} $182\to165$, \texttt{barenco\_tof\_5} $115\to109$, \texttt{unary\_iteration\_n3} $138\to133$, and \texttt{cuccaro\_adder\_n6} $195\to192$. The two objectives that were previously pre-registered but undeployed now carry 14 oracle labels, showing that the portfolio's value grows with scale. At target scope the guarded top-2 win-size distribution is $\{2{\times}3,3,5{\times}2,6{\times}2,14,17,22,26,28\}$, so five wins are at least 14 $T$ gates. The suite is exhausted below tensor size 17; \texttt{cuccaro\_adder\_n5} and \texttt{gf\_2pow6\_mult} remain open at the current budget.
 
 \subsection{Mechanism: how the largest improvement arises}
 
@@ -208,27 +203,27 @@ Objective & $R$ ($=$T) & Supp. & Ovl. & Jac. & Depth \\
 
 \subsection{Which features carry the ranking signal}
 
-Table~\ref{tab:rankaudit} compares the learned ranking with simpler controls. The learned five-feature and rank-only policies both recover the oracle on every group with zero losses; they choose different materialization sets on five groups, but the final T-counts are identical. The broader feature ablation leads to the same conclusion: the signal concentrates in $R$, and all eleven feature configurations retain zero losses because safety comes from the guard.
+Table~\ref{tab:rankaudit} compares the learned ranking with simpler controls. The learned five-feature and rank-only policies both recover the oracle on every group with zero losses; they choose different materialization sets on four groups, but final T-counts are identical. The broader feature ablation gives the same conclusion: signal concentrates in $R$, while every feature configuration retains zero losses because safety comes from the guard.
 
 \begin{table}[hbt]
 \centering
-\caption{\footnotesize Rank audit for guarded top-2 under LOTO, group scope. The learned and rank-only policies choose different materialization sets on five groups but return identical final T-counts.}
+\caption{\footnotesize Rank audit for guarded top-2 under LOTO, group scope. The learned and rank-only policies choose different materialization sets on four groups but return identical final T-counts.}
 \label{tab:rankaudit}
 \footnotesize
 \begin{tabular}{lccc}
 \toprule
 Ranking & Oracle & W/L & Max regret ($T$) \\
 \midrule
-learned five-feature & 33/33 & 12/0 & 0 \\
-rank-only $R$        & 33/33 & 12/0 & 0 \\
-alphabetical control & 30/33 & 10/0 & 6 \\
+learned five-feature & 54/54 & 21/0 & 0 \\
+rank-only $R$        & 54/54 & 21/0 & 0 \\
+alphabetical control & 47/54 & 17/0 & 26 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Effect of the guard under distribution shift}
 
-The unguarded policy is not safe outside its training distribution: top-1 selection regresses on one instance group under LOTO and two under LOFO. The guarded policy eliminates every baseline regression in both protocols. It does not guarantee oracle recovery at fixed small budget; under LOFO, guarded top-2 misses one group oracle, but monotonicity closes that miss at budget three. Because the non-regression guarantee is structural, it extends to any future target without re-evaluation.
+The unguarded policy is not safe outside its training distribution: top-1 selection regresses on one instance group under both LOTO and LOFO. The guarded policy eliminates every baseline regression in both protocols, and after the $K=6$ extension LOFO matches LOTO on the headline top-2 and top-3 rows. Because the non-regression guarantee is structural, it extends to future targets without re-evaluation.
 
 \subsection{Computational cost}
 
@@ -237,7 +232,7 @@ Wall time is dominated by the portfolio MILP decompositions (approximately 2700\
 % ============================================================
 \section{Discussion and Limitations}
 
-\textbf{Engine-agnosticism and absolute T-counts.} The baseline used here is a deterministic MILP instantiation rather than the original reinforcement-learning agent: training one agent per objective at the published scale is infeasible on academic hardware, and a deterministic engine gives every portfolio member an identical, reproducible budget, isolating the contribution of the selection layer. This resource constraint is consistent with the independent AlphaTensor-Quantum reusability report of Zen, N\"agele, and Marquardt \cite{zen2025}. Table~\ref{tab:context} makes the consequence explicit: the absolute T-counts produced by a 900--3000\,s MILP search remain well above the best published non-gadgetized results \cite{ruiz2025}, and this paper claims no state-of-the-art absolute counts. The table also shows what the layer contributes at fixed engine cost: portfolio selection closes part of the engine gap (on \texttt{mod\_mult\_55} it lands within one $T$ gate of the best published count), and where the baseline regresses below the original circuit, selection restores parity (\texttt{hamming\_weight\_n7}). The layer composes with any multi-objective decomposition engine; validating it on agent-generated portfolios is a natural next step. Repeated batteries also reveal run-to-run variation: only 5 of 12 repeated targets agree on the oracle objective, which is precisely why per-instance guarded selection is preferable to committing to a fixed objective.
+\textbf{Engine-agnosticism and absolute T-counts.} The baseline used here is a deterministic MILP instantiation rather than the original reinforcement-learning agent: training one agent per objective at the published scale is infeasible on academic hardware, and determinism gives every portfolio member the same reproducible budget. Table~\ref{tab:context} makes the consequence explicit: absolute T-counts from 900--3000\,s MILP searches remain above the best published non-gadgetized results \cite{ruiz2025}, so this paper claims no state-of-the-art absolute counts. It claims a composable selection layer: at fixed engine cost, selection closes part of the gap and avoids objective-specific regressions.
 
 \begin{table}[hbt]
 \centering
@@ -250,24 +245,23 @@ Circuit & Orig. & Publ. & Base & Sel. \\
 \midrule
 \texttt{barenco\_tof\_4}    & 56  & 23 & 64 & 42 \\
 \texttt{vbe\_adder\_3}      & 70  & 19 & 65 & 51 \\
-\texttt{nc\_tof\_4}         & 35  & 19 & 37 & 32 \\
-\texttt{mod\_mult\_55}      & 49  & 17 & 20 & 18 \\
-\texttt{gf\_2pow3\_mult}    & 63  & 29 & 35 & 33 \\
 \texttt{gf\_2pow4\_mult}    & 112 & 39 & 58 & 56 \\
 \texttt{hamming\_weight\_n7}& 28  & -- & 34 & 28 \\
+\texttt{csla\_mux\_3}       & 70  & 39 & 165 & 137 \\
+\texttt{gf\_2pow7\_mult}    & 343 & 104 & 305 & 279 \\
+\texttt{barenco\_tof\_5}    & 84  & 33 & 115 & 109 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Scale.} The present evaluation covers signature tensors up to size 15, which exhausts the benchmark suite below size 17. An extended battery covering tensors up to size 21, two additional circuit families, and the $K=6$ portfolio is in progress. %K6% update when consolidated.
-By the structure of the guard, additional targets and objectives can add improvements but not baseline regressions.
+\textbf{Scale.} The $K=6$ battery extends the evaluation to tensor size 21 and exhausts the suite below size 17. The remaining open frontier targets, \texttt{cuccaro\_adder\_n5} and \texttt{gf\_2pow6\_mult}, did not land a complete candidate set at the current budget. Frontier circuit-level equivalence is also beyond the present checker scale; those candidates are therefore claimed at decomposition level only.
 
 \textbf{Rule distillation.} The closed-form rule \eqref{eq:rule} is distilled from the same dataset on which it is evaluated; the LOTO and LOFO protocols remain the out-of-sample evidence. The value of the rule lies in its interpretability and zero adoption cost.
 
 % ============================================================
 \section{Conclusion}
 
-The choice of decomposition objective inside AlphaTensor-Quantum is target-dependent, and exploiting this dependence requires neither a better universal cost function nor a circuit-level classifier. It does require generating a portfolio of decompositions; the budgeted layer saves downstream synthesis, audit, and verification, while the reserved baseline slot gives zero T-count regressions by construction. On the present artifacts it reaches the available oracle on 33/33 groups at budget two and 18/18 targets at budget three, with a formally verified 34\% T-count reduction.
+The choice of decomposition objective inside AlphaTensor-Quantum is target-dependent, and exploiting this dependence requires neither a better universal cost function nor a circuit-level classifier. A six-objective guarded portfolio reaches the available oracle on 54/54 groups at budget two and 24/24 targets at budget three, with identical LOFO transfer rows and zero guarded losses. The largest circuit-level-verified improvement remains 34\%, while frontier tensors up to size 21 add six decomposition-level wins.
 
 % ============================================================
 \section*{Acknowledgments}
@@ -303,6 +297,11 @@ A. Kissinger and J. van de Wetering,
 ``Reducing the number of non-Clifford gates in quantum circuits,''
 \textit{Phys. Rev. A}, vol. 102, p. 022406, 2020.
 
+\bibitem{vandaele2025}
+V. Vandaele,
+``Lower T-count with faster algorithms,''
+\textit{Quantum}, vol. 9, p. 1860, 2025.
+
 \bibitem{ruiz2025}
 F. J. R. Ruiz \textit{et al.},
 ``Quantum circuit optimization with AlphaTensor,''
@@ -323,6 +322,12 @@ J. R. Rice,
 L. Xu, F. Hutter, H. H. Hoos, and K. Leyton-Brown,
 ``SATzilla: Portfolio-based algorithm selection for SAT,''
 \textit{J. Artif. Intell. Res.}, vol. 32, pp. 565--606, 2008.
+
+\bibitem{quetschlich2024}
+N. Quetschlich, L. Burgholzer, and R. Wille,
+``MQT Predictor: Automatic Device Selection with Device-Specific Circuit Compilation for Quantum Computing,''
+\textit{ACM Transactions on Quantum Computing}, 2024,
+doi:10.1145/3673241.
 
 \bibitem{amy2018}
 M. Amy,

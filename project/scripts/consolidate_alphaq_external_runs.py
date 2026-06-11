@@ -39,6 +39,8 @@ DEFAULT_RUNS = (
     "article_repair2_vbe",
     "journal_full_nc_tof_5_long",
     "journal_full_gf_2pow5_mult_long",
+    "journal_k6_backfill",
+    "journal_k6_frontier",
 )
 
 

@@ -7,11 +7,11 @@ This selector uses only pre-run AlphaQ/circuit tensor features. ZX and materiali
 
 | policy | groups | exact oracle | T non-worse | T wins | QASM wins | runtime wins | median T ratio | median QASM ratio | selected objectives |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| oracle_posthoc | 33 | 33 | 33 | 12 | 16 | 2 | 1 | 1 | factor_count=14, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=7 |
-| baseline_factor_count | 33 | 14 | 33 | 0 | 0 | 0 | 1 | 1 | factor_count=33 |
-| best_fixed_loto | 33 | 14 | 33 | 0 | 0 | 0 | 1 | 1 | factor_count=33 |
-| circuit_knn3 | 33 | 12 | 30 | 0 | 3 | 0 | 1 | 1 | factor_count=28, factor_count_pair_cap=1, mixed_pair=4 |
-| circuit_1nn | 31 | 10 | 25 | 4 | 8 | 0 | 1 | 1 | factor_count=12, factor_count_pair_cap=12, mixed_pair=7 |
-| circuit_softmax | 30 | 10 | 24 | 1 | 5 | 0 | 1 | 1 | factor_count=18, factor_count_pair_cap=10, mixed_pair=2 |
-| shuffled_centroid_control | 25 | 6 | 19 | 2 | 5 | 0 | 1 | 1 | factor_count=10, factor_count_pair_cap=8, frontier_pair=2, mixed_pair=5 |
-| circuit_nearest_centroid | 27 | 3 | 16 | 3 | 9 | 1 | 1 | 1 | factor_count=6, factor_count_pair_cap=4, frontier_pair=6, mixed_pair=11 |
+| oracle_posthoc | 54 | 54 | 54 | 21 | 27 | 15 | 1 | 0.998 | depth_guarded_mixed_pair=6, factor_count=21, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=7, t_preserving_frontier_pair=8 |
+| circuit_knn3 | 51 | 25 | 49 | 7 | 6 | 5 | 1 | 1 | factor_count=40, factor_count_pair_cap=3, mixed_pair=2, t_preserving_frontier_pair=6 |
+| circuit_softmax | 52 | 25 | 52 | 6 | 4 | 5 | 1 | 1 | factor_count=45, factor_count_pair_cap=1, t_preserving_frontier_pair=6 |
+| baseline_factor_count | 54 | 21 | 54 | 0 | 0 | 0 | 1 | 1 | factor_count=54 |
+| best_fixed_loto | 54 | 21 | 54 | 0 | 0 | 0 | 1 | 1 | factor_count=54 |
+| circuit_1nn | 40 | 16 | 34 | 10 | 11 | 4 | 1 | 1 | factor_count=15, factor_count_pair_cap=12, mixed_pair=8, t_preserving_frontier_pair=5 |
+| circuit_nearest_centroid | 31 | 13 | 21 | 7 | 10 | 8 | 1 | 1 | depth_guarded_mixed_pair=4, factor_count=13, factor_count_pair_cap=2, frontier_pair=2, mixed_pair=4, t_preserving_frontier_pair=6 |
+| shuffled_centroid_control | 27 | 9 | 19 | 3 | 9 | 6 | 1 | 1 | depth_guarded_mixed_pair=2, factor_count=9, factor_count_pair_cap=4, frontier_pair=3, mixed_pair=6, t_preserving_frontier_pair=3 |

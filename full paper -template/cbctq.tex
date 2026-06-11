@@ -1,0 +1,198 @@
+%% ============================================================
+%% CBCTQ 2026 - Full Paper Template (Up to 5 pages)
+%% Congress on Brazilian Quantum Science and Technologies
+%% September 21–25, 2026
+%% Innovation District of Cantareira – Niterói, RJ, Brazil
+%% ============================================================
+
+\documentclass{cbctq}
+
+\usepackage[brazil,lenglish,]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{braket}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+
+% Força os títulos para inglês (comente abaixo para português)
+\makeatletter
+\renewcommand{\@WORDappendix}{Appendix}
+\renewcommand{\@WORDreferences}{References}
+\renewcommand{\@WORDproof}{Proof}
+\makeatother
+
+\begin{document}
+
+\title{Full Paper Template for the CBCTQ 2026}
+
+\author{
+Author One and Author Two%
+\thanks{
+Author One, Department, University, City, Country, e-mail: author1@email.edu;
+Author Two, Department, University, City, Country, e-mail: author2@email.edu.
+This work was partially supported by Funding Agency (Grant No. XXXX).
+}
+}
+
+\maketitle
+
+\markboth{Congresso Brasileiro de Ciências e Tecnologias Quânticas (CBCTQ 2026) -- September 21--25, 2026, Innovation District of Cantareira, Niterói--RJ, Brazil}{}
+
+
+% ============================================================
+% ABSTRACT
+% ============================================================
+
+\begin{abstract}
+This document provides the official \LaTeX\ template for submission of full papers (up to five pages, including references) to the Brazilian Congress on Quantum Science and Technologies (CBCTQ 2026). The abstract must not exceed 100 words. Papers may be written in English or Portuguese. All accepted and presented papers will be published in the CBCTQ 2026 Proceedings.
+\end{abstract}
+
+\begin{keywords}
+Quantum computing, quantum communication, quantum information, quantum metrology, CBCTQ 2026.
+\end{keywords}
+
+% ============================================================
+\section{Introduction}
+
+The Brazilian Congress on Quantum Science and Technologies (CBCTQ 2026) will take place from September 21 to 25, 2026, at the Innovation District of Cantareira, Niterói--RJ, Brazil.
+
+CBCTQ 2026 succeeds the Workshop-Escola de Computação e Informação Quântica (WECIQ), consolidating nearly two decades of scientific exchange in quantum technologies in Brazil. The Congress expands its scope to include interdisciplinary developments in quantum computing, communication, information theory, metrology, and technological innovation.
+
+Full papers must not exceed five pages in A4 format, double column, 10pt font, including references.
+
+% ============================================================
+\section{Topics of Interest}
+Submissions are invited in (but not limited to) the following areas:
+
+\begin{itemize}
+    \item Quantum Computing
+    \item Quantum Communication and Cryptography
+    \item Quantum Information Theory
+    \item Quantum Metrology and Sensing
+    \item Quantum Machine Learning
+    \item Quantum Hardware and Architectures
+    \item Quantum Error Correction
+    \item Quantum Networks and Internet
+\end{itemize}
+
+% ============================================================
+\section{Example of Mathematical Content}
+
+Papers should present rigorous theoretical developments, experimental results, or technological innovations in quantum science.
+\subsection{Example from Quantum Computing}
+
+Consider a quantum state in a Hilbert space $\mathcal{H}$:
+
+\begin{equation}
+    \ket{\psi} = \sum_{x \in \{0,1\}^n} \alpha_x \ket{x},
+\end{equation}
+
+where $\sum_x |\alpha_x|^2 = 1$.
+
+A quantum operation is represented by a completely positive trace-preserving (CPTP) map:
+
+\begin{equation}
+    \mathcal{E}(\rho) = \sum_k E_k \rho E_k^\dagger,
+\end{equation}
+
+with $\sum_k E_k^\dagger E_k = I$.
+
+\subsection{Example from Quantum Information}
+
+The von Neumann entropy of a density operator $\rho$ is defined as
+
+\begin{equation}
+    S(\rho) = -\mathrm{Tr}(\rho \log \rho).
+\end{equation}
+
+In quantum key distribution, the asymptotic secret key rate under collective attacks can be written as
+
+\begin{equation}
+    r = H(A|E) - H(A|B),
+\end{equation}
+
+where $H(A|E)$ and $H(A|B)$ denote conditional entropies.
+
+\subsection{Example from Quantum Metrology}
+
+The quantum Cramér–Rao bound establishes that
+
+\begin{equation}
+    \Delta \theta \ge \frac{1}{\sqrt{\nu F_Q(\rho_\theta)}},
+\end{equation}
+
+where $F_Q$ is the quantum Fisher information and $\nu$ is the number of measurements.
+
+% ============================================================
+\section{Figures and Tables}
+
+Figures and tables must be clear and properly labeled.
+
+\begin{figure}[hbt]
+\centering
+\includegraphics[width=0.5\linewidth]{cbctq2026-logo.png}
+\caption{\footnotesize
+  CBCTQ 2026 --
+  September 21--25, 2026, Innovation District of Cantareira, Niterói--RJ, Brazil.}
+\end{figure}
+% ============================================================
+\section{Formatting Instructions}
+
+\begin{itemize}
+    \item Maximum length: 5 pages (including references).
+    \item Paper size: A4.
+    \item Two-column format.
+    \item Font size: 10pt.
+    \item Language: English (preferred) or Portuguese.
+\end{itemize}
+
+If the paper is written in Portuguese, authors may include:
+
+\begin{resumo}
+O resumo em português deve ter no máximo 100 palavras.
+\end{resumo}
+
+\begin{chave}
+Palavras-chave em português.
+\end{chave}
+
+% ============================================================
+\section{Conclusion}
+
+CBCTQ 2026 aims to foster scientific exchange and technological development in quantum sciences across Brazil and internationally. Authors are encouraged to submit original, high-quality contributions aligned with the expanding landscape of quantum technologies.
+
+% ============================================================
+\section*{Acknowledgments}
+
+The Organizing Committee of CBCTQ 2026 acknowledges the legacy of WECIQ and the Brazilian quantum research community for its continuous development over the past two decades.
+
+% ============================================================
+\begin{thebibliography}{99}
+
+\bibitem{nielsen}
+M. A. Nielsen and I. L. Chuang,
+\textit{Quantum Computation and Quantum Information}.
+Cambridge University Press, 2000.
+
+\bibitem{devetak}
+I. Devetak and A. Winter,
+``Distillation of secret key and entanglement from quantum states,''
+\textit{Proc. R. Soc. A}, vol. 461, pp. 207–235, 2005.
+
+\bibitem{giovannetti}
+V. Giovannetti, S. Lloyd, and L. Maccone,
+``Quantum-enhanced measurements,''
+\textit{Nature Photonics}, vol. 5, pp. 222–229, 2011.
+
+\end{thebibliography}
+
+\appendix
+Appendices may be included within the 5-page limit.
+
+\end{document}
+

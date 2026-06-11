@@ -33,10 +33,8 @@ DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_selecto
 DEFAULT_DETAIL_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_external_selector_transfer_details.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_external_selector_transfer.md"
 PAIRWISE_SELECTOR = "loto_pairwise_linear_alphaq"
-# Required objectives are the deployed portfolio: the objectives the
-# batteries actually run end-to-end. Experimental variants that have never
-# produced runs are excluded so target completeness tracks the algorithm as
-# deployed.
+# This legacy transfer audit is defined on the original core-4 external
+# objective set. The K=6 portfolio is evaluated by the selection-budget path.
 REQUIRED_OBJECTIVES = frozenset(
     {
         "factor_count",

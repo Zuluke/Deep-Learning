@@ -72,15 +72,15 @@ DEFAULT_DEDUPE_AUDIT = PROJECT_ROOT / "results" / "csv" / "alphaq_portfolio_budg
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_portfolio_budget.md"
 DEFAULT_FIGURE = PROJECT_ROOT / "results" / "figures" / "alphaq_portfolio_budget.png"
 
-# The deployed portfolio: objectives that have actually been run end-to-end in
-# the internal and external batteries. Experimental variants that never
-# produced runs are deliberately excluded so budgets and completeness refer to
-# the algorithm as deployed.
+# The deployed evaluation portfolio: objectives that have actually been run
+# end-to-end in the internal and external batteries.
 PORTFOLIO_OBJECTIVES = (
     "factor_count",
     "factor_count_pair_cap",
     "mixed_pair",
     "frontier_pair",
+    "depth_guarded_mixed_pair",
+    "t_preserving_frontier_pair",
 )
 SELECTOR_LEVELS = (-2, -1, 0, 1, 2)
 BOOTSTRAP_SAMPLES = 10_000
@@ -593,7 +593,7 @@ def write_report(
         f"Dedupe audit CSV: `{dedupe_audit_csv}`.",
         f"Figure: `{figure_path}`.",
         "",
-        "The portfolio is the four deployed AlphaQ objectives: "
+        "The evaluation portfolio is the six deployed AlphaQ objectives: "
         + ", ".join(f"`{objective}`" for objective in PORTFOLIO_OBJECTIVES)
         + ".",
         "",

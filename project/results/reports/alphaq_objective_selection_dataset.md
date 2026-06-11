@@ -8,9 +8,9 @@ This dataset reframes the current evidence as supervised objective selection: ea
 
 Decision: `prototype-ready`.
 
-Train-ready target groups: 33/42.
-External train-ready target groups: 25.
-Oracle objective distribution: factor_count=14, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=7.
+Train-ready target groups: 54/68.
+External train-ready target groups: 46.
+Oracle objective distribution: depth_guarded_mixed_pair=6, factor_count=21, factor_count_pair_cap=10, frontier_pair=2, mixed_pair=7, t_preserving_frontier_pair=8.
 
 We can proceed with a prototype selector and leave-one-target validation. The dataset is still too small for a high-capacity deep model or a broad journal-level generalization claim.
 
@@ -45,6 +45,32 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 | external_journal_full_mod_mult_55 | mod_mult_55 | True | 3 | mixed_pair |
 | external_journal_full_nc_tof_5 | nc_tof_5 | False | 0 | - |
 | external_journal_full_nc_tof_5_long | nc_tof_5 | True | 2 | factor_count |
+| external_journal_k6_backfill | barenco_tof_3 | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_backfill | barenco_tof_4 | True | 2 | factor_count |
+| external_journal_k6_backfill | cuccaro_adder_n3 | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_backfill | cuccaro_adder_n4 | True | 2 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | gf_2pow2_mult | True | 3 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | gf_2pow3_mult | True | 2 | factor_count |
+| external_journal_k6_backfill | gf_2pow4_mult | True | 2 | factor_count |
+| external_journal_k6_backfill | gf_2pow5_mult | False | 0 | - |
+| external_journal_k6_backfill | hamming_weight_n4 | True | 3 | factor_count |
+| external_journal_k6_backfill | hamming_weight_n5 | True | 3 | factor_count |
+| external_journal_k6_backfill | hamming_weight_n6 | True | 2 | factor_count |
+| external_journal_k6_backfill | hamming_weight_n7 | True | 2 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | mod_5_4 | True | 3 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | mod_mult_55 | True | 2 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | nc_tof_3 | True | 3 | factor_count |
+| external_journal_k6_backfill | nc_tof_4 | True | 2 | depth_guarded_mixed_pair |
+| external_journal_k6_backfill | nc_tof_5 | False | 0 | - |
+| external_journal_k6_backfill | vbe_adder_3 | False | 1 | factor_count |
+| external_journal_k6_frontier | barenco_tof_5 | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_frontier | csla_mux_3 | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_frontier | cuccaro_adder_n5 | False | 0 | - |
+| external_journal_k6_frontier | cuccaro_adder_n6 | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_frontier | gf_2pow6_mult | False | 0 | - |
+| external_journal_k6_frontier | gf_2pow7_mult | True | 3 | t_preserving_frontier_pair |
+| external_journal_k6_frontier | hamming_weight_n8 | True | 2 | t_preserving_frontier_pair |
+| external_journal_k6_frontier | unary_iteration_n3 | True | 3 | t_preserving_frontier_pair |
 | external_journal_repair_paircap | barenco_tof_4 | False | 1 | factor_count_pair_cap |
 | external_night_long | barenco_tof_4 | True | 2 | mixed_pair |
 | external_night_long | nc_tof_4 | True | 3 | mixed_pair |
@@ -65,9 +91,9 @@ We can proceed with a prototype selector and leave-one-target validation. The da
 
 | objective | rows | ok | beam rows | failures | oracle count | median runtime sec | mean runtime sec |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| factor_count | 42 | 34 | 34 | 8 | 15 | 3.04e+03 | 2.99e+03 |
-| factor_count_pair_cap | 42 | 30 | 30 | 12 | 11 | 2.7e+03 | 2.7e+03 |
-| mixed_pair | 42 | 29 | 29 | 13 | 7 | 2.7e+03 | 2.7e+03 |
-| frontier_pair | 42 | 15 | 15 | 27 | 3 | 3.06e+03 | 2.97e+03 |
-| depth_guarded_mixed_pair | 42 | 0 | 0 | 42 | 0 |  |  |
-| t_preserving_frontier_pair | 42 | 0 | 0 | 42 | 0 |  |  |
+| factor_count | 68 | 56 | 56 | 12 | 23 | 3.01e+03 | 2.48e+03 |
+| factor_count_pair_cap | 68 | 30 | 30 | 38 | 11 | 2.7e+03 | 2.7e+03 |
+| mixed_pair | 68 | 29 | 29 | 39 | 7 | 2.7e+03 | 2.7e+03 |
+| frontier_pair | 68 | 20 | 20 | 48 | 3 | 3.05e+03 | 3.07e+03 |
+| depth_guarded_mixed_pair | 68 | 14 | 14 | 54 | 6 | 125 | 1.21e+03 |
+| t_preserving_frontier_pair | 68 | 14 | 14 | 54 | 8 | 3e+03 | 1.96e+03 |

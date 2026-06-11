@@ -2,6 +2,28 @@
 
 Snapshot date: 2026-06-09 (supersedes the 2026-06-07 checkpoint).
 
+> **2026-06-11 K=6/frontier addendum (supersedes the numbers below).**
+> The portfolio is now the six deployed objectives (the two pre-registered
+> variants were run in the `journal_k6_backfill`/`journal_k6_frontier`
+> batteries). Dataset: 54 train-ready groups / 24 deduplicated targets / 46
+> external groups; available-candidate oracle splits 21/10/7/2/6/8. Guarded
+> top-2 LOTO: 54/54 groups oracle, 21W/0L (p=4.8e-7), geo 0.943; targets
+> 23/24, 13W/0L; guarded top-3: 24/24 targets, 14W/0L. **LOFO equals LOTO on
+> all headline rows.** Frontier: six new targets at sizes 20-21 (incl. two
+> new families), all with non-baseline wins; `t_preserving_frontier_pair`
+> beats the baseline on all six (largest: csla_mux_3 165->137).
+> Verification: 85 merged circuit-level proofs pass; the 17 frontier
+> candidates are decomposition-level verified only (checkers do not scale to
+> 20-21 qubits with gadget ancillas) — this is why the journal gates now
+> read `not-yet-journal-ready` (4/6): the gates are deliberately stricter
+> than the CBCTQ paper, which scopes its verification claim accordingly.
+> During this campaign the verification chain caught a stale-materializer
+> deployment on the cluster (Clifford-bookkeeping defects, T-counts
+> unaffected); candidates were re-synthesized locally and re-proven.
+> Conference manuscript: `paper/cbctq2026/manuscript.pdf` (5 pages).
+> Open items: frontier circuit-level verification method; cuccaro_adder_n5
+> and gf_2pow6_mult remain unsolved at the 3000s budget.
+
 This document consolidates the current scientific state of the AlphaQuantum/
 AlphaQ line after the portfolio-budget formalization and the formal
 verification campaign.

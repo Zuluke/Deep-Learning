@@ -29,16 +29,18 @@ DEFAULT_VERIFICATION_CSVS = (
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_repair2_barenco" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_article_repair2_vbe" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_full_nc_tof_5_long" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_backfill" / "verification_summary.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_backfill" / "verification_numeric.csv",
+    PROJECT_ROOT / "results" / "verification" / "alphaq_external_journal_k6_frontier" / "verification_summary.csv",
     PROJECT_ROOT / "results" / "verification" / "alphaq_external_numeric" / "verification_numeric.csv",
 )
 DEFAULT_OUTPUT_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_evidence_gates.csv"
 DEFAULT_BATTERY_CSV = PROJECT_ROOT / "results" / "csv" / "alphaq_journal_next_battery.csv"
 DEFAULT_REPORT = PROJECT_ROOT / "results" / "reports" / "alphaq_journal_evidence.md"
 
-# External-target completeness is measured against the deployed portfolio:
-# the objectives that the batteries actually run end-to-end. Experimental
-# variants without any runs (`depth_guarded_mixed_pair`,
-# `t_preserving_frontier_pair`) must not reset completeness to zero.
+# External-target completeness gates are intentionally measured against the
+# core-4 portfolio. The K=6 extension is reported by the selection-evaluation
+# layer, not by journal-readiness gates.
 OBJECTIVES = (
     "factor_count",
     "factor_count_pair_cap",
@@ -538,6 +540,8 @@ def write_report(
         "## Decision",
         "",
         f"Decision: `{overall['status']}`.",
+        "",
+        "Note: journal-readiness gates are defined on the core-4 portfolio (`factor_count`, `factor_count_pair_cap`, `mixed_pair`, `frontier_pair`); K=6 coverage is reported in the selection-evaluation layer.",
         "",
         overall["evidence"],
         "",

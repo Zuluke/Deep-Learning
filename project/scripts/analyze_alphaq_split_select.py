@@ -634,7 +634,7 @@ def write_report(
         f"Detail CSV: `{detail_csv}`.",
         f"Figure: `{figure_path}`.",
         "",
-        "This report evaluates whether the consolidated objective-selection dataset is strong enough to train a deployable AlphaQuantum Split-Select policy. The selector chooses among the available AlphaQ objectives, including `factor_count`, `factor_count_pair_cap`, `mixed_pair`, and the article-inspired `frontier_pair`, using only AlphaQuantum/QASM-side candidate descriptors; ZX/feynver metrics are labels/audit targets only, not selector inputs.",
+        "This report evaluates whether the consolidated objective-selection dataset is strong enough to train a deployable AlphaQuantum Split-Select policy. The selector chooses among the available AlphaQ objectives, including `factor_count`, `factor_count_pair_cap`, `mixed_pair`, `frontier_pair`, `depth_guarded_mixed_pair`, and `t_preserving_frontier_pair`, using only AlphaQuantum/QASM-side candidate descriptors; ZX/feynver metrics are labels/audit targets only, not selector inputs.",
         "",
         "## Decision",
         "",
