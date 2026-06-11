@@ -20,9 +20,6 @@ from typing import Any
 
 os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -164,6 +161,9 @@ def run_all(rows: list[dict[str, str]]) -> tuple[list[dict[str, Any]], list[dict
 
 
 def write_figure(path: Path, summaries: list[dict[str, Any]]) -> None:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
     mpl.rcParams.update(
         {
             "font.size": 8,

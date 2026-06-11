@@ -57,9 +57,13 @@ def policy_details(
     rows: list[dict[str, str]],
     *,
     policy: str,
+    rankings: dict[tuple[str, str], list[dict[str, Any]]] | None = None,
+    groups_raw: dict[tuple[str, str], list[dict[str, str]]] | None = None,
 ) -> list[dict[str, Any]]:
-    rankings, _weights = loto_rankings(rows, fold_attr="target")
-    groups_raw = grouped(rows)
+    if rankings is None:
+        rankings, _weights = loto_rankings(rows, fold_attr="target")
+    if groups_raw is None:
+        groups_raw = grouped(rows)
     details = []
     guarded = policy == "guarded_top2"
     budget = 2 if guarded else 1
@@ -311,9 +315,16 @@ REPRO_FIELDS = [
 def main() -> int:
     args = parse_args()
     rows = portfolio_rows(train_ready_rows(read_csv(args.dataset_csv)))
+    rankings, _weights = loto_rankings(rows, fold_attr="target")
+    groups_raw = grouped(rows)
     details_by_policy = {
-        "top1": policy_details(rows, policy="top1"),
-        "guarded_top2": policy_details(rows, policy="guarded_top2"),
+        "top1": policy_details(rows, policy="top1", rankings=rankings, groups_raw=groups_raw),
+        "guarded_top2": policy_details(
+            rows,
+            policy="guarded_top2",
+            rankings=rankings,
+            groups_raw=groups_raw,
+        ),
     }
     bootstrap = bootstrap_rows(
         details_by_policy,

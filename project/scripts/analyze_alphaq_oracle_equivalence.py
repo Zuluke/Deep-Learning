@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -294,6 +295,8 @@ def bottom_line(factor: dict[str, Any] | None) -> str:
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     rows = [row for row in rows if row["selector"] in important_selectors(rows)]
     labels = [row["selector"].replace("min_", "").replace("_", "\n") for row in rows]

@@ -3,12 +3,13 @@ from __future__ import annotations
 import argparse
 import csv
 import itertools
+import os
 import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -430,6 +431,8 @@ def write_report(path: Path, rows: list[dict[str, Any]], output_csv: Path, detai
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     labels = [row["selector"].replace("loto_linear_", "").replace("_", "\n") for row in rows]
     fields = [

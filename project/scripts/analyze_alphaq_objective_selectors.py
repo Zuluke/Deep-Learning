@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 from pathlib import Path
 from typing import Any, Callable
 
-import matplotlib.pyplot as plt
+os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/matplotlib-cache")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -350,6 +351,8 @@ def write_report(path: Path, rows: list[dict[str, Any]], summary_csv: Path, deta
 
 
 def write_figure(path: Path, rows: list[dict[str, Any]]) -> None:
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     labels = [row["selector"].replace("min_", "").replace("_then_", "\nthen ") for row in rows]
     x = range(len(rows))
